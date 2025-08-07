@@ -3,12 +3,17 @@ plugins {
     idea
     war
     id("org.springframework.boot") version "3.3.0"
-    id("io.spring.dependency-management") version "1.1.5"
+//    id("io.spring.dependency-management") version "1.1.5"
     id("org.graalvm.buildtools.native") version "0.10.2"
 }
 
 group = "pl.akmf.ksef"
 version = "2.0.1"
+
+val springBootVersion = "3.3.0"
+val lombokVersion = "1.18.32"
+val commonsLang3Version = "3.14.0"
+val micrometerVersion = "1.12.5"
 
 java {
     toolchain {
@@ -62,7 +67,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jsr310Version")
 
     //
-    implementation("org.apache.commons:commons-lang3")
+    implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
     implementation("org.apache.commons:commons-collections4:$commonsCollectionsVersion")
     implementation("org.apache.httpcomponents:httpclient:$httpcomponentsHttpClientVersion")
     implementation("org.apache.santuario:xmlsec:$santuarioXmlsecVersion")
@@ -82,7 +87,7 @@ dependencies {
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    integrationTestImplementation("org.springframework.boot:spring-boot-testcontainers:") {
+    integrationTestImplementation("org.springframework.boot:spring-boot-testcontainers:$springBootVersion") {
         exclude("org.testcontainers:testcontainers-shaded-jackson")
     }
     integrationTestImplementation("org.testcontainers:junit-jupiter:${testcontainersVersion}")
