@@ -11,6 +11,7 @@ public class AuthenticationToken {
     private List<TokenPermissionType> requestedPermissions;
     private OffsetDateTime dateCreated;
     private AuthenticationTokenStatus status;
+    private OffsetDateTime lastUseDate;
 
     public AuthenticationToken() {
     }
@@ -70,5 +71,13 @@ public class AuthenticationToken {
 
     public void setStatus(AuthenticationTokenStatus status) {
         this.status = status;
+    }
+
+    public OffsetDateTime getLastUseDate() {
+        return lastUseDate;
+    }
+
+    public void setLastUseDate(OffsetDateTime lastUseDate) {
+        this.lastUseDate = lastUseDate;
     }
 }
