@@ -1,2 +1,4 @@
 server:
   port: 8082
+ksef:
+  base-uri: "https://ksef-test.mf.gov.pl"

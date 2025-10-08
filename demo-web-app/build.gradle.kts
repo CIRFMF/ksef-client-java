@@ -89,8 +89,9 @@ dependencies {
     integrationTestImplementation("org.testcontainers:testcontainers:${testcontainersVersion}")
     integrationTestImplementation("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
     integrationTestImplementation("org.wiremock:wiremock-standalone:${wiremockStandaloneVersion}")
-    implementation("org.awaitility:awaitility:${awaitilityVersion}")}
-
+    implementation("org.awaitility:awaitility:${awaitilityVersion}")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+}
 
 sourceSets {
     create("integrationTest") {

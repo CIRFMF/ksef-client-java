@@ -1,5 +1,7 @@
 package pl.akmf.ksef.sdk.util;
 
+import lombok.Getter;
+import org.springframework.beans.factory.annotation.Value;
 import pl.akmf.ksef.sdk.api.KsefApiProperties;
 
 import java.time.Duration;
@@ -8,10 +10,9 @@ import java.util.Map;
 
 public class ExampleApiProperties extends KsefApiProperties {
 
-    @Override
-    public String getBaseUri() {
-        return "";
-    }
+    @Getter
+    @Value("${ksef.base-uri}")
+    private String baseUri;
 
     @Override
     public Duration getRequestTimeout() {
