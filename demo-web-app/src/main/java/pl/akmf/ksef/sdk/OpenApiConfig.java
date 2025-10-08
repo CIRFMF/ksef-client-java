@@ -20,14 +20,12 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("KSEF Demo APP")
                         .version("2.0.1"))
-
                 .components(new Components()
                         .addSecuritySchemes(SECURITY_SCHEME_NAME,
                                 new SecurityScheme()
                                         .type(SecurityScheme.Type.APIKEY)
                                         .in(SecurityScheme.In.HEADER)
                                         .name("Authorization")))
-
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME));
     }
 

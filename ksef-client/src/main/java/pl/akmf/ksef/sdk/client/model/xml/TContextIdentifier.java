@@ -49,13 +49,13 @@ public class TContextIdentifier {
     @XmlElement(name = "Nip")
     protected String nip;
     /**
-     * Identyfikator wewnêtrzny
+     * Identyfikator wewnÄ™trzny
      * 
      */
     @XmlElement(name = "InternalId")
     protected String internalId;
     /**
-     * Kontekst z³o¿ony, bêd¹cy po³aczniem numeru NIP oraz numeru Vat UE
+     * Kontekst zÅ‚oÅ¼ony, bÄ™dÄ…cy poÅ‚aczniem numeru NIP oraz numeru Vat UE
      * 
      */
     @XmlElement(name = "NipVatUe")
@@ -87,7 +87,7 @@ public class TContextIdentifier {
     }
 
     /**
-     * Identyfikator wewnêtrzny
+     * Identyfikator wewnÄ™trzny
      * 
      * @return
      *     possible object is
@@ -112,7 +112,7 @@ public class TContextIdentifier {
     }
 
     /**
-     * Kontekst z³o¿ony, bêd¹cy po³aczniem numeru NIP oraz numeru Vat UE
+     * Kontekst zÅ‚oÅ¼ony, bÄ™dÄ…cy poÅ‚aczniem numeru NIP oraz numeru Vat UE
      * 
      * @return
      *     possible object is
