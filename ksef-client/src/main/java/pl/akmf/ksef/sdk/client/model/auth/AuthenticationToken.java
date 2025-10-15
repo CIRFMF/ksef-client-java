@@ -5,12 +5,14 @@ import java.util.List;
 
 public class AuthenticationToken {
     private String referenceNumber;
-    private SubjectIdentifier authorIdentifier;
+    private AuthorTokenIdentifier authorIdentifier;
     private ContextIdentifier contextIdentifier;
     private String description;
     private List<TokenPermissionType> requestedPermissions;
     private OffsetDateTime dateCreated;
+    private OffsetDateTime lastUseDate;
     private AuthenticationTokenStatus status;
+    private List<String> statusDetails;
 
     public AuthenticationToken() {
     }
@@ -24,11 +26,11 @@ public class AuthenticationToken {
         this.referenceNumber = referenceNumber;
     }
 
-    public SubjectIdentifier getAuthorIdentifier() {
+    public AuthorTokenIdentifier getAuthorIdentifier() {
         return authorIdentifier;
     }
 
-    public void setAuthorIdentifier(SubjectIdentifier authorIdentifier) {
+    public void setAuthorIdentifier(AuthorTokenIdentifier authorIdentifier) {
         this.authorIdentifier = authorIdentifier;
     }
 
@@ -64,11 +66,27 @@ public class AuthenticationToken {
         this.dateCreated = dateCreated;
     }
 
+    public OffsetDateTime getLastUseDate() {
+        return lastUseDate;
+    }
+
+    public void setLastUseDate(OffsetDateTime lastUseDate) {
+        this.lastUseDate = lastUseDate;
+    }
+
     public AuthenticationTokenStatus getStatus() {
         return status;
     }
 
     public void setStatus(AuthenticationTokenStatus status) {
         this.status = status;
+    }
+
+    public List<String> getStatusDetails() {
+        return statusDetails;
+    }
+
+    public void setStatusDetails(List<String> statusDetails) {
+        this.statusDetails = statusDetails;
     }
 }

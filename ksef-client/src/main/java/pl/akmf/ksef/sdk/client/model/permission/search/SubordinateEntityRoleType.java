@@ -5,9 +5,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum SubordinateEntityRoleType {
 
-    LOCALGOVERNMENTSUBUNIT("LocalGovernmentSubUnit"),
+    LOCAL_GOVERNMENT_SUBUNIT("LocalGovernmentSubUnit"),
 
-    VATGROUPSUBUNIT("VatGroupSubUnit");
+    VAT_GROUP_SUBUNIT("VatGroupSubUnit");
 
     private final String value;
 

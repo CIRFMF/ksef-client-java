@@ -4,39 +4,39 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum EuEntityPermissionsQueryPermissionType {
-  
-  VATUEMANAGE("VatUeManage"),
-  
-  INVOICEWRITE("InvoiceWrite"),
-  
-  INVOICEREAD("InvoiceRead"),
-  
-  INTROSPECTION("Introspection");
 
-  private final String value;
+    VATUEMANAGE("VatUeManage"),
 
-  EuEntityPermissionsQueryPermissionType(String value) {
-    this.value = value;
-  }
+    INVOICEWRITE("InvoiceWrite"),
 
-  @JsonValue
-  public String getValue() {
-    return value;
-  }
+    INVOICEREAD("InvoiceRead"),
 
-  @Override
-  public String toString() {
-    return String.valueOf(value);
-  }
+    INTROSPECTION("Introspection");
 
-  @JsonCreator
-  public static EuEntityPermissionsQueryPermissionType fromValue(String value) {
-    for (EuEntityPermissionsQueryPermissionType b : EuEntityPermissionsQueryPermissionType.values()) {
-      if (b.value.equals(value)) {
-        return b;
-      }
+    private final String value;
+
+    EuEntityPermissionsQueryPermissionType(String value) {
+        this.value = value;
     }
-    throw new IllegalArgumentException("Unexpected value '" + value + "'");
-  }
+
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static EuEntityPermissionsQueryPermissionType fromValue(String value) {
+        for (EuEntityPermissionsQueryPermissionType b : EuEntityPermissionsQueryPermissionType.values()) {
+            if (b.value.equals(value)) {
+                return b;
+            }
+        }
+        throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
 }
 

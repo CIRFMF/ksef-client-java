@@ -1,6 +1,5 @@
 package pl.akmf.ksef.sdk.client.model.invoice;
 
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -9,21 +8,29 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 public enum InvoiceMetadataInvoiceType {
 
-    VAT("Vat"),// Faktura podstawowa
+    VAT("Vat"),
 
-    KOR("Kor"),// Faktura korygująca
+    KOR("Kor"),
 
-    ZAL("Zal"),// Faktura zaliczkowa
+    ZAL("Zal"),
 
-    ROZ("Roz"),// Faktura rozliczeniowa
+    ROZ("Roz"),
 
-    UPR("Upr"),// Faktura uproszczona
+    UPR("Upr"),
 
-    KOR_ZAL("KorZal"),// Korygująca do faktury zaliczkowej
+    KOR_ZAL("KorZal"),
 
-    KOR_ROZ("KorRoz");// Korygująca do faktury rozliczeniowej
+    KOR_ROZ("KorRoz"),
 
-    private String value;
+    VAT_PEF("VatPef"),
+
+    KOR_PEF("KorPef"),
+
+    VAT_RR("VatRr"),
+
+    KOR_VAT_SP("KorVatRr");
+
+    private final String value;
 
     InvoiceMetadataInvoiceType(String value) {
         this.value = value;

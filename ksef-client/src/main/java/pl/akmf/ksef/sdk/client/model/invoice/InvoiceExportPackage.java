@@ -9,6 +9,7 @@ public class InvoiceExportPackage {
     private List<InvoicePackagePart> parts;
     private Boolean isTruncated;
     private OffsetDateTime lastIssueDate;
+    private OffsetDateTime lastInvoicingDate;
     private OffsetDateTime lastPermanentStorageDate;
 
     public InvoiceExportPackage() {
@@ -53,6 +54,14 @@ public class InvoiceExportPackage {
 
     public void setLastIssueDate(OffsetDateTime lastIssueDate) {
         this.lastIssueDate = lastIssueDate;
+    }
+
+    public OffsetDateTime getLastInvoicingDate() {
+        return lastInvoicingDate;
+    }
+
+    public void setLastInvoicingDate(OffsetDateTime lastInvoicingDate) {
+        this.lastInvoicingDate = lastInvoicingDate;
     }
 
     public OffsetDateTime getLastPermanentStorageDate() {

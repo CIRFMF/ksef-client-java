@@ -5,15 +5,21 @@ import java.time.OffsetDateTime;
 public class QueryCertificatesRequest {
     private String certificateSerialNumber;
     private String name;
+    private CertificateType type;
     private CertificateListItemStatus status;
     private OffsetDateTime expiresAfter;
 
     public QueryCertificatesRequest() {
     }
 
-    public QueryCertificatesRequest(String certificateSerialNumber, String name, CertificateListItemStatus status, OffsetDateTime expiresAfter) {
+    public QueryCertificatesRequest(String certificateSerialNumber,
+                                    String name,
+                                    CertificateType type,
+                                    CertificateListItemStatus status,
+                                    OffsetDateTime expiresAfter) {
         this.certificateSerialNumber = certificateSerialNumber;
         this.name = name;
+        this.type = type;
         this.status = status;
         this.expiresAfter = expiresAfter;
     }
@@ -32,6 +38,14 @@ public class QueryCertificatesRequest {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public CertificateType getType() {
+        return type;
+    }
+
+    public void setType(CertificateType type) {
+        this.type = type;
     }
 
     public CertificateListItemStatus getStatus() {

@@ -2,19 +2,22 @@ package pl.akmf.ksef.sdk;
 
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.certificate.SendCertificateEnrollmentRequestBuilder;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
-import pl.akmf.ksef.sdk.client.interfaces.CryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
+import pl.akmf.ksef.sdk.client.model.auth.EncryptionMethod;
 import pl.akmf.ksef.sdk.client.model.certificate.CertificateEnrollmentResponse;
 import pl.akmf.ksef.sdk.client.model.certificate.CertificateEnrollmentStatusResponse;
 import pl.akmf.ksef.sdk.client.model.certificate.CertificateEnrollmentsInfoResponse;
 import pl.akmf.ksef.sdk.client.model.certificate.CertificateListRequest;
 import pl.akmf.ksef.sdk.client.model.certificate.CertificateListResponse;
-import pl.akmf.ksef.sdk.client.model.certificate.CertificateResponse;
 import pl.akmf.ksef.sdk.client.model.certificate.CertificateType;
 import pl.akmf.ksef.sdk.client.model.certificate.CsrResult;
+import pl.akmf.ksef.sdk.client.model.certificate.RetrieveCertificatesListItem;
 import pl.akmf.ksef.sdk.client.model.certificate.SendCertificateEnrollmentRequest;
 import pl.akmf.ksef.sdk.client.model.qrcode.ContextIdentifierType;
 import pl.akmf.ksef.sdk.client.model.session.FileMetadata;
@@ -29,11 +32,15 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
 public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
+
+    @Autowired
+    private DefaultCryptographyService defaultCryptographyService;
 
     /**
      * End-to-end test weryfikujący pełny, zakończony sukcesem przebieg wystawienia kodów QR do faktury w trybie offline (offlineMode = true).
@@ -54,22 +61,33 @@ public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
      * 12. Utworzenie odnośnika (Url) do weryfikacji certyfikatu (KOD II).
      * 13. Utworzenie kodu QR do weryfikacji certyfikatu (KOD II) dla trybu offline.
      */
-    @Test
-    public void qrCodeOfflineE2ETest() throws ApiException, JAXBException, IOException {
-        CryptographyService cryptographyService = new DefaultCryptographyService(createKSeFClient());
+    static Stream<Arguments> inputTestParameters() {
+        return Stream.of(
+                Arguments.of("invoice-template.xml", EncryptionMethod.Rsa),
+                Arguments.of("invoice-template_v3.xml", EncryptionMethod.Rsa),
+                Arguments.of("invoice-template.xml", EncryptionMethod.ECDsa),
+                Arguments.of("invoice-template_v3.xml", EncryptionMethod.ECDsa)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("inputTestParameters")
+    public void qrCodeOfflineE2ETest(String invoiceTemplate, EncryptionMethod encryptionMethod) throws ApiException, JAXBException, IOException {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         //Autoryzacja, pozyskanie tokenu dostępu
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
 
         //Utworzenie Certificate Signing Request (csr) oraz klucz prywatny za pomocą RSA
         CertificateEnrollmentsInfoResponse enrollmentInfo = getEnrolmentInfo(accessToken);
-        CsrResult csr = cryptographyService.generateCsr(enrollmentInfo);
+        CsrResult csr = EncryptionMethod.Rsa.equals(encryptionMethod)
+                ? defaultCryptographyService.generateCsrWithRsa(enrollmentInfo)
+                : defaultCryptographyService.generateCsrWithEcdsa(enrollmentInfo);
 
         // Zapisanie klucza prywatnego (private key) do pamięci tylko na potrzeby testu, w rzeczywistości powinno być bezpiecznie przechowywane
         byte[] privateKey = csr.privateKey();
 
         //Utworzenie i wysłanie żądania wystawienia certyfikatu KSeF
-        String referenceNumber = sendEnrollment(csr, CertificateType.Offline, accessToken);
+        String referenceNumber = sendEnrollment(csr, CertificateType.OFFLINE, accessToken);
 
         //Sprawdzenie statusu żądania, oczekiwanie na zakończenie przetwarzania CSR
         await().atMost(30, SECONDS)
@@ -79,11 +97,11 @@ public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
         CertificateEnrollmentStatusResponse enrolmentStatus = getEnrolmentStatus(referenceNumber, accessToken);
 
         //Pobranie certyfikatu KSeF
-        List<CertificateResponse> certificateList = getCertificateList(enrolmentStatus.getCertificateSerialNumber(), accessToken);
+        List<RetrieveCertificatesListItem> certificateList = getCertificateList(enrolmentStatus.getCertificateSerialNumber(), accessToken);
 
         //Odfiltrowanie i zapisanie właściwego certyfikatu do pamięci, w rzeczywistości powinien być bezpiecznie przechowywany
-        CertificateResponse certificate = certificateList.stream()
-                .filter(c -> CertificateType.Offline.equals(c.getCertificateType()))
+        RetrieveCertificatesListItem certificate = certificateList.stream()
+                .filter(c -> CertificateType.OFFLINE.equals(c.getCertificateType()))
                 .findFirst()
                 .orElseThrow();
 
@@ -92,9 +110,9 @@ public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
         //Przygotowanie faktury FA(2) w formacie XML
         //gotową fakturę należy zapisać, aby wysłać do KSeF później (zgodnie z obowiązującymi przepisami), oznaczoną jako offlineMode = true
         LocalDate invoicingDate = LocalDate.of(2025, 10, 1);
-        byte[] invoice = prepareInvoice(contextNip, invoicingDate, "/xml/invoices/sample/invoice-template.xml");
+        byte[] invoice = prepareInvoice(contextNip, invoicingDate, "/xml/invoices/sample/" + invoiceTemplate);
 
-        FileMetadata invoiceMetadata = cryptographyService.getMetaData(invoice);
+        FileMetadata invoiceMetadata = defaultCryptographyService.getMetaData(invoice);
         //Zapisanie skrótu faktury (hash)
         String invoiceHash = invoiceMetadata.getHashSHA();
 
@@ -121,7 +139,9 @@ public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
                 contextNip,
                 certificate.getCertificateSerialNumber(),
                 invoiceHash,
-                cryptographyService.parsePrivateKeyFromPem(privateKey));
+                EncryptionMethod.Rsa.equals(encryptionMethod)
+                        ? defaultCryptographyService.parseRsaPrivateKeyFromPem(privateKey)
+                        : defaultCryptographyService.parseEcdsaPrivateKeyFromPem(privateKey));
 
         //Utworzenie kodu QR do weryfikacji certyfikatu (KOD II) dla trybu offline
         byte[] qrOfflineCertificate = qrCodeService.generateQrCode(url);
@@ -133,7 +153,7 @@ public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
     }
 
     private CertificateEnrollmentsInfoResponse getEnrolmentInfo(String accessToken) throws ApiException {
-        CertificateEnrollmentsInfoResponse response = createKSeFClient().getCertificateEnrollmentInfo(accessToken);
+        CertificateEnrollmentsInfoResponse response = ksefClient.getCertificateEnrollmentInfo(accessToken);
 
         Assertions.assertNotNull(response);
         Assertions.assertNotNull(response.getOrganizationIdentifier());
@@ -149,7 +169,7 @@ public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
                 .withCertificateType(certificateType)
                 .build();
 
-        CertificateEnrollmentResponse response = createKSeFClient().sendCertificateEnrollment(request, accessToken);
+        CertificateEnrollmentResponse response = ksefClient.sendCertificateEnrollment(request, accessToken);
         Assertions.assertNotNull(response);
 
         return response.getReferenceNumber();
@@ -158,25 +178,25 @@ public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
     private Boolean isEnrolmentStatusReady(String referenceNumber, String accessToken) {
         try {
             CertificateEnrollmentStatusResponse response =
-                    createKSeFClient().getCertificateEnrollmentStatus(referenceNumber, accessToken);
+                    ksefClient.getCertificateEnrollmentStatus(referenceNumber, accessToken);
             return response != null &&
-                    response.getStatus().getCode() == 200;
+                   response.getStatus().getCode() == 200;
         } catch (Exception e) {
             return false;
         }
     }
 
     private CertificateEnrollmentStatusResponse getEnrolmentStatus(String referenceNumber, String accessToken) throws ApiException {
-        CertificateEnrollmentStatusResponse response = createKSeFClient().getCertificateEnrollmentStatus(referenceNumber, accessToken);
+        CertificateEnrollmentStatusResponse response = ksefClient.getCertificateEnrollmentStatus(referenceNumber, accessToken);
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(200, response.getStatus().getCode());
         return response;
     }
 
-    private List<CertificateResponse> getCertificateList(String certificateSerialNumber, String accessToken) throws ApiException {
+    private List<RetrieveCertificatesListItem> getCertificateList(String certificateSerialNumber, String accessToken) throws ApiException {
         CertificateListResponse certificateResponse =
-                createKSeFClient().getCertificateList(new CertificateListRequest(List.of(certificateSerialNumber)), accessToken);
+                ksefClient.getCertificateList(new CertificateListRequest(List.of(certificateSerialNumber)), accessToken);
 
         Assertions.assertNotNull(certificateResponse);
         Assertions.assertNotNull(certificateResponse.getCertificates());

@@ -4,6 +4,7 @@
 POST http://localhost:8082/permissions/query/persons/grants?pageOffset=0&pageSize=5
 Accept: application/json
 Content-Type: application/json
+Authorization: {{token}}
 
 {
   "authorIdentifier": {
@@ -26,9 +27,10 @@ Content-Type: application/json
 
 ### Pobranie listy uprawnień administratora podmiotu podrzędnego
 
-POST http://localhost:8082/permissions/query/subunits/grants?pageOffset=0&pageSize=5
+POST http://localhost:8082/permissions/query/subunits/grants?pageOffset=0&pageSize=10
 Accept: application/json
 Content-Type: application/json
+Authorization: {{token}}
 
 {
   "subunitIdentifier": {
@@ -39,14 +41,16 @@ Content-Type: application/json
 
 ### Pobranie listy uprawnień do obsługi faktur nadanych podmiotom
 
-GET http://localhost:8082/permissions/query/entities/roles?pageOffset=0&pageSize=5
+GET http://localhost:8082/permissions/query/entities/roles?pageOffset=0&pageSize=10
 Accept: application/json
+Authorization: {{token}}
 
 ### Pobranie listy uprawnień o charakterze upoważnień nadanych podmiotom
 
-POST http://localhost:8082/permissions/query/authorizations/grants?pageOffset=0&pageSize=5
+POST http://localhost:8082/permissions/query/authorizations/grants?pageOffset=0&pageSize=10
 Accept: application/json
 Content-Type: application/json
+Authorization: {{token}}
 
 {
   "authorizingIdentifier": {
@@ -66,9 +70,10 @@ Content-Type: application/json
 
 ### Pobranie listy uprawnień nadanych podmiotom unijnym
 
-POST http://localhost:8082/permissions/query/eu-entities/grants?pageOffset=0&pageSize=5
+POST http://localhost:8082/permissions/query/eu-entities/grants?pageOffset=0&pageSize=10
 Accept: application/json
 Content-Type: application/json
+Authorization: {{token}}
 
 {
   "vatUeIdentifier": "string",

@@ -2,11 +2,10 @@ package pl.akmf.ksef.sdk.api.builders.invoices;
 
 import pl.akmf.ksef.sdk.client.model.invoice.CurrencyCode;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceMetadataInvoiceType;
-import pl.akmf.ksef.sdk.client.model.invoice.InvoiceMetadataSchema;
+import pl.akmf.ksef.sdk.client.model.invoice.InvoiceFormType;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceQueryAmount;
-import pl.akmf.ksef.sdk.client.model.invoice.InvoiceQueryBuyer;
+import pl.akmf.ksef.sdk.client.model.invoice.InvoiceBuyerIdentifier;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceQueryDateRange;
-import pl.akmf.ksef.sdk.client.model.invoice.InvoiceQuerySeller;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceQuerySubjectType;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportFilters;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoicingMode;
@@ -19,12 +18,12 @@ public class InvoicesAsyncQueryFiltersBuilder {
     private String ksefNumber;
     private String invoiceNumber;
     private InvoiceQueryAmount amount;
-    private InvoiceQuerySeller seller;
-    private InvoiceQueryBuyer buyer;
+    private String sellerNip;
+    private InvoiceBuyerIdentifier buyer;
     private List<CurrencyCode> currencyCodes;
     private InvoicingMode invoicingMode;
     private Boolean isSelfInvoicing;
-    private InvoiceMetadataSchema formType;
+    private InvoiceFormType formType;
     private List<InvoiceMetadataInvoiceType> invoiceTypes;
     private Boolean hasAttachment;
 
@@ -53,12 +52,12 @@ public class InvoicesAsyncQueryFiltersBuilder {
         return this;
     }
 
-    public InvoicesAsyncQueryFiltersBuilder withSeller(InvoiceQuerySeller seller) {
-        this.seller = seller;
+    public InvoicesAsyncQueryFiltersBuilder withSellerNip(String sellerNip) {
+        this.sellerNip = sellerNip;
         return this;
     }
 
-    public InvoicesAsyncQueryFiltersBuilder withBuyer(InvoiceQueryBuyer buyer) {
+    public InvoicesAsyncQueryFiltersBuilder withBuyer(InvoiceBuyerIdentifier buyer) {
         this.buyer = buyer;
         return this;
     }
@@ -78,7 +77,7 @@ public class InvoicesAsyncQueryFiltersBuilder {
         return this;
     }
 
-    public InvoicesAsyncQueryFiltersBuilder withFormType(InvoiceMetadataSchema formType) {
+    public InvoicesAsyncQueryFiltersBuilder withFormType(InvoiceFormType formType) {
         this.formType = formType;
         return this;
     }
@@ -100,8 +99,8 @@ public class InvoicesAsyncQueryFiltersBuilder {
         request.setKsefNumber(ksefNumber);
         request.setInvoiceNumber(invoiceNumber);
         request.setAmount(amount);
-        request.setSeller(seller);
-        request.setBuyer(buyer);
+        request.setSellerNip(sellerNip);
+        request.setBuyerIdentifier(buyer);
         request.setCurrencyCodes(currencyCodes);
         request.setInvoicingMode(invoicingMode);
         request.setIsSelfInvoicing(isSelfInvoicing);

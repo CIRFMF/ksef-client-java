@@ -2,13 +2,13 @@ package pl.akmf.ksef.sdk.client.model.session;
 
 public class FormCode {
     private SystemCode systemCode;
-    private String schemaVersion;
-    private String value;
+    private SchemaVersion schemaVersion;
+    private SessionValue value;
 
     public FormCode() {
     }
 
-    public FormCode(SystemCode systemCode, String schemaVersion, String value) {
+    public FormCode(SystemCode systemCode, SchemaVersion schemaVersion, SessionValue value) {
         this.systemCode = systemCode;
         this.schemaVersion = schemaVersion;
         this.value = value;
@@ -22,19 +22,19 @@ public class FormCode {
         this.systemCode = systemCode;
     }
 
-    public String getSchemaVersion() {
+    public SchemaVersion getSchemaVersion() {
         return schemaVersion;
     }
 
-    public void setSchemaVersion(String schemaVersion) {
+    public void setSchemaVersion(SchemaVersion schemaVersion) {
         this.schemaVersion = schemaVersion;
     }
 
-    public String getValue() {
+    public SessionValue getValue() {
         return value;
     }
 
-    public void setValue(String value) {
+    public void setValue(SessionValue value) {
         this.value = value;
     }
 }

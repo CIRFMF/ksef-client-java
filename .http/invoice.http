@@ -2,6 +2,7 @@
 POST http://localhost:8082/send-invoice/{{sessionReferenceNumber}}/{{contextIdentifier}}
 Accept: application/json
 Content-Type: application/json
+Authorization: {{token}}
 
 > {%
     client.global.set("invoiceReferenceNumber", response.body.referenceNumber);
@@ -14,6 +15,7 @@ Content-Type: application/json
 ###  check session invoice
 GET http://localhost:8082/session/session-documents?referenceNumber={{sessionReferenceNumber}}
 Accept: application/json
+Authorization: {{token}}
 
 > {%
     client.global.set("ksefNumber", response.body.invoices[0].ksefNumber);
@@ -24,4 +26,5 @@ Accept: application/json
 ###  download invoice by ksefNumber
 GET http://localhost:8082/invoices/ksef/{{ksefNumber}}
 Accept: application/json
+Authorization: {{token}}
 

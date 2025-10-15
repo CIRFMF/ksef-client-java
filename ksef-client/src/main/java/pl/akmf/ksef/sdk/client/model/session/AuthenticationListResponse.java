@@ -5,26 +5,26 @@ import java.util.List;
 
 
 public class AuthenticationListResponse {
-  private String continuationToken;
-  private List<AuthenticationListItem> items = new ArrayList<>();
+    private String continuationToken;
+    private List<AuthenticationListItem> items = new ArrayList<>();
 
-  public AuthenticationListResponse() { 
-  }
+    public AuthenticationListResponse() {
+    }
 
-  public String getContinuationToken() {
-    return continuationToken;
-  }
+    public String getContinuationToken() {
+        return continuationToken;
+    }
 
-  public void setContinuationToken(String continuationToken) {
-    this.continuationToken = continuationToken;
-  }
+    public void setContinuationToken(String continuationToken) {
+        this.continuationToken = continuationToken;
+    }
 
-  public List<AuthenticationListItem> getItems() {
-    return items;
-  }
+    public List<AuthenticationListItem> getItems() {
+        return items;
+    }
 
-  public void setItems(List<AuthenticationListItem> items) {
-    this.items = items;
-  }
+    public void setItems(List<AuthenticationListItem> items) {
+        this.items = items;
+    }
 }
 

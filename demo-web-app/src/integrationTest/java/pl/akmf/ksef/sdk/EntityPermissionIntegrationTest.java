@@ -12,7 +12,6 @@ import pl.akmf.ksef.sdk.client.model.permission.entity.EntityPermission;
 import pl.akmf.ksef.sdk.client.model.permission.entity.EntityPermissionType;
 import pl.akmf.ksef.sdk.client.model.permission.entity.GrantEntityPermissionsRequest;
 import pl.akmf.ksef.sdk.client.model.permission.entity.SubjectIdentifier;
-import pl.akmf.ksef.sdk.client.model.permission.entity.SubjectIdentifierType;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermission;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermissionQueryType;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermissionsQueryRequest;
@@ -56,13 +55,13 @@ class EntityPermissionIntegrationTest extends BaseIntegrationTest {
     }
 
     private Boolean isOperationFinish(String referenceNumber, String accessToken) throws ApiException {
-        PermissionStatusInfo operations = createKSeFClient().permissionOperationStatus(referenceNumber, accessToken);
+        PermissionStatusInfo operations = ksefClient.permissionOperationStatus(referenceNumber, accessToken);
         return operations != null && operations.getStatus().getCode() == 200;
     }
 
     private String revokePermission(String operationId, String accessToken) {
         try {
-            return createKSeFClient().revokeCommonPermission(operationId, accessToken).getOperationReferenceNumber();
+            return ksefClient.revokeCommonPermission(operationId, accessToken).getReferenceNumber();
         } catch (ApiException e) {
             Assertions.fail(e.getMessage());
         }
@@ -74,7 +73,7 @@ class EntityPermissionIntegrationTest extends BaseIntegrationTest {
                 .withQueryType(PersonPermissionQueryType.PERMISSION_GRANTED_IN_CURRENT_CONTEXT)
                 .build();
 
-        QueryPersonPermissionsResponse response = createKSeFClient().searchGrantedPersonPermissions(request, 0, 10, accessToken);
+        QueryPersonPermissionsResponse response = ksefClient.searchGrantedPersonPermissions(request, 0, 10, accessToken);
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(expectedRolesAmount, response.getPermissions().size());
@@ -88,15 +87,15 @@ class EntityPermissionIntegrationTest extends BaseIntegrationTest {
     private String grantPermission(String targetNip, String accessToken) throws ApiException {
         GrantEntityPermissionsRequest request = new GrantEntityPermissionsRequestBuilder()
                 .withPermissions(List.of(
-                        new EntityPermission(EntityPermissionType.INVOICEREAD, true),
-                        new EntityPermission(EntityPermissionType.INVOICEWRITE, false)))
+                        new EntityPermission(EntityPermissionType.INVOICE_READ, true),
+                        new EntityPermission(EntityPermissionType.INVOICE_WRITE, false)))
                 .withDescription(DESCRIPTION)
-                .withSubjectIdentifier(new SubjectIdentifier(SubjectIdentifierType.NIP, targetNip))
+                .withSubjectIdentifier(new SubjectIdentifier(SubjectIdentifier.IdentifierType.NIP, targetNip))
                 .build();
 
-        OperationResponse response = createKSeFClient().grantsPermissionEntity(request, accessToken);
+        OperationResponse response = ksefClient.grantsPermissionEntity(request, accessToken);
         Assertions.assertNotNull(response);
 
-        return response.getOperationReferenceNumber();
+        return response.getReferenceNumber();
     }
 }

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum EuEntityPermissionType {
   
-  INVOICEWRITE("InvoiceWrite"),
-  INVOICEREAD("InvoiceRead");
+  INVOICE_WRITE("InvoiceWrite"),
+  INVOICE_READ("InvoiceRead");
 
   private final String value;
 

@@ -4,6 +4,7 @@
 POST http://localhost:8082/batch/open-session/1111111111?numberOfParts=11&maxPartSizeMB=0.01
 Accept: application/json
 Content-Type: application/json
+Authorization: {{token}}
 
 > {%
     const body = response.body;
@@ -22,11 +23,13 @@ Content-Type: application/json
 POST http://localhost:8082/batch/close-session?referenceNumber={{sessionReferenceNumber}}
 Accept: application/json
 Content-Type: application/json
+Authorization: {{token}}
 
 ######### SessionController
 ###  check session invoice
 GET http://localhost:8082/session/status?referenceNumber={{sessionReferenceNumber}}
 Accept: application/json
+Authorization: {{token}}
 
 > {%
     client.global.set("upoReferenceNumber", response.body.upo.pages[0].referenceNumber);

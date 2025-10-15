@@ -3,8 +3,7 @@ package pl.akmf.ksef.sdk.client.model.permission.search;
 import java.time.OffsetDateTime;
 
 public class SubordinateEntityRole {
-    private String subordinateEntityIdentifier;
-    private SubordinateRoleSubordinateEntityIdentifierType subordinateEntityIdentifierType;
+    private EntityRoleQueryParentEntityIdentifier subordinateEntityIdentifier;
     private SubordinateEntityRoleType role;
     private String description;
     private OffsetDateTime startDate;
@@ -12,28 +11,12 @@ public class SubordinateEntityRole {
     public SubordinateEntityRole() {
     }
 
-    public SubordinateEntityRole(String subordinateEntityIdentifier, SubordinateRoleSubordinateEntityIdentifierType subordinateEntityIdentifierType, SubordinateEntityRoleType role, String description, OffsetDateTime startDate) {
-        this.subordinateEntityIdentifier = subordinateEntityIdentifier;
-        this.subordinateEntityIdentifierType = subordinateEntityIdentifierType;
-        this.role = role;
-        this.description = description;
-        this.startDate = startDate;
-    }
-
-    public String getSubordinateEntityIdentifier() {
+    public EntityRoleQueryParentEntityIdentifier getSubordinateEntityIdentifier() {
         return subordinateEntityIdentifier;
     }
 
-    public void setSubordinateEntityIdentifier(String subordinateEntityIdentifier) {
+    public void setSubordinateEntityIdentifier(EntityRoleQueryParentEntityIdentifier subordinateEntityIdentifier) {
         this.subordinateEntityIdentifier = subordinateEntityIdentifier;
-    }
-
-    public SubordinateRoleSubordinateEntityIdentifierType getSubordinateEntityIdentifierType() {
-        return subordinateEntityIdentifierType;
-    }
-
-    public void setSubordinateEntityIdentifierType(SubordinateRoleSubordinateEntityIdentifierType subordinateEntityIdentifierType) {
-        this.subordinateEntityIdentifierType = subordinateEntityIdentifierType;
     }
 
     public SubordinateEntityRoleType getRole() {

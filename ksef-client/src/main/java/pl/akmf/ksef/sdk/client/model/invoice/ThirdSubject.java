@@ -1,16 +1,13 @@
 package pl.akmf.ksef.sdk.client.model.invoice;
 
 public class ThirdSubject {
-    private IdentifierType identifierType;
-    private String identifier;
+    private ThirdSubjectIdentifier identifier;
     private String name;
     private int role;
 
-    public ThirdSubject(final IdentifierType identifierType,
-                        final String identifier,
+    public ThirdSubject(final ThirdSubjectIdentifier identifier,
                         final String name,
                         final int role) {
-        this.identifierType = identifierType;
         this.identifier = identifier;
         this.name = name;
         this.role = role;
@@ -20,19 +17,11 @@ public class ThirdSubject {
 
     }
 
-    public IdentifierType getIdentifierType() {
-        return identifierType;
-    }
-
-    public void setIdentifierType(final IdentifierType identifierType) {
-        this.identifierType = identifierType;
-    }
-
-    public String getIdentifier() {
+    public ThirdSubjectIdentifier getIdentifier() {
         return identifier;
     }
 
-    public void setIdentifier(final String identifier) {
+    public void setIdentifier(final ThirdSubjectIdentifier identifier) {
         this.identifier = identifier;
     }
 

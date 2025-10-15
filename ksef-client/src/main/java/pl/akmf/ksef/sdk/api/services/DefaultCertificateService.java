@@ -32,25 +32,27 @@ public class DefaultCertificateService implements CertificateService {
     private static final String SHA_256 = "SHA-256";
 
     @Override
-    public String getSha256Fingerprint(X509Certificate certificate) throws CertificateEncodingException, NoSuchAlgorithmException {
-        byte[] raw = certificate.getEncoded();
+    public String getSha256Fingerprint(X509Certificate certificate){
+        try {
+            byte[] raw = certificate.getEncoded();
+            MessageDigest sha256 = MessageDigest.getInstance(SHA_256);
+            byte[] sha256Bytes = sha256.digest(raw);
 
-        MessageDigest sha256 = MessageDigest.getInstance(SHA_256);
-        byte[] sha256Bytes = sha256.digest(raw);
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : sha256Bytes) {
+                String hex = String.format("%02X", b);
+                hexString.append(hex);
+            }
 
-        StringBuilder hexString = new StringBuilder();
-        for (byte b : sha256Bytes) {
-            String hex = String.format("%02X", b);
-            hexString.append(hex);
+            return hexString.toString();
+        } catch (CertificateEncodingException | NoSuchAlgorithmException e) {
+            throw new SystemKSeFSDKException(e.getMessage(), e);
         }
-
-        return hexString.toString();
     }
 
     @Override
-    public SelfSignedCertificate getPersonalCertificate(String givenName, String surname, String serialNumberPrefix,
-                                                        String serialNumber, String commonName) {
-        X500Name x500Name = new CertificateBuilders()
+    public SelfSignedCertificate getPersonalCertificate(String givenName, String surname, String serialNumberPrefix, String serialNumber, String commonName) {
+        CertificateBuilders.X500NameHolder x500Name = new CertificateBuilders()
                 .buildForPerson(givenName, surname, serialNumberPrefix + "-" + serialNumber, commonName, "PL");
 
         return generateSelfSignedCertificateRsa(x500Name);
@@ -58,25 +60,28 @@ public class DefaultCertificateService implements CertificateService {
 
     @Override
     public SelfSignedCertificate getCompanySeal(String organizationName, String organizationIdentifier, String commonName) {
-        X500Name x500Name = new CertificateBuilders()
+        CertificateBuilders.X500NameHolder x500Name = new CertificateBuilders()
                 .buildForOrganization(organizationName, organizationIdentifier, commonName, "PL");
 
         return generateSelfSignedCertificateRsa(x500Name);
     }
 
     @Override
-    public SelfSignedCertificate generateSelfSignedCertificateRsa(X500Name x500Name) {
+    public SelfSignedCertificate generateSelfSignedCertificateRsa(CertificateBuilders.X500NameHolder x500Name) {
 
-        return generateSelfSignedCertificate(RSA, 2048, SHA_256_WITH_RSA, x500Name);
+        return generateSelfSignedCertificate(RSA, 2048, SHA_256_WITH_RSA, x500Name.getX500Name());
     }
 
     @Override
-    public SelfSignedCertificate generateSelfSignedCertificateEcdsa(X500Name x500Name) {
+    public SelfSignedCertificate generateSelfSignedCertificateEcdsa(CertificateBuilders.X500NameHolder x500Name) {
 
-        return generateSelfSignedCertificate(EC, 256, SHA_256_WITH_ECDSA, x500Name);
+        return generateSelfSignedCertificate(EC, 256, SHA_256_WITH_ECDSA, x500Name.getX500Name());
     }
 
-    private SelfSignedCertificate generateSelfSignedCertificate(String generatorAlgorithm, int generatorKeySize, String signatureAlgorithm, X500Name x500Name) {
+    private SelfSignedCertificate generateSelfSignedCertificate(String generatorAlgorithm,
+                                                                int generatorKeySize,
+                                                                String signatureAlgorithm,
+                                                                X500Name x500Name) {
         try {
             Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 

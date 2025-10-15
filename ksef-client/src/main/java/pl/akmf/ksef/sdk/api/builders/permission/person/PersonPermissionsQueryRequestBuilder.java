@@ -5,6 +5,7 @@ import pl.akmf.ksef.sdk.client.model.permission.search.PermissionState;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermissionQueryType;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermissionsAuthorIdentifier;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermissionsAuthorizedIdentifier;
+import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermissionsContextIdentifier;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermissionsQueryRequest;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermissionsTargetIdentifier;
 
@@ -14,6 +15,7 @@ public class PersonPermissionsQueryRequestBuilder {
     private PersonPermissionsAuthorIdentifier authorIdentifier;
     private PersonPermissionsAuthorizedIdentifier authorizedIdentifier;
     private PersonPermissionsTargetIdentifier targetIdentifier;
+    private PersonPermissionsContextIdentifier contextIdentifier;
     private List<PersonPermissionType> permissionTypes;
     private PermissionState permissionState;
     private PersonPermissionQueryType queryType;
@@ -33,6 +35,11 @@ public class PersonPermissionsQueryRequestBuilder {
         return this;
     }
 
+    public PersonPermissionsQueryRequestBuilder withContextIdentifier(PersonPermissionsContextIdentifier contextIdentifier) {
+        this.contextIdentifier = contextIdentifier;
+        return this;
+    }
+
     public PersonPermissionsQueryRequestBuilder withPermissionTypes(List<PersonPermissionType> permissionTypes) {
         this.permissionTypes = permissionTypes;
         return this;
@@ -49,6 +56,6 @@ public class PersonPermissionsQueryRequestBuilder {
     }
 
     public PersonPermissionsQueryRequest build() {
-        return new PersonPermissionsQueryRequest(authorIdentifier, authorizedIdentifier, targetIdentifier, permissionTypes, permissionState, queryType);
+        return new PersonPermissionsQueryRequest(authorIdentifier, authorizedIdentifier, targetIdentifier, contextIdentifier, permissionTypes, permissionState, queryType);
     }
 }

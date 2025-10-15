@@ -2,6 +2,8 @@ package pl.akmf.ksef.sdk.api.builders.batch;
 
 import pl.akmf.ksef.sdk.client.model.session.EncryptionInfo;
 import pl.akmf.ksef.sdk.client.model.session.FormCode;
+import pl.akmf.ksef.sdk.client.model.session.SchemaVersion;
+import pl.akmf.ksef.sdk.client.model.session.SessionValue;
 import pl.akmf.ksef.sdk.client.model.session.SystemCode;
 import pl.akmf.ksef.sdk.client.model.session.batch.BatchFileInfo;
 import pl.akmf.ksef.sdk.client.model.session.batch.BatchFilePartInfo;
@@ -27,8 +29,8 @@ public class OpenBatchSessionRequestBuilder {
         return new OpenBatchSessionRequestBuilder();
     }
 
-    public OpenBatchSessionRequestBuilder withFormCode(SystemCode systemCode, String schemaVersion, String value) {
-        if (Objects.isNull(systemCode) || isNullOrBlank(schemaVersion) || isNullOrBlank(value)) {
+    public OpenBatchSessionRequestBuilder withFormCode(SystemCode systemCode, SchemaVersion schemaVersion, SessionValue value) {
+        if (Objects.isNull(systemCode) || Objects.isNull(schemaVersion) || Objects.isNull(value)) {
             throw new IllegalArgumentException("FormCode parameters cannot be null or empty.");
         }
 

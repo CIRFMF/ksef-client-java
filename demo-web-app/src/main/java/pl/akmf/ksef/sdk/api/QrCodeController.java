@@ -10,17 +10,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
-import pl.akmf.ksef.sdk.client.interfaces.KSeFClient;
 import pl.akmf.ksef.sdk.client.interfaces.QrCodeService;
 import pl.akmf.ksef.sdk.client.interfaces.VerificationLinkService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.qrcode.ContextIdentifierType;
 import pl.akmf.ksef.sdk.client.model.qrcode.QrCodeResult;
-import pl.akmf.ksef.sdk.util.ExampleApiProperties;
-import pl.akmf.ksef.sdk.util.HttpClientBuilder;
 
-import java.io.IOException;
-import java.net.http.HttpClient;
 import java.security.PrivateKey;
 import java.time.LocalDate;
 import java.util.Base64;
@@ -31,8 +26,8 @@ import java.util.Base64;
 public class QrCodeController {
     private final VerificationLinkService linkSvc;
     private final QrCodeService qrSvc;
-    private final ExampleApiProperties exampleApiProperties;
-
+    private final DefaultKsefClient ksefClient;
+    private final DefaultCryptographyService defaultCryptographyService;
 
     // 1. Faktura z numerem KSeF (online)
     @GetMapping("/invoice/ksef")
@@ -72,7 +67,7 @@ public class QrCodeController {
             @RequestParam String certSerial,
             @RequestParam String invoiceHash,
             @RequestBody String privateKeyPemBase64
-    ) throws IOException, ApiException {
+    ) throws ApiException {
         PrivateKey privateKey = parsePrivateKeyFromBase64(privateKeyPemBase64);
 
         String url = linkSvc.buildCertificateVerificationUrl(sellerNip, contextIdentifierType, contextIdentifierValue, certSerial, invoiceHash, privateKey);
@@ -82,13 +77,9 @@ public class QrCodeController {
         return new QrCodeResult(url, Base64.getEncoder().encodeToString(labeledQr));
     }
 
-    private PrivateKey parsePrivateKeyFromBase64(String base64) throws ApiException, IOException {
+    private PrivateKey parsePrivateKeyFromBase64(String base64) {
         String pem = base64.replaceAll("\\s+", "");
         byte[] keyBytes = Base64.getDecoder().decode(pem);
-        try (HttpClient apiClient = HttpClientBuilder.createHttpBuilder().build()) {
-            KSeFClient ksefClient = new DefaultKsefClient(apiClient, exampleApiProperties);
-
-            return new DefaultCryptographyService(ksefClient).parsePrivateKeyFromPem(keyBytes);
-        }
+        return defaultCryptographyService.parseRsaPrivateKeyFromPem(keyBytes);
     }
 }

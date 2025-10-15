@@ -8,12 +8,12 @@ public class InvoiceExportFilters {
     private String ksefNumber;
     private String invoiceNumber;
     private InvoiceQueryAmount amount;
-    private InvoiceQuerySeller seller;
-    private InvoiceQueryBuyer buyer;
+    private String sellerNip;
+    private InvoiceBuyerIdentifier buyerIdentifier;
     private List<CurrencyCode> currencyCodes;
     private InvoicingMode invoicingMode;
     private Boolean isSelfInvoicing;
-    private InvoiceMetadataSchema formType;
+    private InvoiceFormType formType;
     private List<InvoiceMetadataInvoiceType> invoiceTypes;
     private Boolean hasAttachment;
 
@@ -61,20 +61,20 @@ public class InvoiceExportFilters {
         this.amount = amount;
     }
 
-    public InvoiceQuerySeller getSeller() {
-        return seller;
+    public String getSellerNip() {
+        return sellerNip;
     }
 
-    public void setSeller(InvoiceQuerySeller seller) {
-        this.seller = seller;
+    public void setSellerNip(String sellerNip) {
+        this.sellerNip = sellerNip;
     }
 
-    public InvoiceQueryBuyer getBuyer() {
-        return buyer;
+    public InvoiceBuyerIdentifier getBuyerIdentifier() {
+        return buyerIdentifier;
     }
 
-    public void setBuyer(InvoiceQueryBuyer buyer) {
-        this.buyer = buyer;
+    public void setBuyerIdentifier(InvoiceBuyerIdentifier buyerIdentifier) {
+        this.buyerIdentifier = buyerIdentifier;
     }
 
     public List<CurrencyCode> getCurrencyCodes() {
@@ -101,11 +101,11 @@ public class InvoiceExportFilters {
         this.isSelfInvoicing = isSelfInvoicing;
     }
 
-    public InvoiceMetadataSchema getFormType() {
+    public InvoiceFormType getFormType() {
         return formType;
     }
 
-    public void setFormType(InvoiceMetadataSchema formType) {
+    public void setFormType(InvoiceFormType formType) {
         this.formType = formType;
     }
 

@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum EntityPermissionType {
   
-  INVOICEWRITE("InvoiceWrite"),
+  INVOICE_WRITE("InvoiceWrite"),
 
-  INVOICEREAD("InvoiceRead");
+  INVOICE_READ("InvoiceRead");
 
   private final String value;
 

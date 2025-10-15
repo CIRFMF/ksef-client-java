@@ -1,36 +1,22 @@
 package pl.akmf.ksef.sdk.client.model.permission.search;
 
+import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionType;
+
 import java.time.OffsetDateTime;
 
 public class PersonPermission {
     private String id;
-    private String authorizedIdentifier;
-    private PersonPermissionsAuthorizedIdentifierType authorizedIdentifierType;
-    private String targetIdentifier;
-    private PersonPermissionsTargetIdentifierType targetIdentifierType;
-    private String authorIdentifier;
-    private PersonPermissionsAuthorIdentifierType authorIdentifierType;
-    private PersonPermissionScope permissionScope;
+    private PersonPermissionsAuthorizedIdentifier authorizedIdentifier;
+    private PersonPermissionsContextIdentifier contextIdentifier;
+    private PersonPermissionsTargetIdentifier targetIdentifier;
+    private PersonPermissionsAuthorIdentifier authorIdentifier;
+    private PersonPermissionType permissionScope;
     private String description;
     private PermissionState permissionState;
     private OffsetDateTime startDate;
     private boolean canDelegate;
 
     public PersonPermission() {
-    }
-
-    public PersonPermission(String id, String authorizedIdentifier, PersonPermissionsAuthorizedIdentifierType authorizedIdentifierType, String targetIdentifier, PersonPermissionsTargetIdentifierType targetIdentifierType, String authorIdentifier, PersonPermissionsAuthorIdentifierType authorIdentifierType, PersonPermissionScope permissionScope, String description, PermissionState permissionState, OffsetDateTime startDate) {
-        this.id = id;
-        this.authorizedIdentifier = authorizedIdentifier;
-        this.authorizedIdentifierType = authorizedIdentifierType;
-        this.targetIdentifier = targetIdentifier;
-        this.targetIdentifierType = targetIdentifierType;
-        this.authorIdentifier = authorIdentifier;
-        this.authorIdentifierType = authorIdentifierType;
-        this.permissionScope = permissionScope;
-        this.description = description;
-        this.permissionState = permissionState;
-        this.startDate = startDate;
     }
 
     public String getId() {
@@ -41,59 +27,43 @@ public class PersonPermission {
         this.id = id;
     }
 
-    public String getAuthorizedIdentifier() {
+    public PersonPermissionsAuthorizedIdentifier getAuthorizedIdentifier() {
         return authorizedIdentifier;
     }
 
-    public void setAuthorizedIdentifier(String authorizedIdentifier) {
+    public void setAuthorizedIdentifier(PersonPermissionsAuthorizedIdentifier authorizedIdentifier) {
         this.authorizedIdentifier = authorizedIdentifier;
     }
 
-    public PersonPermissionsAuthorizedIdentifierType getAuthorizedIdentifierType() {
-        return authorizedIdentifierType;
+    public PersonPermissionsContextIdentifier getContextIdentifier() {
+        return contextIdentifier;
     }
 
-    public void setAuthorizedIdentifierType(PersonPermissionsAuthorizedIdentifierType authorizedIdentifierType) {
-        this.authorizedIdentifierType = authorizedIdentifierType;
+    public void setContextIdentifier(PersonPermissionsContextIdentifier contextIdentifier) {
+        this.contextIdentifier = contextIdentifier;
     }
 
-    public String getTargetIdentifier() {
+    public PersonPermissionsTargetIdentifier getTargetIdentifier() {
         return targetIdentifier;
     }
 
-    public void setTargetIdentifier(String targetIdentifier) {
+    public void setTargetIdentifier(PersonPermissionsTargetIdentifier targetIdentifier) {
         this.targetIdentifier = targetIdentifier;
     }
 
-    public PersonPermissionsTargetIdentifierType getTargetIdentifierType() {
-        return targetIdentifierType;
-    }
-
-    public void setTargetIdentifierType(PersonPermissionsTargetIdentifierType targetIdentifierType) {
-        this.targetIdentifierType = targetIdentifierType;
-    }
-
-    public String getAuthorIdentifier() {
+    public PersonPermissionsAuthorIdentifier getAuthorIdentifier() {
         return authorIdentifier;
     }
 
-    public void setAuthorIdentifier(String authorIdentifier) {
+    public void setAuthorIdentifier(PersonPermissionsAuthorIdentifier authorIdentifier) {
         this.authorIdentifier = authorIdentifier;
     }
 
-    public PersonPermissionsAuthorIdentifierType getAuthorIdentifierType() {
-        return authorIdentifierType;
-    }
-
-    public void setAuthorIdentifierType(PersonPermissionsAuthorIdentifierType authorIdentifierType) {
-        this.authorIdentifierType = authorIdentifierType;
-    }
-
-    public PersonPermissionScope getPermissionScope() {
+    public PersonPermissionType getPermissionScope() {
         return permissionScope;
     }
 
-    public void setPermissionScope(PersonPermissionScope permissionScope) {
+    public void setPermissionScope(PersonPermissionType permissionScope) {
         this.permissionScope = permissionScope;
     }
 

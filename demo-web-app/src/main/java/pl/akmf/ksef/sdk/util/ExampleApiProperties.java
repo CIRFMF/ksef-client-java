@@ -21,8 +21,7 @@ public class ExampleApiProperties extends KsefApiProperties {
 
     @Override
     public Map<String, String> getDefaultHeaders() {
-        Map<String, String> headers = new HashMap<>();
 
-        return headers;
+        return new HashMap<>();
     }
 }

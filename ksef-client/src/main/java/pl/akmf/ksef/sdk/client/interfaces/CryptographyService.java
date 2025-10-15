@@ -9,7 +9,6 @@ import pl.akmf.ksef.sdk.system.SystemKSeFSDKException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.InvalidAlgorithmParameterException;
@@ -17,7 +16,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.cert.CertificateException;
 import java.time.Instant;
 
 public interface CryptographyService {
@@ -27,7 +25,7 @@ public interface CryptographyService {
      * @return
      * @throws SystemKSeFSDKException
      */
-    EncryptionData getEncryptionData() throws SystemKSeFSDKException, CertificateException, IOException;
+    EncryptionData getEncryptionData() throws SystemKSeFSDKException;
 
     /**
      * Zwraca zaszyfrowany token KSeF przy użyciu algorytmu RSA z publicznym kluczem.
@@ -37,7 +35,7 @@ public interface CryptographyService {
      * @return
      * @throws SystemKSeFSDKException
      */
-    byte[] encryptKsefTokenWithRSAUsingPublicKey(String ksefToken, Instant challengeTimestamp) throws SystemKSeFSDKException, CertificateException, IOException;
+    byte[] encryptKsefTokenWithRSAUsingPublicKey(String ksefToken, Instant challengeTimestamp) throws SystemKSeFSDKException;
 
     /**
      * Zwraca zaszyfrowany token KSeF przy użyciu algorytmu ECIes z publicznym kluczem.
@@ -52,7 +50,7 @@ public interface CryptographyService {
      * @throws IllegalBlockSizeException
      * @throws BadPaddingException
      */
-    byte[] encryptKsefTokenWithECDsaUsingPublicKey(String ksefToken, Instant challengeTimestamp) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, CertificateException, IOException;
+    byte[] encryptKsefTokenWithECDsaUsingPublicKey(String ksefToken, Instant challengeTimestamp) throws SystemKSeFSDKException;
 
     /**
      * Zwraca zaszyfrowany content przy użyciu algorytmu RSA z publicznym kluczem.
@@ -61,7 +59,7 @@ public interface CryptographyService {
      * @return
      * @throws SystemKSeFSDKException
      */
-    byte[] encryptWithRSAUsingPublicKey(byte[] content) throws SystemKSeFSDKException, CertificateException, IOException;
+    byte[] encryptWithRSAUsingPublicKey(byte[] content) throws SystemKSeFSDKException;
 
     /**
      * Zwraca zaszyfrowany content przy użyciu algorytmu ECIes z publicznym kluczem.
@@ -75,7 +73,7 @@ public interface CryptographyService {
      * @throws IllegalBlockSizeException
      * @throws BadPaddingException
      */
-    byte[] encryptWithECDsaUsingPublicKey(byte[] content) throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, CertificateException, IOException;
+    byte[] encryptWithECDsaUsingPublicKey(byte[] content) throws SystemKSeFSDKException;
 
     /**
      * Szyfrowanie danych przy użyciu AES-256 w trybie CBC z PKCS7 paddingiem.
@@ -104,7 +102,7 @@ public interface CryptographyService {
      * @return Zwraca CSR oraz klucz prywatny, oba zakodowane w formacie Base64
      * @throws SystemKSeFSDKException
      */
-    CsrResult generateCsr(CertificateEnrollmentsInfoResponse certificateInfo) throws SystemKSeFSDKException;
+    CsrResult generateCsrWithRsa(CertificateEnrollmentsInfoResponse certificateInfo) throws SystemKSeFSDKException;
 
     /**
      * Generuje żądanie podpisania certyfikatu (CSR) z użyciem krzywej eliptycznej (EC) na podstawie przekazanych informacji o certyfikacie.
@@ -113,12 +111,30 @@ public interface CryptographyService {
      * @return Zwraca CSR oraz klucz prywatny, oba zakodowane w Base64 w formacie DER
      * @throws SystemKSeFSDKException
      */
-    CsrResult generateCsrWithEcdsa(CertificateEnrollmentsInfoResponse certificateInfo) throws SystemKSeFSDKException, InvalidAlgorithmParameterException;
+    CsrResult generateCsrWithEcdsa(CertificateEnrollmentsInfoResponse certificateInfo) throws SystemKSeFSDKException;
 
+    /**
+     * Zwraca metadane plik: rozmiar i hash SHA256.
+     *
+     * @param file - Plik w formie byte array
+     * @return - FileMetadata
+     * @throws SystemKSeFSDKException
+     */
     FileMetadata getMetaData(byte[] file) throws SystemKSeFSDKException;
 
-    PublicKey parsePublicKeyFromPem(String pem) throws CertificateException, IOException;
+    /**
+     * Zwraca metadane pliku: rozmiar i hash SHA256 dla strumienia bez buforowania całej zawartości w pamięci.
+     *
+     * @param inputStream - Strumień pliku.
+     * @return - FileMetadata
+     * @throws SystemKSeFSDKException
+     */
+    FileMetadata getMetaData(InputStream inputStream) throws SystemKSeFSDKException;
 
-    PrivateKey parsePrivateKeyFromPem(byte[] privateKey) throws SystemKSeFSDKException;
+    PublicKey parsePublicKeyFromCertificatePem(String certificatePem) throws SystemKSeFSDKException;
+
+    PrivateKey parseRsaPrivateKeyFromPem(byte[] privateKey) throws SystemKSeFSDKException;
+
+    PrivateKey parseEcdsaPrivateKeyFromPem(byte[] privateKey) throws SystemKSeFSDKException;
 
 }

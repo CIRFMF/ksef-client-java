@@ -2,6 +2,7 @@
 ### session documents
 GET http://localhost:8082/session/session-documents?referenceNumber={{sessionReferenceNumber}}
 Accept: application/json
+Authorization: {{token}}
 
 > {%
     client.global.set("ksefNumber", response.body.invoices[0].ksefNumber);
@@ -11,19 +12,23 @@ Accept: application/json
 ### invoice upo by ksef number
 GET http://localhost:8082/session/invoice-upo?referenceNumber={{sessionReferenceNumber}}&ksefNumber={{ksefNumber}}
 Accept: application/xml
+Authorization: {{token}}
 
 ### invoice upo by invoice reference number
 GET http://localhost:8082/session/invoice-upo?referenceNumber={{sessionReferenceNumber}}&invoiceReferenceNumber={{invoiceNumber}}
 Accept: application/xml
+Authorization: {{token}}
 
 ### close session
 POST http://localhost:8082/close-session/{{sessionReferenceNumber}}
 Accept: application/json
 Content-Type: application/json
+Authorization: {{token}}
 
 ### session status
 GET http://localhost:8082/session/status?referenceNumber={{sessionReferenceNumber}}&pageSize=50
 Accept: application/json
+Authorization: {{token}}
 
 > {%
     client.global.set("upoReferenceNumber", response.body.upo.pages[0].referenceNumber);
@@ -32,11 +37,14 @@ Accept: application/json
 ### session upo
 GET http://localhost:8082/session/session-upo?referenceNumber={{sessionReferenceNumber}}&upoReferenceNumber={{upoReferenceNumber}}
 Accept: application/xml
+Authorization: {{token}}
 
 ### failed invoices
 GET http://localhost:8082/session/failed-invoices?referenceNumber={{sessionReferenceNumber}}
 Accept: application/json
+Authorization: {{token}}
 
 ### status invoice
 GET http://localhost:8082/session/invoice-status?referenceNumber={{sessionReferenceNumber}}&invoiceReferenceNumber={{invoiceReferenceNumber}}
 Accept: application/json
+Authorization: {{token}}

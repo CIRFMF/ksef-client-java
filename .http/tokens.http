@@ -2,6 +2,7 @@
 ### Generate KSeF Token
 POST http://localhost:8082/generate-token
 Content-Type: application/json
+Authorization: {{token}}
 
 > {%
     client.global.set("generateToken", response.body.token);
@@ -12,17 +13,20 @@ Content-Type: application/json
 ### Query KSeF Tokens
 POST http://localhost:8082/tokens
 Content-Type: application/json
+Authorization: {{token}}
 
 ###
 
 ### Get KSeF Token by Reference Number
 GET http://localhost:8082/token?referenceNumber={{generateTokenReferenceNumber}}
 Content-Type: application/json
+Authorization: {{token}}
 
 ###
 
 ### Revoke KSeF Token
 POST http://localhost:8082/revoke-token?referenceNumber={{generateTokenReferenceNumber}}
 Content-Type: application/json
+Authorization: {{token}}
 
 ###

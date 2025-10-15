@@ -28,8 +28,13 @@ Content-Type: application/json
 ### revoke token
 GET http://localhost:8082/revoke
 Accept: application/json
+Authorization: {{token}}
 
 ### refreshToken
  http://localhost:8082/refreshToken/{{refreshToken}}
 Accept: application/json
 Content-Type: application/json
+
+> {%
+    client.global.set("token", response.body.accessToken.token);
+%}

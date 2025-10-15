@@ -19,7 +19,7 @@ class AuthorizationIntegrationTest extends BaseIntegrationTest {
         AuthTokensPair token = authWithCustomNip(contextNip, contextNip);
 
         //when
-        AuthenticationTokenRefreshResponse refreshTokenResult = createKSeFClient().refreshAccessToken(token.refreshToken());
+        AuthenticationTokenRefreshResponse refreshTokenResult = ksefClient.refreshAccessToken(token.refreshToken());
 
         //then
         Assertions.assertNotNull(refreshTokenResult);

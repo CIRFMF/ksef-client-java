@@ -2,7 +2,6 @@ package pl.akmf.ksef.sdk.client.model.session;
 
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 public class SessionsQueryRequest {

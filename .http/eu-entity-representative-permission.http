@@ -2,6 +2,7 @@
 POST http://localhost:8082/grant-eu-entity-representative-permissions
 Accept: application/json
 Content-Type: application/json
+Authorization: {{token}}
 
 {
   "type": "Fingerprint",
@@ -16,6 +17,7 @@ Content-Type: application/json
 POST http://localhost:8082/revoke-eu-entity-representative-permissions
 Accept: application/json
 Content-Type: application/json
+Authorization: {{token}}
 
 {{referenceNumber}}
 
@@ -26,3 +28,4 @@ Content-Type: application/json
 ###  check permission status
 GET http://localhost:8082/{{referenceNumber}}/status
 Accept: application/json
+Authorization: {{token}}

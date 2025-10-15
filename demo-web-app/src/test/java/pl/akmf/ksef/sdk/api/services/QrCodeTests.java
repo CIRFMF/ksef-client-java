@@ -1,6 +1,5 @@
 package pl.akmf.ksef.sdk.api.services;
 
-import org.bouncycastle.asn1.x500.X500Name;
 import org.junit.jupiter.api.Test;
 import pl.akmf.ksef.sdk.api.builders.certificate.CertificateBuilders;
 import pl.akmf.ksef.sdk.client.interfaces.QrCodeService;
@@ -33,7 +32,7 @@ class QrCodeTests {
     // =============================================
     @Test
     void buildCertificateQr_WithEmbeddedPrivateKey_ShouldReturnBase64Png() throws Exception {
-        X500Name x500 = new CertificateBuilders()
+        CertificateBuilders.X500NameHolder x500 = new CertificateBuilders()
                 .buildForOrganization("Kowalski sp. z o.o", "VATPL-1111111111", "Kowalski", "PL");
         SelfSignedCertificate cert = new DefaultCertificateService().generateSelfSignedCertificateRsa(x500);
 
@@ -74,7 +73,7 @@ class QrCodeTests {
     // =============================================
     @Test
     void buildCertificateQr_WithEmbeddedEccPrivateKey_ShouldReturnBase64Png() throws Exception {
-        X500Name x500 = new CertificateBuilders()
+        CertificateBuilders.X500NameHolder x500 = new CertificateBuilders()
                 .buildForOrganization("Kowalski sp. z o.o", "VATPL-1111111111", "TestEcc", "PL");
         SelfSignedCertificate cert = new DefaultCertificateService().generateSelfSignedCertificateEcdsa(x500);
 

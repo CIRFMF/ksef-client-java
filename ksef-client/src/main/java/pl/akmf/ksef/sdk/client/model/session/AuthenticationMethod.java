@@ -6,43 +6,46 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 
 public enum AuthenticationMethod {
-  
-  TOKEN("Token"),
-  
-  TRUSTEDPROFILE("TrustedProfile"),
-  
-  INTERNALCERTIFICATE("InternalCertificate"),
-  
-  QUALIFIEDSIGNATURE("QualifiedSignature"),
-  
-  QUALIFIEDSEAL("QualifiedSeal"),
-  PERSONALSIGNATURE("PersonalSignature");
 
-  private final String value;
+    TOKEN("Token"),
 
-  AuthenticationMethod(String value) {
-    this.value = value;
-  }
+    TRUSTEDPROFILE("TrustedProfile"),
 
-  @JsonValue
-  public String getValue() {
-    return value;
-  }
+    INTERNALCERTIFICATE("InternalCertificate"),
 
-  @Override
-  public String toString() {
-    return String.valueOf(value);
-  }
+    QUALIFIEDSIGNATURE("QualifiedSignature"),
 
-  @JsonCreator
-  public static AuthenticationMethod fromValue(String value) {
-    for (AuthenticationMethod b : AuthenticationMethod.values()) {
-      if (b.value.equals(value)) {
-        return b;
-      }
+    QUALIFIEDSEAL("QualifiedSeal"),
+
+    PERSONALSIGNATURE("PersonalSignature"),
+
+    PEPPOL_SIGNATURE("PeppolSignature");
+
+    private final String value;
+
+    AuthenticationMethod(String value) {
+        this.value = value;
     }
-    throw new IllegalArgumentException("Unexpected value '" + value + "'");
-  }
+
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static AuthenticationMethod fromValue(String value) {
+        for (AuthenticationMethod b : AuthenticationMethod.values()) {
+            if (b.value.equals(value)) {
+                return b;
+            }
+        }
+        throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
 
 }
 

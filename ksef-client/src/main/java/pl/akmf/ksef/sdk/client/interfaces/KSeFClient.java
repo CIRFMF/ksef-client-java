@@ -2,16 +2,17 @@ package pl.akmf.ksef.sdk.client.interfaces;
 
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.auth.AuthKsefTokenRequest;
+import pl.akmf.ksef.sdk.client.model.auth.AuthOperationStatusResponse;
 import pl.akmf.ksef.sdk.client.model.auth.AuthStatus;
 import pl.akmf.ksef.sdk.client.model.auth.AuthenticationChallengeResponse;
-import pl.akmf.ksef.sdk.client.model.auth.SignatureResponse;
-import pl.akmf.ksef.sdk.client.model.auth.AuthOperationStatusResponse;
 import pl.akmf.ksef.sdk.client.model.auth.AuthenticationToken;
 import pl.akmf.ksef.sdk.client.model.auth.AuthenticationTokenRefreshResponse;
 import pl.akmf.ksef.sdk.client.model.auth.AuthenticationTokenStatus;
-import pl.akmf.ksef.sdk.client.model.auth.KsefTokenRequest;
+import pl.akmf.ksef.sdk.client.model.auth.AuthorTokenIdentifier;
 import pl.akmf.ksef.sdk.client.model.auth.GenerateTokenResponse;
+import pl.akmf.ksef.sdk.client.model.auth.KsefTokenRequest;
 import pl.akmf.ksef.sdk.client.model.auth.QueryTokensResponse;
+import pl.akmf.ksef.sdk.client.model.auth.SignatureResponse;
 import pl.akmf.ksef.sdk.client.model.certificate.CertificateEnrollmentResponse;
 import pl.akmf.ksef.sdk.client.model.certificate.CertificateEnrollmentStatusResponse;
 import pl.akmf.ksef.sdk.client.model.certificate.CertificateEnrollmentsInfoResponse;
@@ -23,14 +24,19 @@ import pl.akmf.ksef.sdk.client.model.certificate.CertificateRevokeRequest;
 import pl.akmf.ksef.sdk.client.model.certificate.QueryCertificatesRequest;
 import pl.akmf.ksef.sdk.client.model.certificate.SendCertificateEnrollmentRequest;
 import pl.akmf.ksef.sdk.client.model.certificate.publickey.PublicKeyCertificate;
-import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportStatus;
 import pl.akmf.ksef.sdk.client.model.invoice.DownloadInvoiceRequest;
 import pl.akmf.ksef.sdk.client.model.invoice.InitAsyncInvoicesQueryResponse;
-import pl.akmf.ksef.sdk.client.model.invoice.InvoiceMetadataQueryRequest;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportRequest;
+import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportStatus;
+import pl.akmf.ksef.sdk.client.model.invoice.InvoiceQueryFilters;
 import pl.akmf.ksef.sdk.client.model.invoice.QueryInvoiceMetadataResponse;
-import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
+import pl.akmf.ksef.sdk.client.model.limit.ChangeContextLimitRequest;
+import pl.akmf.ksef.sdk.client.model.limit.ChangeSubjectCertificateLimitRequest;
+import pl.akmf.ksef.sdk.client.model.limit.GetContextLimitResponse;
+import pl.akmf.ksef.sdk.client.model.limit.GetSubjectLimitResponse;
 import pl.akmf.ksef.sdk.client.model.permission.OperationResponse;
+import pl.akmf.ksef.sdk.client.model.permission.PermissionAttachmentStatusResponse;
+import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
 import pl.akmf.ksef.sdk.client.model.permission.entity.GrantEntityPermissionsRequest;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.EuEntityPermissionsGrantRequest;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.GrantEUEntityRepresentativePermissionsRequest;
@@ -44,9 +50,11 @@ import pl.akmf.ksef.sdk.client.model.permission.search.QueryEntityAuthorizationP
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryEntityRolesResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryEuEntityPermissionsResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryPersonPermissionsResponse;
-import pl.akmf.ksef.sdk.client.model.permission.search.QuerySubordinateEntityRolesResponse;
+import pl.akmf.ksef.sdk.client.model.permission.search.QueryPersonalGrantRequest;
+import pl.akmf.ksef.sdk.client.model.permission.search.QueryPersonalGrantResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.QuerySubunitPermissionsResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.SubordinateEntityRolesQueryRequest;
+import pl.akmf.ksef.sdk.client.model.permission.search.SubordinateEntityRolesQueryResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.SubunitPermissionsQueryRequest;
 import pl.akmf.ksef.sdk.client.model.permission.subunit.SubunitPermissionsGrantRequest;
 import pl.akmf.ksef.sdk.client.model.session.AuthenticationListResponse;
@@ -59,12 +67,21 @@ import pl.akmf.ksef.sdk.client.model.session.batch.BatchPartSendingInfo;
 import pl.akmf.ksef.sdk.client.model.session.batch.BatchPartStreamSendingInfo;
 import pl.akmf.ksef.sdk.client.model.session.batch.OpenBatchSessionRequest;
 import pl.akmf.ksef.sdk.client.model.session.batch.OpenBatchSessionResponse;
+import pl.akmf.ksef.sdk.client.model.session.batch.PackagePartSignatureInitResponseType;
 import pl.akmf.ksef.sdk.client.model.session.online.OpenOnlineSessionRequest;
 import pl.akmf.ksef.sdk.client.model.session.online.OpenOnlineSessionResponse;
 import pl.akmf.ksef.sdk.client.model.session.online.SendInvoiceOnlineSessionRequest;
 import pl.akmf.ksef.sdk.client.model.session.online.SendInvoiceResponse;
+import pl.akmf.ksef.sdk.client.model.testdata.TestDataAttachmentRemoveRequest;
+import pl.akmf.ksef.sdk.client.model.testdata.TestDataAttachmentRequest;
+import pl.akmf.ksef.sdk.client.model.testdata.TestDataPermissionRemoveRequest;
+import pl.akmf.ksef.sdk.client.model.testdata.TestDataPermissionRequest;
+import pl.akmf.ksef.sdk.client.model.testdata.TestDataPersonCreateRequest;
+import pl.akmf.ksef.sdk.client.model.testdata.TestDataPersonRemoveRequest;
+import pl.akmf.ksef.sdk.client.model.testdata.TestDataSubjectCreateRequest;
+import pl.akmf.ksef.sdk.client.model.testdata.TestDataSubjectRemoveRequest;
+import pl.akmf.ksef.sdk.client.peppol.PeppolProvidersListResponse;
 
-import java.io.IOException;
 import java.util.List;
 
 public interface KSeFClient {
@@ -95,10 +112,9 @@ public interface KSeFClient {
      *
      * @param openBatchSessionResponse
      * @param parts                    - Kolekcja trzymająca informacje o partach
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws ApiException
      */
-    void sendBatchParts(OpenBatchSessionResponse openBatchSessionResponse, List<BatchPartSendingInfo> parts) throws IOException, InterruptedException;
+    void sendBatchParts(OpenBatchSessionResponse openBatchSessionResponse, List<BatchPartSendingInfo> parts) throws ApiException;
 
     /**
      * Wysłanie części paczki faktur z wykorzystaniem strumienia.
@@ -106,8 +122,9 @@ public interface KSeFClient {
      * @param openBatchSessionResponse
      * @param parts                    - Kolekcja trzymająca informacje o partach
      * @return
+     * @throws ApiException
      */
-    void sendBatchPartsWithStream(OpenBatchSessionResponse openBatchSessionResponse, List<BatchPartStreamSendingInfo> parts) throws IOException, InterruptedException;
+    void sendBatchPartsWithStream(OpenBatchSessionResponse openBatchSessionResponse, List<BatchPartStreamSendingInfo> parts) throws ApiException;
 
     /**
      * Otwarcie sesji interaktywnej
@@ -335,6 +352,19 @@ public interface KSeFClient {
     QuerySubunitPermissionsResponse searchSubunitAdminPermissions(SubunitPermissionsQueryRequest request, int pageOffset, int pageSize, String accessToken) throws ApiException;
 
     /**
+     * Zwraca listę uprawnień przysługujących uwierzytelnionemu podmiotowi.
+     *
+     * @param request    QueryPersonalGrantRequest
+     * @param pageOffset - Index strony wyników (domyślnie 0)
+     * @param pageSize   - Ilość elementów na stronie (domyślnie 10)
+     * @return QueryPersonalGrantResponse
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
+     * @throws ApiException - Brak autoryzacji. (401 Unauthorized)
+     */
+    QueryPersonalGrantResponse searchPersonalGrantPermission(QueryPersonalGrantRequest request, int pageOffset, int pageSize, String accessToken) throws ApiException;
+
+
+    /**
      * Pobranie listy uprawnień administratora podmiotu podrzędnego.
      *
      * @param pageOffset - Index strony wyników (domyślnie 0)
@@ -355,7 +385,7 @@ public interface KSeFClient {
      * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
      * @throws ApiException - Brak autoryzacji. (401 Unauthorized)
      */
-    QuerySubordinateEntityRolesResponse searchSubordinateEntityInvoiceRoles(SubordinateEntityRolesQueryRequest request, int pageOffset, int pageSize, String accessToken) throws ApiException;
+    SubordinateEntityRolesQueryResponse searchSubordinateEntityInvoiceRoles(SubordinateEntityRolesQueryRequest request, int pageOffset, int pageSize, String accessToken) throws ApiException;
 
     /**
      * Pobranie listy uprawnień o charakterze uprawnień nadanych podmiotom.
@@ -526,7 +556,7 @@ public interface KSeFClient {
      * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
      * @throws ApiException - Brak autoryzacji. (401 Unauthorized)
      */
-    QueryInvoiceMetadataResponse queryInvoiceMetadata(Integer pageOffset, Integer pageSize, InvoiceMetadataQueryRequest request, String accessToken) throws ApiException;
+    QueryInvoiceMetadataResponse queryInvoiceMetadata(Integer pageOffset, Integer pageSize, InvoiceQueryFilters request, String accessToken) throws ApiException;
 
     /**
      * Rozpoczyna asynchroniczny proces wyszukiwania faktur w systemie KSeF na podstawie przekazanych filtrów
@@ -542,12 +572,12 @@ public interface KSeFClient {
      * Pobiera status wcześniej zainicjalizowanego zapytania asynchronicznego na podstawie identyfikatora operacji.
      * Umożliwia śledzenie postępu przetwarzania zapytania oraz pobranie gotowych paczek z wynikami, jeśli są już dostępne.
      *
-     * @param operationReferenceNumber - Numer referencyjny operacji.
+     * @param referenceNumber - Numer referencyjny operacji.
      * @return AsyncInvoicesQueryStatus
      * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
      * @throws ApiException - Brak autoryzacji. (401 Unauthorized)
      */
-    InvoiceExportStatus checkStatusAsyncQueryInvoice(String operationReferenceNumber, String accessToken) throws ApiException;
+    InvoiceExportStatus checkStatusAsyncQueryInvoice(String referenceNumber, String accessToken) throws ApiException;
 
     /**
      * Nadanie podmiotom uprawnień do pracy w KSeF
@@ -593,6 +623,17 @@ public interface KSeFClient {
     OperationResponse revokeAuthorizationsPermission(String permissionId, String accessToken) throws ApiException;
 
     /**
+     * Sprawdzenie czy obecny kontekst posiada zgodę na wystawianie faktur z załącznikiem.
+     * Wymagane uprawnienia: CredentialsManage, CredentialsRead.
+     *
+     * @param accessToken - token sesyjny
+     * @return PermissionAttachmentStatusResponse
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
+     * @throws ApiException - Brak autoryzacji. (401 Unauthorized)
+     */
+    PermissionAttachmentStatusResponse checkPermissionAttachmentInvoiceStatus(String accessToken) throws ApiException;
+
+    /**
      * Generuje nowy token KSeF.
      *
      * @param tokenRequest GenerateTokenRequest
@@ -612,7 +653,13 @@ public interface KSeFClient {
      * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
      * @throws ApiException - Brak autoryzacji. (401 Unauthorized)
      */
-    QueryTokensResponse queryKsefTokens(List<AuthenticationTokenStatus> statuses, String continuationToken, Integer pageSize, String accessToken) throws ApiException;
+    QueryTokensResponse queryKsefTokens(List<AuthenticationTokenStatus> statuses,
+                                        String description,
+                                        String authorIdentifier,
+                                        AuthorTokenIdentifier.IdentifierType authorIdentifierType,
+                                        String continuationToken,
+                                        Integer pageSize,
+                                        String accessToken) throws ApiException;
 
     /**
      * Pobranie statusu tokena
@@ -639,7 +686,7 @@ public interface KSeFClient {
      * @return List<PublicKeyCertificate>
      * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
      */
-    List<PublicKeyCertificate> retrievePublicKeyCertificate() throws ApiException, IOException;
+    List<PublicKeyCertificate> retrievePublicKeyCertificate() throws ApiException;
 
     /**
      * Zwraca listę sesji spełniających podane kryteria wyszukiwania.
@@ -684,4 +731,141 @@ public interface KSeFClient {
      * @throws ApiException - Brak autoryzacji. (401 Unauthorized)
      */
     void revokeSession(String referenceNumber, String accessToken) throws ApiException;
+
+    /**
+     * Zwraca listę dostawców usług Peppol zarejestrowanych w systemie.
+     *
+     * @param pageOffset - Index strony wyników (domyślnie 0)
+     * @param pageSize   - Ilość elementów na stronie (domyślnie 10)
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
+     */
+    PeppolProvidersListResponse getPeppolProvidersList(int pageOffset, int pageSize) throws ApiException;
+
+    /**
+     * Zwraca wartości aktualnie obowiązujących limitów dla bieżącego kontekstu.
+     *
+     * @param accessToken
+     * @return GetContextLimitResponse
+     * @throws ApiException
+     */
+    GetContextLimitResponse getContextSessionLimit(String accessToken) throws ApiException;
+
+    /**
+     * Zwraca wartoście aktualnie obowiązujących limitów dla bieżącego podmiotu.
+     *
+     * @param accessToken
+     * @return GetContextLimitResponse
+     * @throws ApiException
+     */
+    GetSubjectLimitResponse getSubjectCertificateLimit(String accessToken) throws ApiException;
+
+    /**
+     * Zmienia wartości aktualnie obowiązujących limitów dla bieżącego kontekstu. Tylko na środowiskach testowych.
+     *
+     * @param changeContextLimitRequest
+     * @param accessToken
+     * @return
+     * @throws ApiException
+     */
+    void changeContextLimitTest(ChangeContextLimitRequest changeContextLimitRequest, String accessToken) throws ApiException;
+
+    /**
+     * Zmienia wartości aktualnie obowiązujących limitów certyfikatów dla bieżącego podmiotu. Tylko na środowiskach testowych.
+     *
+     * @param changeSubjectCertificateLimitRequest
+     * @param accessToken
+     * @return
+     * @throws ApiException
+     */
+    void changeSubjectLimitTest(ChangeSubjectCertificateLimitRequest changeSubjectCertificateLimitRequest, String accessToken) throws ApiException;
+
+    /**
+     * Przywraca wartości aktualnie obowiązujących limitów dla bieżącego kontekstu do wartości domyślnych. Tylko na środowiskach testowych.
+     *
+     * @param accessToken
+     * @return
+     * @throws ApiException
+     */
+    void resetContextLimitTest(String accessToken) throws ApiException;
+
+    /**
+     * Przywraca wartości aktualnie obowiązujących limitów dla bieżącego kontekstu do wartości domyślnych. Tylko na środowiskach testowych.
+     *
+     * @param accessToken
+     * @return
+     * @throws ApiException
+     */
+    void resetSubjectCertificateLimit(String accessToken) throws ApiException;
+
+    /**
+     * Tworzenie nowego podmiotu testowego. W przypadku grupy VAT i JST istnieje możliwość stworzenia jednostek podrzędnych. W wyniku takiego działania w systemie powstanie powiązanie między tymi podmiotami.
+     * Metoda dostępna tylko na środowiskach testowych
+     *
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
+     */
+    void createTestSubject(TestDataSubjectCreateRequest testDataSubjectCreateRequest) throws ApiException;
+
+    /**
+     * Usuwanie podmiotu testowego. W przypadku grupy VAT i JST usunięte zostaną również jednostki podrzędne.
+     * Metoda dostępna tylko na środowiskach testowych
+     *
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
+     */
+    void removeTestSubject(TestDataSubjectRemoveRequest testDataSubjectRemoveRequest) throws ApiException;
+
+    /**
+     * Tworzenie nowej osoby fizycznej, której system nadaje uprawnienia właścicielskie. Można również określić, czy osoba ta jest komornikiem – wówczas otrzyma odpowiednie uprawnienie egzekucyjne.
+     * Metoda dostępna tylko na środowiskach testowych
+     *
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
+     */
+    void createTestPerson(TestDataPersonCreateRequest testDataPersonCreateRequest) throws ApiException;
+
+    /**
+     * Usuwanie testowej osoby fizycznej. System automatycznie odbierze jej wszystkie uprawnienia.
+     * Metoda dostępna tylko na środowiskach testowych
+     *
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
+     */
+    void removeTestPerson(TestDataPersonRemoveRequest testDataPersonRemoveRequest) throws ApiException;
+
+    /**
+     * Nadawanie uprawnień testowemu podmiotowi lub osobie fizycznej, a także w ich kontekście.
+     * Metoda dostępna tylko na środowiskach testowych
+     *
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
+     */
+    void addTestPermission(TestDataPermissionRequest testDataPermissionRequest) throws ApiException;
+
+    /**
+     * Odbieranie uprawnień nadanych testowemu podmiotowi lub osobie fizycznej, a także w ich kontekście.
+     * Metoda dostępna tylko na środowiskach testowych
+     *
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
+     */
+    void removeTestPermission(TestDataPermissionRemoveRequest testDataPermissionRemoveRequest) throws ApiException;
+
+    /**
+     * Dodaje możliwość wysyłania faktur z załącznikiem przez wskazany podmiot
+     * Metoda dostępna tylko na środowiskach testowych
+     *
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
+     */
+    void addAttachmentPermissionTest(TestDataAttachmentRequest testDataAttachmentRequest) throws ApiException;
+
+    /**
+     * Odbiera możliwość wysyłania faktur z załącznikiem przez wskazany podmiot
+     * Metoda dostępna tylko na środowiskach testowych
+     *
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
+     */
+    void removeAttachmentPermissionTest(TestDataAttachmentRemoveRequest testDataAttachmentRemoveRequest) throws ApiException;
+
+    void singleBatchPartSendingProcess(BatchPartSendingInfo part,
+                                       PackagePartSignatureInitResponseType responsePart,
+                                       List<String> errors);
+
+    void singleBatchPartSendingProcessByStream(BatchPartStreamSendingInfo part,
+                                               PackagePartSignatureInitResponseType responsePart,
+                                               List<String> errors);
 }

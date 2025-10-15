@@ -1,6 +1,5 @@
 package pl.akmf.ksef.sdk.client.model.invoice;
 
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -10,7 +9,7 @@ public enum InvoicingMode {
 
     OFFLINE("Offline");
 
-    private String value;
+    private final String value;
 
     InvoicingMode(String value) {
         this.value = value;

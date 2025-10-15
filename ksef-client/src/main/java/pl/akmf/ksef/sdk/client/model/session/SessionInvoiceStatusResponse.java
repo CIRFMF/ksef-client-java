@@ -1,6 +1,7 @@
 package pl.akmf.ksef.sdk.client.model.session;
 
 import pl.akmf.ksef.sdk.client.model.StatusInfo;
+import pl.akmf.ksef.sdk.client.model.invoice.InvoicingMode;
 
 import java.time.OffsetDateTime;
 
@@ -16,6 +17,7 @@ public class SessionInvoiceStatusResponse {
     private StatusInfo status;
     private OffsetDateTime permanentStorageDate;
     private String upoDownloadUrl;
+    private InvoicingMode invoicingMode;
 
     public SessionInvoiceStatusResponse() {
 
@@ -107,6 +109,14 @@ public class SessionInvoiceStatusResponse {
 
     public void setUpoDownloadUrl(String upoDownloadUrl) {
         this.upoDownloadUrl = upoDownloadUrl;
+    }
+
+    public InvoicingMode getInvoicingMode() {
+        return invoicingMode;
+    }
+
+    public void setInvoicingMode(InvoicingMode invoicingMode) {
+        this.invoicingMode = invoicingMode;
     }
 }
 

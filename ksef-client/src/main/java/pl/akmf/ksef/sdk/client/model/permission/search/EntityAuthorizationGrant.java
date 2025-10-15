@@ -4,28 +4,12 @@ import java.time.OffsetDateTime;
 
 public class EntityAuthorizationGrant {
     private String id;
-    private String authorIdentifier;
-    private EntityAuthorizationsAuthorIdentifierType authorIdentifierType;
-    private String authorizedEntityIdentifier;
-    private EntityAuthorizationsAuthorizedEntityIdentifierType authorizedEntityIdentifierType;
-    private String authorizingEntityIdentifier;
-    private EntityAuthorizationsAuthorizingEntityIdentifierType authorizingEntityIdentifierType;
+    private EntityAuthorizationsAuthorIdentifier authorIdentifier;
+    private EntityAuthorizationsAuthorizedEntityIdentifier authorizedEntityIdentifier;
+    private EntityAuthorizationsAuthorizingEntityIdentifier authorizingEntityIdentifier;
     private InvoicePermissionType authorizationScope;
     private String description;
     private OffsetDateTime startDate;
-
-    public EntityAuthorizationGrant(String id, String authorIdentifier, EntityAuthorizationsAuthorIdentifierType authorIdentifierType, String authorizedEntityIdentifier, EntityAuthorizationsAuthorizedEntityIdentifierType authorizedEntityIdentifierType, String authorizingEntityIdentifier, EntityAuthorizationsAuthorizingEntityIdentifierType authorizingEntityIdentifierType, InvoicePermissionType authorizationScope, String description, OffsetDateTime startDate) {
-        this.id = id;
-        this.authorIdentifier = authorIdentifier;
-        this.authorIdentifierType = authorIdentifierType;
-        this.authorizedEntityIdentifier = authorizedEntityIdentifier;
-        this.authorizedEntityIdentifierType = authorizedEntityIdentifierType;
-        this.authorizingEntityIdentifier = authorizingEntityIdentifier;
-        this.authorizingEntityIdentifierType = authorizingEntityIdentifierType;
-        this.authorizationScope = authorizationScope;
-        this.description = description;
-        this.startDate = startDate;
-    }
 
     public EntityAuthorizationGrant() {
     }
@@ -38,52 +22,28 @@ public class EntityAuthorizationGrant {
         this.id = id;
     }
 
-    public String getAuthorIdentifier() {
+    public EntityAuthorizationsAuthorIdentifier getAuthorIdentifier() {
         return authorIdentifier;
     }
 
-    public void setAuthorIdentifier(String authorIdentifier) {
+    public void setAuthorIdentifier(EntityAuthorizationsAuthorIdentifier authorIdentifier) {
         this.authorIdentifier = authorIdentifier;
     }
 
-    public EntityAuthorizationsAuthorIdentifierType getAuthorIdentifierType() {
-        return authorIdentifierType;
-    }
-
-    public void setAuthorIdentifierType(EntityAuthorizationsAuthorIdentifierType authorIdentifierType) {
-        this.authorIdentifierType = authorIdentifierType;
-    }
-
-    public String getAuthorizedEntityIdentifier() {
+    public EntityAuthorizationsAuthorizedEntityIdentifier getAuthorizedEntityIdentifier() {
         return authorizedEntityIdentifier;
     }
 
-    public void setAuthorizedEntityIdentifier(String authorizedEntityIdentifier) {
+    public void setAuthorizedEntityIdentifier(EntityAuthorizationsAuthorizedEntityIdentifier authorizedEntityIdentifier) {
         this.authorizedEntityIdentifier = authorizedEntityIdentifier;
     }
 
-    public EntityAuthorizationsAuthorizedEntityIdentifierType getAuthorizedEntityIdentifierType() {
-        return authorizedEntityIdentifierType;
-    }
-
-    public void setAuthorizedEntityIdentifierType(EntityAuthorizationsAuthorizedEntityIdentifierType authorizedEntityIdentifierType) {
-        this.authorizedEntityIdentifierType = authorizedEntityIdentifierType;
-    }
-
-    public String getAuthorizingEntityIdentifier() {
+    public EntityAuthorizationsAuthorizingEntityIdentifier getAuthorizingEntityIdentifier() {
         return authorizingEntityIdentifier;
     }
 
-    public void setAuthorizingEntityIdentifier(String authorizingEntityIdentifier) {
+    public void setAuthorizingEntityIdentifier(EntityAuthorizationsAuthorizingEntityIdentifier authorizingEntityIdentifier) {
         this.authorizingEntityIdentifier = authorizingEntityIdentifier;
-    }
-
-    public EntityAuthorizationsAuthorizingEntityIdentifierType getAuthorizingEntityIdentifierType() {
-        return authorizingEntityIdentifierType;
-    }
-
-    public void setAuthorizingEntityIdentifierType(EntityAuthorizationsAuthorizingEntityIdentifierType authorizingEntityIdentifierType) {
-        this.authorizingEntityIdentifierType = authorizingEntityIdentifierType;
     }
 
     public InvoicePermissionType getAuthorizationScope() {

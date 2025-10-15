@@ -9,15 +9,13 @@ import pl.akmf.ksef.sdk.api.builders.permission.euentity.GrantEUEntityPermission
 import pl.akmf.ksef.sdk.api.builders.permission.euentityrepresentative.GrantEUEntityRepresentativePermissionsRequestBuilder;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.certificate.SelfSignedCertificate;
-import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
 import pl.akmf.ksef.sdk.client.model.permission.OperationResponse;
+import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.ContextIdentifier;
-import pl.akmf.ksef.sdk.client.model.permission.euentity.ContextIdentifierType;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.EuEntityPermissionType;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.EuEntityPermissionsGrantRequest;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.GrantEUEntityRepresentativePermissionsRequest;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.SubjectIdentifier;
-import pl.akmf.ksef.sdk.client.model.permission.euentity.SubjectIdentifierType;
 import pl.akmf.ksef.sdk.client.model.permission.search.EuEntityPermission;
 import pl.akmf.ksef.sdk.client.model.permission.search.EuEntityPermissionsQueryRequest;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryEuEntityPermissionsResponse;
@@ -26,8 +24,6 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateEncodingException;
 import java.util.List;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -48,7 +44,7 @@ class EuEntityRepresentativePermissionIntegrationTest extends BaseIntegrationTes
      *
      */
     @Test
-    void grantAdministrativePermission_E2E_ReturnsExpectedResults() throws CertificateEncodingException, NoSuchAlgorithmException, JAXBException, IOException, ApiException {
+    void grantAdministrativePermission_E2E_ReturnsExpectedResults() throws JAXBException, IOException, ApiException {
         String ownerNip = IdentifierGeneratorUtils.getRandomNip();
         String ownerVatEu = IdentifierGeneratorUtils.getRandomVatEU("ES");
         String ownerNipVatEu = IdentifierGeneratorUtils.getNipVatEU(ownerNip, ownerVatEu);
@@ -118,7 +114,7 @@ class EuEntityRepresentativePermissionIntegrationTest extends BaseIntegrationTes
 
     private String revokePermission(String operationId, String accessToken) {
         try {
-            return createKSeFClient().revokeCommonPermission(operationId, accessToken).getOperationReferenceNumber();
+            return ksefClient.revokeCommonPermission(operationId, accessToken).getReferenceNumber();
         } catch (ApiException e) {
             Assertions.fail(e.getMessage());
         }
@@ -130,7 +126,7 @@ class EuEntityRepresentativePermissionIntegrationTest extends BaseIntegrationTes
                 .withAuthorizedFingerprintIdentifier(authorizedFingerprintIdentifier)
                 .build();
 
-        QueryEuEntityPermissionsResponse response = createKSeFClient().searchGrantedEuEntityPermissions(request, 0, 10, accessToken);
+        QueryEuEntityPermissionsResponse response = ksefClient.searchGrantedEuEntityPermissions(request, 0, 10, accessToken);
 
         Assertions.assertEquals(expectedNumberOfPermissions, response.getPermissions().size());
 
@@ -142,16 +138,16 @@ class EuEntityRepresentativePermissionIntegrationTest extends BaseIntegrationTes
 
     private String grantEuEntityRepresentativePermission(String fingerprint, String accessToken) throws ApiException {
         GrantEUEntityRepresentativePermissionsRequest request = new GrantEUEntityRepresentativePermissionsRequestBuilder()
-                .withSubjectIdentifier(new SubjectIdentifier(SubjectIdentifierType.FINGERPRINT, fingerprint))
-                .withPermissions(List.of(EuEntityPermissionType.INVOICEWRITE, EuEntityPermissionType.INVOICEREAD))
+                .withSubjectIdentifier(new SubjectIdentifier(SubjectIdentifier.IdentifierType.FINGERPRINT, fingerprint))
+                .withPermissions(List.of(EuEntityPermissionType.INVOICE_WRITE, EuEntityPermissionType.INVOICE_READ))
                 .withDescription("Representative for EU Entity")
                 .build();
 
-        OperationResponse response = createKSeFClient().grantsPermissionEUEntityRepresentative(request, accessToken);
+        OperationResponse response = ksefClient.grantsPermissionEUEntityRepresentative(request, accessToken);
 
         Assertions.assertNotNull(response);
 
-        return response.getOperationReferenceNumber();
+        return response.getReferenceNumber();
     }
 
     private String grantEuEntityPermission(String ownerNipVatEu, String euEntityPersonalCertificateFingerprint, String accessToken) throws ApiException {
@@ -159,22 +155,22 @@ class EuEntityRepresentativePermissionIntegrationTest extends BaseIntegrationTes
                 // subject to jednostka unijna - jej nadajemy uprawnienia
                 // typ identyfikatora dla subject (czyli jednostki eu, ktorej nadajemy uprawnienia): fingerprint
                 // wartość identyfikatora dla subject: fingerprint certyfikatu jednostki eu w sha256
-                .withSubject(new SubjectIdentifier(SubjectIdentifierType.FINGERPRINT, euEntityPersonalCertificateFingerprint))
-                .withSubjectName("MB Company")
+                .withSubject(new SubjectIdentifier(SubjectIdentifier.IdentifierType.FINGERPRINT, euEntityPersonalCertificateFingerprint))
+                .withEuEntityName("MB Company")
                 // context to moja firma - bo to ja nadaje uprawnienia, czyli wykonuje akcje w moim kontekscie
-                .withContext(new ContextIdentifier(ContextIdentifierType.NIPVATUE, ownerNipVatEu))
+                .withContext(new ContextIdentifier(ContextIdentifier.IdentifierType.NIP_VAT_UE, ownerNipVatEu))
                 .withDescription("EU Company")
                 .build();
 
-        OperationResponse response = createKSeFClient().grantsPermissionEUEntity(request, accessToken);
+        OperationResponse response = ksefClient.grantsPermissionEUEntity(request, accessToken);
 
         Assertions.assertNotNull(response);
 
-        return response.getOperationReferenceNumber();
+        return response.getReferenceNumber();
     }
 
     private Boolean isOperationFinish(String referenceNumber, String accessToken) throws ApiException {
-        PermissionStatusInfo operations = createKSeFClient().permissionOperationStatus(referenceNumber, accessToken);
+        PermissionStatusInfo operations = ksefClient.permissionOperationStatus(referenceNumber, accessToken);
         return operations != null && operations.getStatus().getCode() == 200;
     }
 }

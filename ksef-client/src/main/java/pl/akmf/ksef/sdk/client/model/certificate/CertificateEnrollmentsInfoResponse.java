@@ -1,9 +1,7 @@
 package pl.akmf.ksef.sdk.client.model.certificate;
 
-import java.util.List;
-
 public class CertificateEnrollmentsInfoResponse {
-    private List<String> givenNames;
+    private String givenName;
     private String surname;
     private String commonName;
     private String serialNumber;
@@ -15,12 +13,12 @@ public class CertificateEnrollmentsInfoResponse {
     public CertificateEnrollmentsInfoResponse() {
     }
 
-    public List<String> getGivenNames() {
-        return givenNames;
+    public String getGivenName() {
+        return givenName;
     }
 
-    public void setGivenNames(List<String> givenNames) {
-        this.givenNames = givenNames;
+    public void setGivenName(String givenName) {
+        this.givenName = givenName;
     }
 
     public String getSurname() {

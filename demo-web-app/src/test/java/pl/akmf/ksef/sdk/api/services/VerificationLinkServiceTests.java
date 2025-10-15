@@ -1,6 +1,5 @@
 package pl.akmf.ksef.sdk.api.services;
 
-import org.bouncycastle.asn1.x500.X500Name;
 import org.junit.jupiter.api.Test;
 import pl.akmf.ksef.sdk.api.builders.certificate.CertificateBuilders;
 import pl.akmf.ksef.sdk.client.interfaces.VerificationLinkService;
@@ -56,7 +55,7 @@ class VerificationLinkServiceTests {
     @Test
     void buildCertificateVerificationUrl_WithEmbeddedEcdsaKey_ShouldSucceed_Ecc() throws Exception {
         // Arrange: wygeneruj klucz ECDSA P-256 i self-signed certyfikat
-        X500Name x500 = new CertificateBuilders()
+        CertificateBuilders.X500NameHolder x500 = new CertificateBuilders()
                 .buildForOrganization("Kowalski sp. z o.o", "VATPL-1111111111", "FullEccCert", "PL");
         SelfSignedCertificate cert = new DefaultCertificateService().generateSelfSignedCertificateEcdsa(x500);
 
@@ -85,7 +84,7 @@ class VerificationLinkServiceTests {
         String serial = UUID.randomUUID().toString();
         String invoiceHash = computeUrlEncodedBase64Sha256(xml);
 
-        X500Name x500 = new CertificateBuilders()
+        CertificateBuilders.X500NameHolder x500 = new CertificateBuilders()
                 .buildForOrganization("Kowalski sp. z o.o", "VATPL-" + nip, "TestRSA", "PL");
         SelfSignedCertificate selfSignedCertificate = new DefaultCertificateService().generateSelfSignedCertificateRsa(x500);
 
@@ -111,7 +110,7 @@ class VerificationLinkServiceTests {
         String serial = UUID.randomUUID().toString();
         String invoiceHash = computeUrlEncodedBase64Sha256(xml);
 
-        X500Name x500 = new CertificateBuilders()
+        CertificateBuilders.X500NameHolder x500 = new CertificateBuilders()
                 .buildForOrganization("Kowalski sp. z o.o", "VATPL-" + nip, "TestECDSA", "PL");
         SelfSignedCertificate selfSignedCertificate = new DefaultCertificateService().generateSelfSignedCertificateEcdsa(x500);
 

@@ -8,30 +8,13 @@ public class CertificateInfo {
     private CertificateType type;
     private String commonName;
     private CertificateListItemStatus status;
-    private String subjectIdentifier;
-    private String subjectIdentifierType;
+    private SubjectCertificateIdentifier subjectIdentifier;
     private OffsetDateTime validFrom;
     private OffsetDateTime validTo;
     private OffsetDateTime lastUseDate;
 
     public CertificateInfo() {
 
-    }
-
-    public CertificateInfo(String certificateSerialNumber, String name, CertificateType type,
-                           String commonName, CertificateListItemStatus status, String subjectIdentifier,
-                           String subjectIdentifierType, OffsetDateTime validFrom, OffsetDateTime validTo,
-                           OffsetDateTime lastUseDate) {
-        this.certificateSerialNumber = certificateSerialNumber;
-        this.name = name;
-        this.type = type;
-        this.commonName = commonName;
-        this.status = status;
-        this.subjectIdentifier = subjectIdentifier;
-        this.subjectIdentifierType = subjectIdentifierType;
-        this.validFrom = validFrom;
-        this.validTo = validTo;
-        this.lastUseDate = lastUseDate;
     }
 
     public String getCertificateSerialNumber() {
@@ -66,20 +49,12 @@ public class CertificateInfo {
         this.status = status;
     }
 
-    public String getSubjectIdentifier() {
+    public SubjectCertificateIdentifier getSubjectIdentifier() {
         return subjectIdentifier;
     }
 
-    public void setSubjectIdentifier(String subjectIdentifier) {
+    public void setSubjectIdentifier(SubjectCertificateIdentifier subjectIdentifier) {
         this.subjectIdentifier = subjectIdentifier;
-    }
-
-    public String getSubjectIdentifierType() {
-        return subjectIdentifierType;
-    }
-
-    public void setSubjectIdentifierType(String subjectIdentifierType) {
-        this.subjectIdentifierType = subjectIdentifierType;
     }
 
     public OffsetDateTime getValidFrom() {

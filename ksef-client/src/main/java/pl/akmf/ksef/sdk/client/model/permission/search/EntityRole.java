@@ -4,8 +4,7 @@ import java.time.OffsetDateTime;
 
 
 public class EntityRole {
-    private String parentEntityIdentifier;
-    private EntityRolesParentEntityIdentifierType parentEntityIdentifierType;
+    private EntityRoleQueryParentEntityIdentifier parentEntityIdentifier;
     private EntityRoleType role;
     private String description;
     private OffsetDateTime startDate;
@@ -13,28 +12,12 @@ public class EntityRole {
     public EntityRole() {
     }
 
-    public EntityRole(String parentEntityIdentifier, EntityRolesParentEntityIdentifierType parentEntityIdentifierType, EntityRoleType role, String description, OffsetDateTime startDate) {
-        this.parentEntityIdentifier = parentEntityIdentifier;
-        this.parentEntityIdentifierType = parentEntityIdentifierType;
-        this.role = role;
-        this.description = description;
-        this.startDate = startDate;
-    }
-
-    public String getParentEntityIdentifier() {
+    public EntityRoleQueryParentEntityIdentifier getParentEntityIdentifier() {
         return parentEntityIdentifier;
     }
 
-    public void setParentEntityIdentifier(String parentEntityIdentifier) {
+    public void setParentEntityIdentifier(EntityRoleQueryParentEntityIdentifier parentEntityIdentifier) {
         this.parentEntityIdentifier = parentEntityIdentifier;
-    }
-
-    public EntityRolesParentEntityIdentifierType getParentEntityIdentifierType() {
-        return parentEntityIdentifierType;
-    }
-
-    public void setParentEntityIdentifierType(EntityRolesParentEntityIdentifierType parentEntityIdentifierType) {
-        this.parentEntityIdentifierType = parentEntityIdentifierType;
     }
 
     public EntityRoleType getRole() {

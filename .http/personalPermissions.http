@@ -2,6 +2,7 @@
 POST http://localhost:8082/person-permission/grant-permissions-for-person
 Accept: application/json
 Content-Type: application/json
+Authorization: {{token}}
 
 {
   "type": "Nip",
@@ -17,6 +18,7 @@ Content-Type: application/json
 POST http://localhost:8082/person-permission/revoke-permissions-for-person
 Accept: application/json
 Content-Type: application/json
+Authorization: {{token}}
 
 {{referenceNumber}}
 
@@ -27,3 +29,4 @@ Content-Type: application/json
 ###  check permission status
 GET http://localhost:8082/{{referenceNumber}}/status
 Accept: application/json
+Authorization: {{token}}

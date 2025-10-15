@@ -2,11 +2,11 @@ package pl.akmf.ksef.sdk.api.builders.permission.proxy;
 
 import pl.akmf.ksef.sdk.client.model.permission.proxy.SubjectIdentifier;
 import pl.akmf.ksef.sdk.client.model.permission.proxy.GrantAuthorizationPermissionsRequest;
-import pl.akmf.ksef.sdk.client.model.permission.proxy.ProxyEntityPermissionType;
+import pl.akmf.ksef.sdk.client.model.permission.search.InvoicePermissionType;
 
 public class GrantAuthorizationPermissionsRequestBuilder {
     private SubjectIdentifier subjectIdentifier;
-    private ProxyEntityPermissionType permission;
+    private InvoicePermissionType permission;
     private String description;
 
     public GrantAuthorizationPermissionsRequestBuilder withSubjectIdentifier(SubjectIdentifier subjectIdentifier) {
@@ -14,7 +14,7 @@ public class GrantAuthorizationPermissionsRequestBuilder {
         return this;
     }
 
-    public GrantAuthorizationPermissionsRequestBuilder withPermission(ProxyEntityPermissionType permission) {
+    public GrantAuthorizationPermissionsRequestBuilder withPermission(InvoicePermissionType permission) {
         this.permission = permission;
         return this;
     }

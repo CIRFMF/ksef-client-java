@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "pl.akmf.ksef-sdk"
-version = "3.0.0"
+version = "3.0.2"
 
 java {
     toolchain {
@@ -20,23 +20,25 @@ configurations {
 repositories {
     mavenCentral()
 }
-
-val bouncycastleVersion = 1.76
+val bouncycastleVersion = "1.82"
 val jsr310Version = "2.17.1"
 val junitVersion = "4.4"
 val junitEngineVersion = "5.8.2"
-val jsxbVarsion = "4.0.5"
-val jaxbFluentApiVersion = 3.0
+val jsxbVarsion = "4.0.6"
+val jaxbFluentApiVersion = "3.0"
 val xjc by configurations.creating
-val xadesVersion = "6.0"
+val xadesVersion = "6.0.1"
 val googleZxingCodeVersion = "3.5.3"
 val googleZxingJavaseVersion = "3.5.3"
+val commonsLangsVersion = "3.18.0"
 
 dependencies {
     // Validation
     implementation("eu.europa.ec.joinup.sd-dss:dss-xades:$xadesVersion")
     implementation("eu.europa.ec.joinup.sd-dss:dss-token:$xadesVersion")
     implementation("eu.europa.ec.joinup.sd-dss:dss-utils-apache-commons:$xadesVersion")
+
+    implementation("org.apache.commons:commons-lang3:$commonsLangsVersion")
 
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jsr310Version")
 
@@ -63,6 +65,8 @@ tasks.withType<Test> {
 
 tasks.withType<JavaCompile>().configureEach {
     options.release.set(11)
+
+    options.encoding = "UTF-8"
 }
 
 
@@ -71,6 +75,12 @@ sourceSets["main"].java.srcDir("${buildDir}/generated/src/main/java")
 
 tasks.named("compileJava") {
     dependsOn("generateJaxb")
+}
+
+tasks.register<Test>("unitTest") {
+    description = "Runs unit tests."
+    group = "Verification"
+    useJUnitPlatform()
 }
 
 tasks.register("generateJaxb") {
@@ -83,7 +93,8 @@ tasks.register("generateJaxb") {
             )
             "xjc"(
                 "destdir" to "src/main/java",
-                "package" to "pl.akmf.ksef.sdk.client.model.xml"
+                "package" to "pl.akmf.ksef.sdk.client.model.xml",
+                "encoding" to "UTF-8"
             ) {
                 "arg"("value" to "-Xfluent-api")
                 "schema"(

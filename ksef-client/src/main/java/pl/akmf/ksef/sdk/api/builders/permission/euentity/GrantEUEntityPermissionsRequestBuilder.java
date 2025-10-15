@@ -8,7 +8,7 @@ public class GrantEUEntityPermissionsRequestBuilder {
     private SubjectIdentifier subjectIdentifier;
     private ContextIdentifier contextIdentifier;
     private String description;
-    private String subjectName;
+    private String euEntityName;
 
     public GrantEUEntityPermissionsRequestBuilder withSubject(SubjectIdentifier subjectIdentifier) {
         this.subjectIdentifier = subjectIdentifier;
@@ -24,8 +24,8 @@ public class GrantEUEntityPermissionsRequestBuilder {
         this.description = description;
         return this;
     }
-    public GrantEUEntityPermissionsRequestBuilder withSubjectName(String subjectName) {
-        this.subjectName = subjectName;
+    public GrantEUEntityPermissionsRequestBuilder withEuEntityName(String euEntityName) {
+        this.euEntityName = euEntityName;
         return this;
     }
 
@@ -34,7 +34,7 @@ public class GrantEUEntityPermissionsRequestBuilder {
         request.setSubjectIdentifier(subjectIdentifier);
         request.setContextIdentifier(contextIdentifier);
         request.setDescription(description);
-        request.setSubjectName(subjectName);
+        request.setEuEntityName(euEntityName);
         return request;
     }
 }

@@ -1,6 +1,7 @@
 package pl.akmf.ksef.sdk.api.builders.certificate;
 
 import pl.akmf.ksef.sdk.client.model.certificate.CertificateListItemStatus;
+import pl.akmf.ksef.sdk.client.model.certificate.CertificateType;
 import pl.akmf.ksef.sdk.client.model.certificate.QueryCertificatesRequest;
 
 import java.time.OffsetDateTime;
@@ -8,6 +9,7 @@ import java.time.OffsetDateTime;
 public class CertificateMetadataListRequestBuilder {
     private String certificateSerialNumber;
     private String name;
+    private CertificateType type;
     private CertificateListItemStatus status;
     private OffsetDateTime expiresAfter;
 
@@ -18,6 +20,11 @@ public class CertificateMetadataListRequestBuilder {
 
     public CertificateMetadataListRequestBuilder withName(final String name) {
         this.name = name;
+        return this;
+    }
+
+    public CertificateMetadataListRequestBuilder withType(final CertificateType type) {
+        this.type = type;
         return this;
     }
 
@@ -35,6 +42,7 @@ public class CertificateMetadataListRequestBuilder {
         QueryCertificatesRequest request = new QueryCertificatesRequest();
         request.setCertificateSerialNumber(certificateSerialNumber);
         request.setName(name);
+        request.setType(type);
         request.setStatus(status);
         request.setExpiresAfter(expiresAfter);
 

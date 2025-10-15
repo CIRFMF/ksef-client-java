@@ -1,15 +1,17 @@
 package pl.akmf.ksef.sdk.client.model.permission.proxy;
 
+import pl.akmf.ksef.sdk.client.model.permission.search.InvoicePermissionType;
+
 public class GrantAuthorizationPermissionsRequest {
     private SubjectIdentifier  subjectIdentifier;
-    private ProxyEntityPermissionType permission;
+    private InvoicePermissionType permission;
     private String description;
 
     public GrantAuthorizationPermissionsRequest() {
 
     }
 
-    public GrantAuthorizationPermissionsRequest(SubjectIdentifier subjectIdentifier, ProxyEntityPermissionType permission, String description) {
+    public GrantAuthorizationPermissionsRequest(SubjectIdentifier subjectIdentifier, InvoicePermissionType permission, String description) {
         this.subjectIdentifier = subjectIdentifier;
         this.permission = permission;
         this.description = description;
@@ -23,11 +25,11 @@ public class GrantAuthorizationPermissionsRequest {
         this.subjectIdentifier = subjectIdentifier;
     }
 
-    public ProxyEntityPermissionType getPermission() {
+    public InvoicePermissionType getPermission() {
         return permission;
     }
 
-    public void setPermission(ProxyEntityPermissionType permission) {
+    public void setPermission(InvoicePermissionType permission) {
         this.permission = permission;
     }
 

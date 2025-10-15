@@ -11,7 +11,10 @@ public class EntityAuthorizationPermissionsQueryRequest {
     public EntityAuthorizationPermissionsQueryRequest() {
     }
 
-    public EntityAuthorizationPermissionsQueryRequest(EntityAuthorizationsAuthorizingEntityIdentifier authorizingIdentifier, EntityAuthorizationsAuthorizedEntityIdentifier authorizedIdentifier, QueryType queryType, List<InvoicePermissionType> permissionTypes) {
+    public EntityAuthorizationPermissionsQueryRequest(EntityAuthorizationsAuthorizingEntityIdentifier authorizingIdentifier,
+                                                      EntityAuthorizationsAuthorizedEntityIdentifier authorizedIdentifier,
+                                                      QueryType queryType,
+                                                      List<InvoicePermissionType> permissionTypes) {
         this.authorizingIdentifier = authorizingIdentifier;
         this.authorizedIdentifier = authorizedIdentifier;
         this.queryType = queryType;

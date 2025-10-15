@@ -17,8 +17,7 @@ public class AuthTokenRequestSerializerTest {
             "<AuthTokenRequest xmlns=\"http://ksef.mf.gov.pl/auth/token/2.0\">\n" +
             "    <Challenge>222-222-2222-2222</Challenge>\n" +
             "    <ContextIdentifier>\n" +
-            "        <Type>nip</Type>\n" +
-            "        <Value>111111111</Value>\n" +
+            "        <Nip>111111111</Nip>\n" +
             "    </ContextIdentifier>\n" +
             "    <SubjectIdentifierType>certificateSubject</SubjectIdentifierType>\n" +
             "    <IpAddressPolicy>\n" +

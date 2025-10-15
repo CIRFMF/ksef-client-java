@@ -4,10 +4,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum TokenPermissionType {
-    INVOICEREAD("InvoiceRead"),
-    INVOICEWRITE("InvoiceWrite"),
-    CREDENTIALSREAD("CredentialsRead"),
-    CREDENTIALSMANAGE("CredentialsManage");
+    INVOICE_READ("InvoiceRead"),
+    INVOICE_WRITE("InvoiceWrite"),
+    SUBUNIT_MANAGE("SubunitManage"),
+    ENFORCEMENT_OPERATION("EnforcementOperations"),
+    CREDENTIALS_READ("CredentialsRead"),
+    CREDENTIALS_MANAGE("CredentialsManage");
 
     private final String value;
 

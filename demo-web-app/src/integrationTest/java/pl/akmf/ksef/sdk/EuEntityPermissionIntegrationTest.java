@@ -6,13 +6,11 @@ import org.junit.jupiter.api.Test;
 import pl.akmf.ksef.sdk.api.builders.permission.euentity.EuEntityPermissionsQueryRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.permission.euentity.GrantEUEntityPermissionsRequestBuilder;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
 import pl.akmf.ksef.sdk.client.model.permission.OperationResponse;
+import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.ContextIdentifier;
-import pl.akmf.ksef.sdk.client.model.permission.euentity.ContextIdentifierType;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.EuEntityPermissionsGrantRequest;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.SubjectIdentifier;
-import pl.akmf.ksef.sdk.client.model.permission.euentity.SubjectIdentifierType;
 import pl.akmf.ksef.sdk.client.model.permission.search.EuEntityPermission;
 import pl.akmf.ksef.sdk.client.model.permission.search.EuEntityPermissionsQueryPermissionType;
 import pl.akmf.ksef.sdk.client.model.permission.search.EuEntityPermissionsQueryRequest;
@@ -62,7 +60,7 @@ class EuEntityPermissionIntegrationTest extends BaseIntegrationTest {
                 .withAuthorizedFingerprintIdentifier(subjectContext)
                 .build();
 
-        QueryEuEntityPermissionsResponse response = createKSeFClient().searchGrantedEuEntityPermissions(request, 0, 10, accessToken);
+        QueryEuEntityPermissionsResponse response = ksefClient.searchGrantedEuEntityPermissions(request, 0, 10, accessToken);
 
         Assertions.assertEquals(expectedNumberOfPermissions, response.getPermissions().size());
 
@@ -71,7 +69,7 @@ class EuEntityPermissionIntegrationTest extends BaseIntegrationTest {
 
     private String revokePermission(String operationId, String accessToken) {
         try {
-            return createKSeFClient().revokeCommonPermission(operationId, accessToken).getOperationReferenceNumber();
+            return ksefClient.revokeCommonPermission(operationId, accessToken).getReferenceNumber();
         } catch (ApiException e) {
             Assertions.fail(e.getMessage());
         }
@@ -80,21 +78,21 @@ class EuEntityPermissionIntegrationTest extends BaseIntegrationTest {
 
     private String grantEuEntityPermission(String euEntity, String nipVatUe, String accessToken) throws ApiException {
         EuEntityPermissionsGrantRequest request = new GrantEUEntityPermissionsRequestBuilder()
-                .withSubject(new SubjectIdentifier(SubjectIdentifierType.FINGERPRINT, euEntity))
-                .withSubjectName("Sample Subject Name")
-                .withContext(new ContextIdentifier(ContextIdentifierType.NIPVATUE, nipVatUe))
+                .withSubject(new SubjectIdentifier(SubjectIdentifier.IdentifierType.FINGERPRINT, euEntity))
+                .withEuEntityName("Sample Subject Name")
+                .withContext(new ContextIdentifier(ContextIdentifier.IdentifierType.NIP_VAT_UE, nipVatUe))
                 .withDescription("E2E EU Entity Permission Test")
                 .build();
 
-        OperationResponse response = createKSeFClient().grantsPermissionEUEntity(request, accessToken);
+        OperationResponse response = ksefClient.grantsPermissionEUEntity(request, accessToken);
 
         Assertions.assertNotNull(response);
 
-        return response.getOperationReferenceNumber();
+        return response.getReferenceNumber();
     }
 
     private Boolean isOperationFinish(String referenceNumber, String accessToken) throws ApiException {
-        PermissionStatusInfo operations = createKSeFClient().permissionOperationStatus(referenceNumber, accessToken);
+        PermissionStatusInfo operations = ksefClient.permissionOperationStatus(referenceNumber, accessToken);
         if (operations != null && operations.getStatus().getCode() >= 400) {
             throw new RuntimeException("Could not finish operation: " + operations.getStatus().getDescription());
         }

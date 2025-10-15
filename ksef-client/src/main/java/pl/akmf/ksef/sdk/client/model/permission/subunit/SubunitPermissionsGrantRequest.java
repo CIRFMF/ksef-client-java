@@ -4,6 +4,7 @@ public class SubunitPermissionsGrantRequest {
     private SubjectIdentifier subjectIdentifier;
     private ContextIdentifier contextIdentifier;
     private String description;
+    private String subunitName;
 
     public SubjectIdentifier getSubjectIdentifier() {
         return subjectIdentifier;
@@ -29,5 +30,12 @@ public class SubunitPermissionsGrantRequest {
         this.description = description;
     }
 
+    public String getSubunitName() {
+        return subunitName;
+    }
+
+    public void setSubunitName(String subunitName) {
+        this.subunitName = subunitName;
+    }
 }
 

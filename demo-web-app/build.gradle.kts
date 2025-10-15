@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "pl.akmf.ksef"
-version = "2.0.1"
+version = "2.0.3"
 
 java {
     toolchain {
@@ -33,24 +33,18 @@ repositories {
 }
 
 val integrationTestImplementation by configurations
-val jakartaVersion = "4.0.2"
+val jakartaVersion = "4.0.4"
 val jakartaValidationApiVersion = "3.0.2"
 val jakartaAnnotationApiVersion = "3.0.0"
 val commonsCollectionsVersion = "4.5.0"
-val santuarioXmlsecVersion = "3.0.4"
-val httpcomponentsHttpClientVersion = "4.3.6"
-val bouncycastleBcpkixJdk18onVersion = 1.76
+val commonsLangsVersion = "3.18.0"
 val jsr310Version = "2.17.1"
-val jsxbVarsion = "4.0.5"
 val wiremockStandaloneVersion = "3.9.1"
 val testcontainersVersion = "1.20.0"
 val junitJupiterVersion = "5.10.3"
 val awaitilityVersion = "4.2.0"
 val googleZxingCodeVersion = "3.5.3"
 val googleZxingJavaseVersion = "3.5.3"
-val springRetry = "2.0.3"
-
-val xjc by configurations.creating
 
 dependencies {
     implementation(project(":ksef-client"))
@@ -62,11 +56,8 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jsr310Version")
 
     //
-    implementation("org.apache.commons:commons-lang3")
+    implementation("org.apache.commons:commons-lang3:$commonsLangsVersion")
     implementation("org.apache.commons:commons-collections4:$commonsCollectionsVersion")
-    implementation("org.apache.httpcomponents:httpclient:$httpcomponentsHttpClientVersion")
-    implementation("org.apache.santuario:xmlsec:$santuarioXmlsecVersion")
-    implementation("org.bouncycastle:bcpkix-jdk18on:$bouncycastleBcpkixJdk18onVersion")
 
     //qr code
     implementation("com.google.zxing:core:$googleZxingCodeVersion")
@@ -75,7 +66,6 @@ dependencies {
     implementation("org.springframework.retry:spring-retry")
     implementation("org.springframework.boot:spring-boot-starter-web")
     compileOnly("org.projectlombok:lombok")
-    runtimeOnly("io.micrometer:micrometer-registry-prometheus")
     annotationProcessor("org.projectlombok:lombok")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.testcontainers:junit-jupiter")
@@ -102,6 +92,12 @@ sourceSets {
     }
 }
 
+tasks.register<Test>("unitTest") {
+    description = "Runs unit tests."
+    group = "Verification"
+    useJUnitPlatform()
+}
+
 tasks.register<Test>("integrationTest") {
     description = "Runs integration tests."
     group = "Verification"
@@ -115,7 +111,7 @@ tasks.register<Test>("integrationTest") {
 }
 
 tasks.named("check") {
-    dependsOn(tasks.named("integrationTest"))
+    dependsOn(tasks.named("integrationTest"), tasks.named("unitTest"))
 }
 
 tasks.withType<Test> {

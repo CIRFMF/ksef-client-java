@@ -8,6 +8,7 @@ public class PersonPermissionsQueryRequest {
     private PersonPermissionsAuthorIdentifier authorIdentifier;
     private PersonPermissionsAuthorizedIdentifier authorizedIdentifier;
     private PersonPermissionsTargetIdentifier targetIdentifier;
+    private PersonPermissionsContextIdentifier contextIdentifier;
     private List<PersonPermissionType> permissionTypes;
     private PermissionState permissionState;
     private PersonPermissionQueryType queryType;
@@ -15,10 +16,17 @@ public class PersonPermissionsQueryRequest {
     public PersonPermissionsQueryRequest() {
     }
 
-    public PersonPermissionsQueryRequest(PersonPermissionsAuthorIdentifier authorIdentifier, PersonPermissionsAuthorizedIdentifier authorizedIdentifier, PersonPermissionsTargetIdentifier targetIdentifier, List<PersonPermissionType> permissionTypes, PermissionState permissionState, PersonPermissionQueryType queryType) {
+    public PersonPermissionsQueryRequest(PersonPermissionsAuthorIdentifier authorIdentifier,
+                                         PersonPermissionsAuthorizedIdentifier authorizedIdentifier,
+                                         PersonPermissionsTargetIdentifier targetIdentifier,
+                                         PersonPermissionsContextIdentifier contextIdentifier,
+                                         List<PersonPermissionType> permissionTypes,
+                                         PermissionState permissionState,
+                                         PersonPermissionQueryType queryType) {
         this.authorIdentifier = authorIdentifier;
         this.authorizedIdentifier = authorizedIdentifier;
         this.targetIdentifier = targetIdentifier;
+        this.contextIdentifier = contextIdentifier;
         this.permissionTypes = permissionTypes;
         this.permissionState = permissionState;
         this.queryType = queryType;
@@ -46,6 +54,14 @@ public class PersonPermissionsQueryRequest {
 
     public void setTargetIdentifier(PersonPermissionsTargetIdentifier targetIdentifier) {
         this.targetIdentifier = targetIdentifier;
+    }
+
+    public PersonPermissionsContextIdentifier getContextIdentifier() {
+        return contextIdentifier;
+    }
+
+    public void setContextIdentifier(PersonPermissionsContextIdentifier contextIdentifier) {
+        this.contextIdentifier = contextIdentifier;
     }
 
     public List<PersonPermissionType> getPermissionTypes() {

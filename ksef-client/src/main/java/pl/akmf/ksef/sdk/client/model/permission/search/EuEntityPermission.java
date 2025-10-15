@@ -4,8 +4,7 @@ import java.time.OffsetDateTime;
 
 public class EuEntityPermission {
     private String id;
-    private String authorIdentifier;
-    private EuEntityPermissionsAuthorIdentifierType authorIdentifierType;
+    private EuEntityPermissionsAuthorIdentifier authorIdentifier;
     private String vatUeIdentifier;
     private String euEntityName;
     private String authorizedFingerprintIdentifier;
@@ -16,18 +15,6 @@ public class EuEntityPermission {
     public EuEntityPermission() {
     }
 
-    public EuEntityPermission(String id, String authorIdentifier, EuEntityPermissionsAuthorIdentifierType authorIdentifierType, String vatUeIdentifier, String euEntityName, String authorizedFingerprintIdentifier, EuEntityPermissionsQueryPermissionType permissionScope, String description, OffsetDateTime startDate) {
-        this.id = id;
-        this.authorIdentifier = authorIdentifier;
-        this.authorIdentifierType = authorIdentifierType;
-        this.vatUeIdentifier = vatUeIdentifier;
-        this.euEntityName = euEntityName;
-        this.authorizedFingerprintIdentifier = authorizedFingerprintIdentifier;
-        this.permissionScope = permissionScope;
-        this.description = description;
-        this.startDate = startDate;
-    }
-
     public String getId() {
         return id;
     }
@@ -36,20 +23,12 @@ public class EuEntityPermission {
         this.id = id;
     }
 
-    public String getAuthorIdentifier() {
+    public EuEntityPermissionsAuthorIdentifier getAuthorIdentifier() {
         return authorIdentifier;
     }
 
-    public void setAuthorIdentifier(String authorIdentifier) {
+    public void setAuthorIdentifier(EuEntityPermissionsAuthorIdentifier authorIdentifier) {
         this.authorIdentifier = authorIdentifier;
-    }
-
-    public EuEntityPermissionsAuthorIdentifierType getAuthorIdentifierType() {
-        return authorIdentifierType;
-    }
-
-    public void setAuthorIdentifierType(EuEntityPermissionsAuthorIdentifierType authorIdentifierType) {
-        this.authorIdentifierType = authorIdentifierType;
     }
 
     public String getVatUeIdentifier() {

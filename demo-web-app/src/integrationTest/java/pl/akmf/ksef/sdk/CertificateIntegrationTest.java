@@ -3,9 +3,10 @@ package pl.akmf.ksef.sdk;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import pl.akmf.ksef.sdk.api.builders.certificate.CertificateMetadataListRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.certificate.CertificateRevokeRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.certificate.SendCertificateEnrollmentRequestBuilder;
-import pl.akmf.ksef.sdk.api.builders.certificate.CertificateMetadataListRequestBuilder;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.certificate.CertificateEnrollmentResponse;
@@ -26,12 +27,16 @@ import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
 class CertificateIntegrationTest extends BaseIntegrationTest {
+
+    @Autowired
+    private DefaultCryptographyService defaultCryptographyService;
 
     @Test
     void certificateE2EIntegrationTest() throws JAXBException, IOException, ApiException {
@@ -59,9 +64,9 @@ class CertificateIntegrationTest extends BaseIntegrationTest {
 
     private Boolean isEnrolmentStatusReady(String referenceNumber, String accessToken) {
         try {
-            CertificateEnrollmentStatusResponse response = createKSeFClient().getCertificateEnrollmentStatus(referenceNumber, accessToken);
+            CertificateEnrollmentStatusResponse response = ksefClient.getCertificateEnrollmentStatus(referenceNumber, accessToken);
             return response != null &&
-                   response.getStatus().getCode() == 200;
+                    response.getStatus().getCode() == 200;
         } catch (Exception e) {
             return false;
         }
@@ -71,7 +76,7 @@ class CertificateIntegrationTest extends BaseIntegrationTest {
         QueryCertificatesRequest request = new CertificateMetadataListRequestBuilder()
                 .build();
 
-        CertificateMetadataListResponse response = createKSeFClient().getCertificateMetadataList(request, 10, 0, accessToken);
+        CertificateMetadataListResponse response = ksefClient.getCertificateMetadataList(request, 10, 0, accessToken);
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(response.getCertificates().getFirst().getCertificateSerialNumber(), certificateSerialNumber);
@@ -82,43 +87,43 @@ class CertificateIntegrationTest extends BaseIntegrationTest {
                 .withRevocationReason(CertificateRevocationReason.KEYCOMPROMISE)
                 .build();
 
-        createKSeFClient().revokeCertificate(request, serialNumber, accessToken);
+        ksefClient.revokeCertificate(request, serialNumber, accessToken);
     }
 
     private void getCertificateList(String certificateSerialNumber, String accessToken) throws ApiException {
         CertificateListResponse certificateResponse =
-                createKSeFClient().getCertificateList(new CertificateListRequest(List.of(certificateSerialNumber)), accessToken);
+                ksefClient.getCertificateList(new CertificateListRequest(List.of(certificateSerialNumber)), accessToken);
 
         Assertions.assertNotNull(certificateResponse);
         Assertions.assertEquals(1, certificateResponse.getCertificates().size());
     }
 
     private CertificateEnrollmentStatusResponse getEnrolmentStatus(String referenceNumber, String accessToken) throws ApiException {
-        CertificateEnrollmentStatusResponse response = createKSeFClient().getCertificateEnrollmentStatus(referenceNumber, accessToken);
+        CertificateEnrollmentStatusResponse response = ksefClient.getCertificateEnrollmentStatus(referenceNumber, accessToken);
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(200, response.getStatus().getCode());
         return response;
     }
 
-    private String sendEnrollment(CertificateEnrollmentsInfoResponse enrollmentInfo, String accessToken) throws ApiException, IOException {
-        CsrResult csr = new DefaultCryptographyService(createKSeFClient()).generateCsr(enrollmentInfo);
+    private String sendEnrollment(CertificateEnrollmentsInfoResponse enrollmentInfo, String accessToken) throws ApiException {
+        CsrResult csr = defaultCryptographyService.generateCsrWithRsa(enrollmentInfo);
 
         SendCertificateEnrollmentRequest request = new SendCertificateEnrollmentRequestBuilder()
-                .withValidFrom(LocalDateTime.now().toString())
+                .withValidFrom(OffsetDateTime.now().toString())
                 .withCsr(csr.csr())
                 .withCertificateName("certificate")
-                .withCertificateType(CertificateType.Authentication)
+                .withCertificateType(CertificateType.AUTHENTICATION)
                 .build();
 
-        CertificateEnrollmentResponse response = createKSeFClient().sendCertificateEnrollment(request, accessToken);
+        CertificateEnrollmentResponse response = ksefClient.sendCertificateEnrollment(request, accessToken);
         Assertions.assertNotNull(response);
 
         return response.getReferenceNumber();
     }
 
     private CertificateEnrollmentsInfoResponse getEnrolmentInfo(String accessToken) throws ApiException {
-        CertificateEnrollmentsInfoResponse response = createKSeFClient().getCertificateEnrollmentInfo(accessToken);
+        CertificateEnrollmentsInfoResponse response = ksefClient.getCertificateEnrollmentInfo(accessToken);
 
         Assertions.assertNotNull(response);
         Assertions.assertNotNull(response.getOrganizationIdentifier());
@@ -127,7 +132,7 @@ class CertificateIntegrationTest extends BaseIntegrationTest {
     }
 
     private void getCertificateLimitAsync(String accessToken) throws ApiException {
-        CertificateLimitsResponse response = createKSeFClient().getCertificateLimits(accessToken);
+        CertificateLimitsResponse response = ksefClient.getCertificateLimits(accessToken);
 
         Assertions.assertNotNull(response);
         Assertions.assertTrue(response.getCanRequest());

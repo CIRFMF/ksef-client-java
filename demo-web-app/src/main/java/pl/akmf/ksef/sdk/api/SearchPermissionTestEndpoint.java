@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import pl.akmf.ksef.sdk.client.interfaces.KSeFClient;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.permission.search.EntityAuthorizationPermissionsQueryRequest;
 import pl.akmf.ksef.sdk.client.model.permission.search.EuEntityPermissionsQueryRequest;
@@ -18,14 +17,10 @@ import pl.akmf.ksef.sdk.client.model.permission.search.QueryEntityAuthorizationP
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryEntityRolesResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryEuEntityPermissionsResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryPersonPermissionsResponse;
-import pl.akmf.ksef.sdk.client.model.permission.search.QuerySubordinateEntityRolesResponse;
+import pl.akmf.ksef.sdk.client.model.permission.search.SubordinateEntityRolesQueryResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.QuerySubunitPermissionsResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.SubordinateEntityRolesQueryRequest;
 import pl.akmf.ksef.sdk.client.model.permission.search.SubunitPermissionsQueryRequest;
-import pl.akmf.ksef.sdk.util.ExampleApiProperties;
-import pl.akmf.ksef.sdk.util.HttpClientBuilder;
-
-import java.net.http.HttpClient;
 
 import static pl.akmf.ksef.sdk.client.Headers.AUTHORIZATION;
 
@@ -33,7 +28,7 @@ import static pl.akmf.ksef.sdk.client.Headers.AUTHORIZATION;
 @RequiredArgsConstructor
 @RequestMapping("/permissions/query")
 public class SearchPermissionTestEndpoint {
-    private final ExampleApiProperties exampleApiProperties;
+    private final DefaultKsefClient ksefClient;
 
     // Pobranie listy uprawnień do pracy w KSeF nadanych osobom fizycznym
     @PostMapping("/persons/grants")
@@ -42,11 +37,7 @@ public class SearchPermissionTestEndpoint {
             @RequestParam int pageSize,
             @RequestBody PersonPermissionsQueryRequest request,
             @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
-        try (HttpClient apiClient = HttpClientBuilder.createHttpBuilder().build()) {
-            KSeFClient ksefClient = new DefaultKsefClient(apiClient, exampleApiProperties);
-
-            return ksefClient.searchGrantedPersonPermissions(request, pageOffset, pageSize, authToken);
-        }
+        return ksefClient.searchGrantedPersonPermissions(request, pageOffset, pageSize, authToken);
     }
 
     // Pobranie listy uprawnień administratora podmiotu podrzędnego
@@ -56,11 +47,7 @@ public class SearchPermissionTestEndpoint {
             @RequestParam int pageSize,
             @RequestBody SubunitPermissionsQueryRequest request,
             @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
-        try (HttpClient apiClient = HttpClientBuilder.createHttpBuilder().build()) {
-            KSeFClient ksefClient = new DefaultKsefClient(apiClient, exampleApiProperties);
-
-            return ksefClient.searchSubunitAdminPermissions(request, pageOffset, pageSize, authToken);
-        }
+        return ksefClient.searchSubunitAdminPermissions(request, pageOffset, pageSize, authToken);
     }
 
     // Pobranie listy uprawnień do obsługi faktur nadanych podmiotom
@@ -69,26 +56,19 @@ public class SearchPermissionTestEndpoint {
             @RequestParam int pageOffset,
             @RequestParam int pageSize,
             @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
-        try (HttpClient apiClient = HttpClientBuilder.createHttpBuilder().build()) {
-            KSeFClient ksefClient = new DefaultKsefClient(apiClient, exampleApiProperties);
-
-            return ksefClient.searchEntityInvoiceRoles(pageOffset, pageSize, authToken);
-        }
+        return ksefClient.searchEntityInvoiceRoles(pageOffset, pageSize, authToken);
     }
 
     // Pobranie listy uprawnień do obsługi faktur nadanych podmiotom podrzędnym
     @PostMapping("/subordinate-entities/roles")
-    public QuerySubordinateEntityRolesResponse searchSubordinateEntityInvoiceRoles(
+    public SubordinateEntityRolesQueryResponse searchSubordinateEntityInvoiceRoles(
             @RequestBody SubordinateEntityRolesQueryRequest request,
             @RequestParam int pageOffset,
             @RequestParam int pageSize,
             @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
-        try (HttpClient apiClient = HttpClientBuilder.createHttpBuilder().build()) {
-            KSeFClient ksefClient = new DefaultKsefClient(apiClient, exampleApiProperties);
-
-            return ksefClient.searchSubordinateEntityInvoiceRoles(request, pageOffset, pageSize, authToken);
-        }
+        return ksefClient.searchSubordinateEntityInvoiceRoles(request, pageOffset, pageSize, authToken);
     }
+
 
     // Pobranie listy uprawnień o charakterze upoważnień nadanych podmiotom
     @PostMapping("/authorizations/grants")
@@ -97,12 +77,9 @@ public class SearchPermissionTestEndpoint {
             @RequestParam int pageSize,
             @RequestBody EntityAuthorizationPermissionsQueryRequest request,
             @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
-        try (HttpClient apiClient = HttpClientBuilder.createHttpBuilder().build()) {
-            KSeFClient ksefClient = new DefaultKsefClient(apiClient, exampleApiProperties);
-
-            return ksefClient.searchEntityAuthorizationGrants(request, pageOffset, pageSize, authToken);
-        }
+        return ksefClient.searchEntityAuthorizationGrants(request, pageOffset, pageSize, authToken);
     }
+
 
     // Pobranie listy uprawnień nadanych podmiotom unijnym
     @PostMapping("/eu-entities/grants")
@@ -111,10 +88,6 @@ public class SearchPermissionTestEndpoint {
             @RequestParam int pageSize,
             @RequestBody EuEntityPermissionsQueryRequest request,
             @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
-        try (HttpClient apiClient = HttpClientBuilder.createHttpBuilder().build()) {
-            KSeFClient ksefClient = new DefaultKsefClient(apiClient, exampleApiProperties);
-
-            return ksefClient.searchGrantedEuEntityPermissions(request, pageOffset, pageSize, authToken);
-        }
+        return ksefClient.searchGrantedEuEntityPermissions(request, pageOffset, pageSize, authToken);
     }
 }

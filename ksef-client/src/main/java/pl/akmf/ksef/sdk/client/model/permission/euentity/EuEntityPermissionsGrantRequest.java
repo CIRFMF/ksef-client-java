@@ -4,7 +4,7 @@ public class EuEntityPermissionsGrantRequest {
     private SubjectIdentifier subjectIdentifier;
     private ContextIdentifier contextIdentifier;
     private String description;
-    private String subjectName;
+    private String euEntityName;
 
     public SubjectIdentifier getSubjectIdentifier() {
         return subjectIdentifier;
@@ -30,12 +30,12 @@ public class EuEntityPermissionsGrantRequest {
         this.description = description;
     }
 
-    public String getSubjectName() {
-        return subjectName;
+    public String getEuEntityName() {
+        return euEntityName;
     }
 
-    public void setSubjectName(String subjectName) {
-        this.subjectName = subjectName;
+    public void setEuEntityName(String euEntityName) {
+        this.euEntityName = euEntityName;
     }
 }
 

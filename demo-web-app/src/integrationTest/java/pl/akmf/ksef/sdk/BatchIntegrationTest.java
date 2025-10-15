@@ -3,15 +3,17 @@ package pl.akmf.ksef.sdk;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.batch.OpenBatchSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
-import pl.akmf.ksef.sdk.client.interfaces.CryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
 import pl.akmf.ksef.sdk.client.model.session.FileMetadata;
+import pl.akmf.ksef.sdk.client.model.session.SchemaVersion;
 import pl.akmf.ksef.sdk.client.model.session.SessionInvoiceStatusResponse;
 import pl.akmf.ksef.sdk.client.model.session.SessionInvoicesResponse;
 import pl.akmf.ksef.sdk.client.model.session.SessionStatusResponse;
+import pl.akmf.ksef.sdk.client.model.session.SessionValue;
 import pl.akmf.ksef.sdk.client.model.session.SystemCode;
 import pl.akmf.ksef.sdk.client.model.session.batch.BatchPartSendingInfo;
 import pl.akmf.ksef.sdk.client.model.session.batch.BatchPartStreamSendingInfo;
@@ -27,7 +29,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.cert.CertificateException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,8 +50,11 @@ class BatchIntegrationTest extends BaseIntegrationTest {
     private static final String TMP = "tmp";
     private static final Path INVOICES_DIR = Paths.get(TMP + "/Invoices");
 
+    @Autowired
+    private DefaultCryptographyService defaultCryptographyService;
+
     @Test
-    void batchSessionE2EIntegrationTest() throws JAXBException, IOException, InterruptedException, ApiException, CertificateException {
+    void batchSessionE2EIntegrationTest() throws JAXBException, IOException, ApiException {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
 
@@ -68,7 +72,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    void batchSessionStreamE2EIntegrationTest() throws JAXBException, IOException, InterruptedException, ApiException, CertificateException {
+    void batchSessionStreamE2EIntegrationTest() throws JAXBException, IOException, ApiException {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
 
@@ -87,19 +91,19 @@ class BatchIntegrationTest extends BaseIntegrationTest {
 
     private void getSessionUpo(String sessionReferenceNumber, String upoReferenceNumber, String accessToken) throws ApiException {
 
-        byte[] sessionUpo = createKSeFClient().getSessionUpo(sessionReferenceNumber, upoReferenceNumber, accessToken);
+        byte[] sessionUpo = ksefClient.getSessionUpo(sessionReferenceNumber, upoReferenceNumber, accessToken);
 
         Assertions.assertNotNull(sessionUpo);
     }
 
     private void getBatchInvoiceAndUpo(String sessionReferenceNumber, String ksefNumber, String accessToken) throws ApiException {
-        byte[] upoResponse = createKSeFClient().getSessionInvoiceUpoByKsefNumber(sessionReferenceNumber, ksefNumber, accessToken);
+        byte[] upoResponse = ksefClient.getSessionInvoiceUpoByKsefNumber(sessionReferenceNumber, ksefNumber, accessToken);
 
         Assertions.assertNotNull(upoResponse);
     }
 
     private List<SessionInvoiceStatusResponse> getInvoice(String sessionReferenceNumber, String accessToken) throws ApiException {
-        SessionInvoicesResponse response = createKSeFClient().getSessionInvoices(sessionReferenceNumber, null, 10,
+        SessionInvoicesResponse response = ksefClient.getSessionInvoices(sessionReferenceNumber, null, 10,
                 accessToken);
 
         Assertions.assertNotNull(response.getInvoices());
@@ -111,11 +115,11 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         await().atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> {
-                    SessionStatusResponse response = createKSeFClient().getSessionStatus(referenceNumber, accessToken);
+                    SessionStatusResponse response = ksefClient.getSessionStatus(referenceNumber, accessToken);
                     return response.getStatus().getCode() == 200;
                 });
 
-        SessionStatusResponse response = createKSeFClient().getSessionStatus(referenceNumber, accessToken);
+        SessionStatusResponse response = ksefClient.getSessionStatus(referenceNumber, accessToken);
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(INVOICES_COUNT, response.getInvoiceCount());
@@ -126,16 +130,15 @@ class BatchIntegrationTest extends BaseIntegrationTest {
     }
 
     private void closeSession(String referenceNumber, String accessToken) throws ApiException {
-        createKSeFClient().closeBatchSession(referenceNumber, accessToken);
+        ksefClient.closeBatchSession(referenceNumber, accessToken);
     }
 
-    private String openBatchSessionAndSendInvoice(String context, String accessToken) throws IOException, ApiException, InterruptedException, CertificateException {
+    private String openBatchSessionAndSendInvoice(String context, String accessToken) throws IOException, ApiException {
         //when
         String invoice = new String(Objects.requireNonNull(BaseIntegrationTest.class.getResourceAsStream("/xml/invoices/sample/invoice-template.xml"))
                 .readAllBytes(), StandardCharsets.UTF_8);
 
-        CryptographyService cryptographyService = new DefaultCryptographyService(createKSeFClient());
-        EncryptionData encryptionData = cryptographyService.getEncryptionData();
+        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
 
         if (!Files.exists(INVOICES_DIR)) Files.createDirectories(INVOICES_DIR);
 
@@ -167,7 +170,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         }
 
         // get ZIP metadata (before crypto)
-        FileMetadata zipMetadata = cryptographyService.getMetaData(zipBytes);
+        FileMetadata zipMetadata = defaultCryptographyService.getMetaData(zipBytes);
 
         // Split ZIP into ${numberOfParts} parts
         int partSize = (int) Math.ceil((double) zipBytes.length / NUMBER_OF_PARTS);
@@ -184,18 +187,18 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         // Encrypt zip parts
         List<BatchPartSendingInfo> encryptedZipParts = new ArrayList<>();
         for (int i = 0; i < zipParts.size(); i++) {
-            byte[] encryptedZipPart = cryptographyService.encryptBytesWithAES256(
+            byte[] encryptedZipPart = defaultCryptographyService.encryptBytesWithAES256(
                     zipParts.get(i),
                     encryptionData.cipherKey(),
                     encryptionData.cipherIv()
             );
-            FileMetadata zipPartMetadata = cryptographyService.getMetaData(encryptedZipPart);
+            FileMetadata zipPartMetadata = defaultCryptographyService.getMetaData(encryptedZipPart);
             encryptedZipParts.add(new BatchPartSendingInfo(encryptedZipPart, zipPartMetadata, (i + 1)));
         }
 
         // Build request
         OpenBatchSessionRequestBuilder builder = OpenBatchSessionRequestBuilder.create()
-                .withFormCode(SystemCode.FA_2, "1-0E", "FA")
+                .withFormCode(SystemCode.FA_2, SchemaVersion.VERSION_1_0E, SessionValue.FA)
                 .withOfflineMode(false)
                 .withBatchFile(zipMetadata.getFileSize(), zipMetadata.getHashSHA());
 
@@ -212,24 +215,23 @@ class BatchIntegrationTest extends BaseIntegrationTest {
                 )
                 .build();
 
-        OpenBatchSessionResponse response = createKSeFClient().openBatchSession(request, accessToken);
+        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, accessToken);
 
         deleteDirectoryRecursively(Paths.get(TMP));
 
         Assertions.assertNotNull(response.getReferenceNumber());
 
-        createKSeFClient().sendBatchParts(response, encryptedZipParts);
+        ksefClient.sendBatchParts(response, encryptedZipParts);
 
         return response.getReferenceNumber();
     }
 
-    private String openBatchSessionAndSendInvoiceStream(String context, String accessToken) throws IOException, ApiException, InterruptedException, CertificateException {
+    private String openBatchSessionAndSendInvoiceStream(String context, String accessToken) throws IOException, ApiException {
         //when
         String invoice = new String(Objects.requireNonNull(BaseIntegrationTest.class.getResourceAsStream("/xml/invoices/sample/invoice-template.xml"))
                 .readAllBytes(), StandardCharsets.UTF_8);
 
-        CryptographyService cryptographyService = new DefaultCryptographyService(createKSeFClient());
-        EncryptionData encryptionData = cryptographyService.getEncryptionData();
+        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
 
         if (!Files.exists(INVOICES_DIR)) Files.createDirectories(INVOICES_DIR);
 
@@ -262,7 +264,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         byte[] zipBytes = zipBaos.toByteArray();
 
         // get ZIP metadata (before crypto)
-        FileMetadata zipMetadata = cryptographyService.getMetaData(zipBytes);
+        FileMetadata zipMetadata = defaultCryptographyService.getMetaData(zipBytes);
 
         // Split ZIP into ${numberOfParts} parts
         int partSize = (int) Math.ceil((double) zipBytes.length / NUMBER_OF_PARTS);
@@ -279,7 +281,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
             ByteArrayInputStream partInputStream = new ByteArrayInputStream(partBytes);
             ByteArrayOutputStream encryptedBaos = new ByteArrayOutputStream();
 
-            cryptographyService.encryptStreamWithAES256(
+            defaultCryptographyService.encryptStreamWithAES256(
                     partInputStream,
                     encryptedBaos,
                     encryptionData.cipherKey(),
@@ -287,7 +289,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
             );
 
             byte[] encryptedBytes = encryptedBaos.toByteArray();
-            FileMetadata metadata = cryptographyService.getMetaData(encryptedBytes);
+            FileMetadata metadata = defaultCryptographyService.getMetaData(encryptedBytes);
 
             encryptedStreamParts.add(new BatchPartStreamSendingInfo(
                     new ByteArrayInputStream(encryptedBytes),
@@ -298,7 +300,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
 
         // Build request
         OpenBatchSessionRequestBuilder builder = OpenBatchSessionRequestBuilder.create()
-                .withFormCode(SystemCode.FA_2, "1-0E", "FA")
+                .withFormCode(SystemCode.FA_2, SchemaVersion.VERSION_1_0E, SessionValue.FA)
                 .withOfflineMode(false)
                 .withBatchFile(zipMetadata.getFileSize(), zipMetadata.getHashSHA());
 
@@ -315,13 +317,13 @@ class BatchIntegrationTest extends BaseIntegrationTest {
                 )
                 .build();
 
-        OpenBatchSessionResponse response = createKSeFClient().openBatchSession(request, accessToken);
+        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, accessToken);
 
         deleteDirectoryRecursively(Paths.get(TMP));
 
         Assertions.assertNotNull(response.getReferenceNumber());
 
-        createKSeFClient().sendBatchPartsWithStream(response, encryptedStreamParts);
+        ksefClient.sendBatchPartsWithStream(response, encryptedStreamParts);
 
         return response.getReferenceNumber();
     }

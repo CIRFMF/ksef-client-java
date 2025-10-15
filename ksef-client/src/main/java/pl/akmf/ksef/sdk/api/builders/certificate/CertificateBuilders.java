@@ -76,11 +76,13 @@ public class CertificateBuilders {
         return this;
     }
 
-    public X500Name build() {
-        return nameBuilder.build();
+    public X500NameHolder build() {
+        X500Name x500Name = nameBuilder.build();
+
+        return new X500NameHolder(x500Name);
     }
 
-    public X500Name buildForOrganization(String organizationName, String organizationIdentifier, String commonName, String countryCode) {
+    public X500NameHolder buildForOrganization(String organizationName, String organizationIdentifier, String commonName, String countryCode) {
         withOrganizationIdentifier(organizationIdentifier);
         withOrganizationName(organizationName);
         withCommonName(commonName);
@@ -89,7 +91,7 @@ public class CertificateBuilders {
         return build();
     }
 
-    public X500Name buildForPerson(String givenName, String surname, String serialNumber, String commonName, String countryCode) {
+    public X500NameHolder buildForPerson(String givenName, String surname, String serialNumber, String commonName, String countryCode) {
         withGivenName(givenName);
         withSurname(surname);
         withSerialNumber(serialNumber);
@@ -97,5 +99,17 @@ public class CertificateBuilders {
         withCountryCode(countryCode);
 
         return build();
+    }
+
+    public static class X500NameHolder {
+        private final X500Name x500Name;
+
+        public X500NameHolder(X500Name x500Name) {
+            this.x500Name = x500Name;
+        }
+
+        public X500Name getX500Name() {
+            return this.x500Name;
+        }
     }
 }

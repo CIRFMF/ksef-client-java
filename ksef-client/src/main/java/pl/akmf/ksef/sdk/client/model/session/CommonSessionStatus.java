@@ -5,39 +5,37 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum CommonSessionStatus {
-  
-  SUCCEEDED("Succeeded"),
-  
-  INPROGRESS("InProgress"),
-  
-  FAILED("Failed"),
-  CANCELLED("Cancelled");
 
-  private String value;
+    SUCCEEDED("Succeeded"),
+    INPROGRESS("InProgress"),
+    FAILED("Failed"),
+    CANCELLED("Cancelled");
 
-  CommonSessionStatus(String value) {
-    this.value = value;
-  }
+    private final String value;
 
-  @JsonValue
-  public String getValue() {
-    return value;
-  }
-
-  @Override
-  public String toString() {
-    return String.valueOf(value);
-  }
-
-  @JsonCreator
-  public static CommonSessionStatus fromValue(String value) {
-    for (CommonSessionStatus b : CommonSessionStatus.values()) {
-      if (b.value.equals(value)) {
-        return b;
-      }
+    CommonSessionStatus(String value) {
+        this.value = value;
     }
-    throw new IllegalArgumentException("Unexpected value '" + value + "'");
-  }
+
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static CommonSessionStatus fromValue(String value) {
+        for (CommonSessionStatus b : CommonSessionStatus.values()) {
+            if (b.value.equals(value)) {
+                return b;
+            }
+        }
+        throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
 
 }
 
