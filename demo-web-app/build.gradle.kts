@@ -45,6 +45,7 @@ val junitJupiterVersion = "5.10.3"
 val awaitilityVersion = "4.2.0"
 val googleZxingCodeVersion = "3.5.3"
 val googleZxingJavaseVersion = "3.5.3"
+val openApiVersion = "2.3.0"
 
 dependencies {
     implementation(project(":ksef-client"))
@@ -80,7 +81,7 @@ dependencies {
     integrationTestImplementation("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
     integrationTestImplementation("org.wiremock:wiremock-standalone:${wiremockStandaloneVersion}")
     implementation("org.awaitility:awaitility:${awaitilityVersion}")
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:${openApiVersion}")
 }
 
 sourceSets {
