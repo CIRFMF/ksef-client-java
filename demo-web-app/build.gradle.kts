@@ -2,13 +2,13 @@ plugins {
     java
     idea
     war
-    id("org.springframework.boot") version "3.3.0"
+    id("org.springframework.boot") version "3.5.7"
     id("io.spring.dependency-management") version "1.1.5"
     id("org.graalvm.buildtools.native") version "0.10.2"
 }
 
 group = "pl.akmf.ksef"
-version = "3.0.4"
+version = "3.1.0-SNAPSHOT"
 
 java {
     toolchain {
@@ -40,8 +40,7 @@ val commonsCollectionsVersion = "4.5.0"
 val commonsLangsVersion = "3.18.0"
 val jsr310Version = "2.17.1"
 val wiremockStandaloneVersion = "3.9.1"
-val testcontainersVersion = "1.20.0"
-val junitJupiterVersion = "5.10.3"
+val testcontainersVersion = "1.21.3"
 val awaitilityVersion = "4.2.0"
 val googleZxingCodeVersion = "3.5.3"
 val googleZxingJavaseVersion = "3.5.3"
@@ -77,7 +76,6 @@ dependencies {
     }
     integrationTestImplementation("org.testcontainers:junit-jupiter:${testcontainersVersion}")
     integrationTestImplementation("org.testcontainers:testcontainers:${testcontainersVersion}")
-    integrationTestImplementation("org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}")
     integrationTestImplementation("org.wiremock:wiremock-standalone:${wiremockStandaloneVersion}")
     implementation("org.awaitility:awaitility:${awaitilityVersion}")
 }
