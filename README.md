@@ -15,7 +15,7 @@ Całość napisana jest w języku **Java**. Do komunikacji HTTP wykorzystywany j
 | Komponent      | Java | Spring Boot |
 |----------------|------|-------------|
 | `ksef-client`  | 11   | –           |
-| `demo-web-app` | 21   | 3.3.0       |
+| `demo-web-app` | 21   | 3.5.7       |
 
 ---
 
