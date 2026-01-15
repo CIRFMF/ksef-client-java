@@ -3,6 +3,7 @@ package pl.akmf.ksef.sdk.client.model.invoice;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Objects;
 
 
 public class InvoiceMetadata {
@@ -197,6 +198,23 @@ public class InvoiceMetadata {
 
     public void setThirdSubjects(List<ThirdSubject> thirdSubjects) {
         this.thirdSubjects = thirdSubjects;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        InvoiceMetadata that = (InvoiceMetadata) o;
+        return this.ksefNumber.equals(that.ksefNumber);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(ksefNumber);
     }
 }
 

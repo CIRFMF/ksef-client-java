@@ -8,6 +8,7 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import pl.akmf.ksef.sdk.api.builders.certificate.CertificateBuilders;
 import pl.akmf.ksef.sdk.client.interfaces.CertificateService;
+import pl.akmf.ksef.sdk.client.model.auth.EncryptionMethod;
 import pl.akmf.ksef.sdk.client.model.certificate.SelfSignedCertificate;
 import pl.akmf.ksef.sdk.system.SystemKSeFSDKException;
 
@@ -32,7 +33,7 @@ public class DefaultCertificateService implements CertificateService {
     private static final String SHA_256 = "SHA-256";
 
     @Override
-    public String getSha256Fingerprint(X509Certificate certificate){
+    public String getSha256Fingerprint(X509Certificate certificate) {
         try {
             byte[] raw = certificate.getEncoded();
             MessageDigest sha256 = MessageDigest.getInstance(SHA_256);
@@ -52,18 +53,42 @@ public class DefaultCertificateService implements CertificateService {
 
     @Override
     public SelfSignedCertificate getPersonalCertificate(String givenName, String surname, String serialNumberPrefix, String serialNumber, String commonName) {
+        return getPersonalCertificate(givenName, surname, serialNumberPrefix, serialNumber, commonName, EncryptionMethod.Rsa);
+    }
+
+    @Override
+    public SelfSignedCertificate getPersonalCertificate(String givenName, String surname, String serialNumberPrefix, String serialNumber, String commonName, EncryptionMethod encryptionMethod) {
         CertificateBuilders.X500NameHolder x500Name = new CertificateBuilders()
                 .buildForPerson(givenName, surname, serialNumberPrefix + "-" + serialNumber, commonName, "PL");
 
-        return generateSelfSignedCertificateRsa(x500Name);
+        switch (encryptionMethod) {
+            case Rsa:
+                return generateSelfSignedCertificateRsa(x500Name);
+            case ECDsa:
+                return generateSelfSignedCertificateEcdsa(x500Name);
+            default:
+                throw new IllegalArgumentException();
+        }
     }
 
     @Override
     public SelfSignedCertificate getCompanySeal(String organizationName, String organizationIdentifier, String commonName) {
+        return getCompanySeal(organizationName, organizationIdentifier, commonName, EncryptionMethod.Rsa);
+    }
+
+    @Override
+    public SelfSignedCertificate getCompanySeal(String organizationName, String organizationIdentifier, String commonName, EncryptionMethod encryptionMethod) {
         CertificateBuilders.X500NameHolder x500Name = new CertificateBuilders()
                 .buildForOrganization(organizationName, organizationIdentifier, commonName, "PL");
 
-        return generateSelfSignedCertificateRsa(x500Name);
+        switch (encryptionMethod) {
+            case Rsa:
+                return generateSelfSignedCertificateRsa(x500Name);
+            case ECDsa:
+                return generateSelfSignedCertificateEcdsa(x500Name);
+            default:
+                throw new IllegalArgumentException();
+        }
     }
 
     @Override

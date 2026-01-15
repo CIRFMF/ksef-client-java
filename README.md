@@ -15,7 +15,7 @@ Całość napisana jest w języku **Java**. Do komunikacji HTTP wykorzystywany j
 | Komponent      | Java | Spring Boot |
 |----------------|------|-------------|
 | `ksef-client`  | 11   | –           |
-| `demo-web-app` | 21   | 3.3.0       |
+| `demo-web-app` | 21   | 3.5.7       |
 
 ---
 
@@ -47,3 +47,11 @@ Całość napisana jest w języku **Java**. Do komunikacji HTTP wykorzystywany j
 - Implementacja klienta KSeF 2.0
 - Przykłady użycia i integracji z KSeF 2.0
 
+
+## Pakiety maven
+
+Projekt ksef-client jest dostępny jako pakiet maven w GitHub Packages organizacji CIRFMF.
+
+Należy najpierw skonfigurować dostęp do paczek Maven opublikowanych w GitHub Packages organizacji CIRFMF.
+Wymaga to autoryzacji przy pomocy osobistego tokena dostępu (Personal Access Token – PAT) z uprawnieniem read:packages.
+Dokładny poradnik jest dostępny w pliku [*maven-packege.md*](https://github.com/CIRFMF/ksef-client-java/blob/main/maven-package.md).

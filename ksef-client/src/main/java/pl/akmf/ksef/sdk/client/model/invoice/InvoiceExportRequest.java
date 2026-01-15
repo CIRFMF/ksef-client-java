@@ -31,4 +31,3 @@ public class InvoiceExportRequest {
         this.filters = filters;
     }
 }
-

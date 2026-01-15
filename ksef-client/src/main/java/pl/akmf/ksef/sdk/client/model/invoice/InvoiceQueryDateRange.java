@@ -9,6 +9,8 @@ public class InvoiceQueryDateRange {
 
     private OffsetDateTime to;
 
+    private Boolean restrictToPermanentStorageHwmDate;
+
     public InvoiceQueryDateRange() {
     }
 
@@ -16,6 +18,13 @@ public class InvoiceQueryDateRange {
         this.dateType = dateType;
         this.from = from;
         this.to = to;
+    }
+
+    public InvoiceQueryDateRange(InvoiceQueryDateType dateType, OffsetDateTime from, OffsetDateTime to, Boolean restrictToPermanentStorageHwmDate) {
+        this.dateType = dateType;
+        this.from = from;
+        this.to = to;
+        this.restrictToPermanentStorageHwmDate = restrictToPermanentStorageHwmDate;
     }
 
     public InvoiceQueryDateType getDateType() {
@@ -41,5 +50,12 @@ public class InvoiceQueryDateRange {
     public void setTo(OffsetDateTime to) {
         this.to = to;
     }
-}
 
+    public Boolean getRestrictToPermanentStorageHwmDate() {
+        return restrictToPermanentStorageHwmDate;
+    }
+
+    public void setRestrictToPermanentStorageHwmDate(Boolean restrictToPermanentStorageHwmDate) {
+        this.restrictToPermanentStorageHwmDate = restrictToPermanentStorageHwmDate;
+    }
+}

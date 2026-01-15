@@ -1,11 +1,13 @@
 package pl.akmf.ksef.sdk.client.model;
 
 import java.util.List;
+import java.util.Map;
 
 public class StatusInfo {
     private Integer code;
     private String description;
     private List<String> details;
+    private Map<String, String> extensions;
 
     public StatusInfo() {
     }
@@ -14,6 +16,13 @@ public class StatusInfo {
         this.code = code;
         this.description = description;
         this.details = details;
+    }
+
+    public StatusInfo(Integer code, String description, List<String> details, Map<String, String> extensions) {
+        this.code = code;
+        this.description = description;
+        this.details = details;
+        this.extensions = extensions;
     }
 
     public Integer getCode() {
@@ -38,5 +47,13 @@ public class StatusInfo {
 
     public void setDetails(List<String> details) {
         this.details = details;
+    }
+
+    public Map<String, String> getExtensions() {
+        return extensions;
+    }
+
+    public void setExtensions(Map<String, String> extensions) {
+        this.extensions = extensions;
     }
 }

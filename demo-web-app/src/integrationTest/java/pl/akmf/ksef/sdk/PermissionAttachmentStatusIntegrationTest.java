@@ -11,6 +11,7 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.time.LocalDate;
 
 class PermissionAttachmentStatusIntegrationTest extends BaseIntegrationTest {
 
@@ -35,6 +36,7 @@ class PermissionAttachmentStatusIntegrationTest extends BaseIntegrationTest {
 
         TestDataAttachmentRemoveRequest removeRequest = new TestDataAttachmentRemoveRequest();
         removeRequest.setNip(contextNip);
+        removeRequest.setExpectedEndDate(LocalDate.now().plusDays(1));
         ksefClient.removeAttachmentPermissionTest(removeRequest);
 
         PermissionAttachmentStatusResponse falseResponse = ksefClient.checkPermissionAttachmentInvoiceStatus(token.accessToken());

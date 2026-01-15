@@ -28,7 +28,8 @@ public class TargetIdentifier {
     }
 
     public enum IdentifierType {
-        ALL_PARNERS("AllPartners"),
+        ALL_PARTNERS("AllPartners"),
+        INTERNAL_ID("InternalId"),
         NIP("Nip");
 
         private final String value;

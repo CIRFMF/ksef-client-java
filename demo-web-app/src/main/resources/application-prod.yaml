@@ -1,0 +1,5 @@
+sdk:
+  config:
+    base-uri: "https://api.ksef.mf.gov.pl"
+    qr-uri: "https://qr.ksef.mf.gov.pl"
+    request-timeout: 100

@@ -10,6 +10,7 @@ import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
+import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
 import pl.akmf.ksef.sdk.client.model.session.FormCode;
 import pl.akmf.ksef.sdk.client.model.session.SchemaVersion;
@@ -47,12 +48,12 @@ public class OnlineSessionController {
 
         //stworzenie zapytania
         var request = new OpenOnlineSessionRequestBuilder()
-                .withFormCode(new FormCode(SystemCode.FA_2, SchemaVersion.VERSION_1_0E,  SessionValue.FA))
+                .withFormCode(new FormCode(SystemCode.FA_2, SchemaVersion.VERSION_1_0E, SessionValue.FA))
                 .withEncryptionInfo(encryptionData.encryptionInfo())
                 .build();
 
         //otwarcie sesji interaktywnej
-        return ksefClient.openOnlineSession(request, authToken);
+        return ksefClient.openOnlineSession(request, UpoVersion.UPO_4_3, authToken);
     }
 
     /**

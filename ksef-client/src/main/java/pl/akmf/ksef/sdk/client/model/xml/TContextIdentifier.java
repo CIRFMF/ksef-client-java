@@ -26,6 +26,7 @@ import jakarta.xml.bind.annotation.XmlType;
  *         &lt;element name="Nip" type="{http://ksef.mf.gov.pl/auth/token/2.0}TNIP"/&gt;
  *         &lt;element name="InternalId" type="{http://ksef.mf.gov.pl/auth/token/2.0}TIID"/&gt;
  *         &lt;element name="NipVatUe" type="{http://ksef.mf.gov.pl/auth/token/2.0}TNipVatUE"/&gt;
+ *         &lt;element name="PeppolId" type="{http://ksef.mf.gov.pl/auth/token/2.0}TPeppolId"/&gt;
  *       &lt;/choice&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -38,7 +39,8 @@ import jakarta.xml.bind.annotation.XmlType;
 @XmlType(name = "TContextIdentifier", propOrder = {
     "nip",
     "internalId",
-    "nipVatUe"
+    "nipVatUe",
+    "peppolId"
 })
 public class TContextIdentifier {
 
@@ -60,6 +62,12 @@ public class TContextIdentifier {
      */
     @XmlElement(name = "NipVatUe")
     protected String nipVatUe;
+    /**
+     * Identyfikator dostawcy usług Peppol
+     * 
+     */
+    @XmlElement(name = "PeppolId")
+    protected String peppolId;
 
     /**
      * Numer Identyfikacyjny NIP
@@ -136,6 +144,31 @@ public class TContextIdentifier {
         this.nipVatUe = value;
     }
 
+    /**
+     * Identyfikator dostawcy usług Peppol
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getPeppolId() {
+        return peppolId;
+    }
+
+    /**
+     * Sets the value of the peppolId property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     * @see #getPeppolId()
+     */
+    public void setPeppolId(String value) {
+        this.peppolId = value;
+    }
+
     public TContextIdentifier withNip(String value) {
         setNip(value);
         return this;
@@ -148,6 +181,11 @@ public class TContextIdentifier {
 
     public TContextIdentifier withNipVatUe(String value) {
         setNipVatUe(value);
+        return this;
+    }
+
+    public TContextIdentifier withPeppolId(String value) {
+        setPeppolId(value);
         return this;
     }
 

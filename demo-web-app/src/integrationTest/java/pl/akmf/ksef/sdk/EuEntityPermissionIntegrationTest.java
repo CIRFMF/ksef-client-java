@@ -19,8 +19,13 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Locale;
 
+import static com.github.dockerjava.zerodep.shaded.org.apache.commons.codec.digest.MessageDigestAlgorithms.SHA_256;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
@@ -31,7 +36,7 @@ class EuEntityPermissionIntegrationTest extends BaseIntegrationTest {
         String nip = IdentifierGeneratorUtils.getRandomNip();
         String nipVatUe = IdentifierGeneratorUtils.getRandomNipVatEU(nip, "CZ");
         String accessToken = authWithCustomNip(nip, nip).accessToken();
-        String euEntity = IdentifierGeneratorUtils.getRandomNipVatEU("CZ");
+        String euEntity = toSha256(IdentifierGeneratorUtils.getRandomNip());
 
         // Nadaj uprawnienia jednostce EU
         String grantReferenceNumber = grantEuEntityPermission(euEntity, nipVatUe, accessToken);
@@ -97,5 +102,23 @@ class EuEntityPermissionIntegrationTest extends BaseIntegrationTest {
             throw new RuntimeException("Could not finish operation: " + operations.getStatus().getDescription());
         }
         return operations != null && operations.getStatus().getCode() == 200;
+    }
+
+    public static String toSha256(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance(SHA_256);
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString().toUpperCase(Locale.ROOT);
+
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not found", e);
+        }
     }
 }

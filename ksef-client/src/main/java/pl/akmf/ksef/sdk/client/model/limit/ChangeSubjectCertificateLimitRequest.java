@@ -45,10 +45,9 @@ public class ChangeSubjectCertificateLimitRequest {
     public enum SubjectType {
         NIP("Nip"),
         PESEL("Pesel"),
-        FINGERPRING("Fingerprint"),
-        TOKEN("Token");
+        FINGERPRING("Fingerprint");
 
-        private String value;
+        private final String value;
 
         SubjectType(String value) {
             this.value = value;

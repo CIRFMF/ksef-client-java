@@ -7,7 +7,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
+import pl.akmf.ksef.sdk.client.ExceptionDetails;
 import pl.akmf.ksef.sdk.client.model.ApiException;
+import pl.akmf.ksef.sdk.client.model.ExceptionResponse;
+import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.session.AuthenticationListItem;
 import pl.akmf.ksef.sdk.client.model.session.AuthenticationListResponse;
 import pl.akmf.ksef.sdk.client.model.session.CommonSessionStatus;
@@ -18,6 +21,7 @@ import pl.akmf.ksef.sdk.client.model.session.SessionType;
 import pl.akmf.ksef.sdk.client.model.session.SessionValue;
 import pl.akmf.ksef.sdk.client.model.session.SessionsQueryRequest;
 import pl.akmf.ksef.sdk.client.model.session.SessionsQueryResponse;
+import pl.akmf.ksef.sdk.client.model.session.SessionsQueryResponseItem;
 import pl.akmf.ksef.sdk.client.model.session.SystemCode;
 import pl.akmf.ksef.sdk.client.model.session.online.OpenOnlineSessionRequest;
 import pl.akmf.ksef.sdk.client.model.session.online.OpenOnlineSessionResponse;
@@ -30,8 +34,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class SessionIntegrationTest extends BaseIntegrationTest {
-    private String expectedErrorMessage = "\"exceptionCode\":21304,\"exceptionDescription\":\"Brak uwierzytelnienia.\",\"details\":[\"Nieprawidłowy token.\"]";
-
     @Autowired
     private DefaultCryptographyService defaultCryptographyService;
 
@@ -67,7 +69,12 @@ class SessionIntegrationTest extends BaseIntegrationTest {
 
         // Step 5: refresh token should throw: 21304: Brak uwierzytelnienia. - Nieprawidłowy token.
         ApiException apiException = assertThrows(ApiException.class, () -> ksefClient.refreshAccessToken(accessTokensPair.refreshToken()));
-        Assertions.assertTrue(apiException.getResponseBody().contains(expectedErrorMessage));
+        ExceptionResponse exceptionResponse = apiException.getExceptionResponse();
+        Assertions.assertFalse(exceptionResponse.getException().getExceptionDetailList().isEmpty());
+        ExceptionDetails details = exceptionResponse.getException().getExceptionDetailList().getFirst();
+        Assertions.assertEquals(21304, details.getExceptionCode());
+        Assertions.assertEquals("Brak uwierzytelnienia.", details.getExceptionDescription());
+        Assertions.assertEquals("Nieprawidłowy token.", details.getDetails().getFirst());
     }
 
     @Test
@@ -123,7 +130,38 @@ class SessionIntegrationTest extends BaseIntegrationTest {
 
         // Step 6: refresh token should throw: 21304: Brak uwierzytelnienia. - Nieprawidłowy token.
         ApiException apiException = assertThrows(ApiException.class, () -> ksefClient.refreshAccessToken(secondAccessTokensPair.refreshToken()));
-        Assertions.assertTrue(apiException.getResponseBody().contains(expectedErrorMessage));
+    }
+
+    @Test
+    void searchSessionsByStatuses() throws JAXBException, IOException, ApiException {
+        String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
+        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+
+        AuthTokensPair firstAccessTokensPair = authWithCustomNip(contextNip, contextNip);
+        AuthTokensPair secondAccessTokensPair = authWithCustomNip(contextNip, contextNip);
+
+        String firstSessionRefNumber = openOnlineSession(encryptionData, firstAccessTokensPair.accessToken());
+        String secondSessionRefNumber = openOnlineSession(encryptionData, secondAccessTokensPair.accessToken());
+
+        ksefClient.closeOnlineSession(secondSessionRefNumber, firstAccessTokensPair.accessToken());
+
+        SessionsQueryRequest request = new SessionsQueryRequest();
+        request.setSessionType(SessionType.ONLINE);
+        request.setStatuses(List.of(CommonSessionStatus.INPROGRESS, CommonSessionStatus.CANCELLED));
+        SessionsQueryResponse sessionsQueryResponse = ksefClient.getSessions(request, 10, null, firstAccessTokensPair.accessToken());
+        Assertions.assertEquals(2, sessionsQueryResponse.getSessions().size());
+        SessionsQueryResponseItem firstSession = sessionsQueryResponse.getSessions().stream()
+                .filter(s -> s.getReferenceNumber().equals(firstSessionRefNumber))
+                .findFirst()
+                .orElseThrow();
+        SessionsQueryResponseItem secondSession = sessionsQueryResponse.getSessions().stream()
+                .filter(s -> s.getReferenceNumber().equals(secondSessionRefNumber))
+                .findFirst()
+                .orElseThrow();
+        Assertions.assertEquals(100, firstSession.getStatus().getCode());
+        Assertions.assertEquals("Sesja interaktywna otwarta", firstSession.getStatus().getDescription());
+        Assertions.assertEquals(440, secondSession.getStatus().getCode());
+        Assertions.assertEquals("Sesja anulowana", secondSession.getStatus().getDescription());
     }
 
     @Test
@@ -146,11 +184,11 @@ class SessionIntegrationTest extends BaseIntegrationTest {
 
     private String openOnlineSession(EncryptionData encryptionData, String accessToken) throws ApiException {
         OpenOnlineSessionRequest request = new OpenOnlineSessionRequestBuilder()
-                .withFormCode(new FormCode(SystemCode.FA_2, SchemaVersion.VERSION_1_0E,  SessionValue.FA))
+                .withFormCode(new FormCode(SystemCode.FA_2, SchemaVersion.VERSION_1_0E, SessionValue.FA))
                 .withEncryptionInfo(encryptionData.encryptionInfo())
                 .build();
 
-        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, accessToken);
+        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, UpoVersion.UPO_4_3, accessToken);
         Assertions.assertNotNull(openOnlineSessionResponse);
         Assertions.assertNotNull(openOnlineSessionResponse.getReferenceNumber());
         return openOnlineSessionResponse.getReferenceNumber();

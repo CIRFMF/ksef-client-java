@@ -2,6 +2,7 @@ package pl.akmf.ksef.sdk.api.builders.permission.indirect;
 
 import pl.akmf.ksef.sdk.client.model.permission.indirect.GrantIndirectEntityPermissionsRequest;
 import pl.akmf.ksef.sdk.client.model.permission.indirect.IndirectPermissionType;
+import pl.akmf.ksef.sdk.client.model.permission.indirect.PermissionsIndirectEntitySubjectDetails;
 import pl.akmf.ksef.sdk.client.model.permission.indirect.SubjectIdentifier;
 import pl.akmf.ksef.sdk.client.model.permission.indirect.TargetIdentifier;
 
@@ -12,6 +13,7 @@ public class GrantIndirectEntityPermissionsRequestBuilder {
     private TargetIdentifier targetIdentifier;
     private List<IndirectPermissionType> permissions;
     private String description;
+    private PermissionsIndirectEntitySubjectDetails subjectDetails;
 
     public GrantIndirectEntityPermissionsRequestBuilder withSubjectIdentifier(SubjectIdentifier subjectIdentifier) {
         this.subjectIdentifier = subjectIdentifier;
@@ -33,7 +35,12 @@ public class GrantIndirectEntityPermissionsRequestBuilder {
         return this;
     }
 
+    public GrantIndirectEntityPermissionsRequestBuilder withSubjectDetails(PermissionsIndirectEntitySubjectDetails subjectDetails) {
+        this.subjectDetails = subjectDetails;
+        return this;
+    }
+
     public GrantIndirectEntityPermissionsRequest build() {
-        return new GrantIndirectEntityPermissionsRequest(subjectIdentifier, targetIdentifier, permissions, description);
+        return new GrantIndirectEntityPermissionsRequest(subjectIdentifier, targetIdentifier, permissions, description, subjectDetails);
     }
 }

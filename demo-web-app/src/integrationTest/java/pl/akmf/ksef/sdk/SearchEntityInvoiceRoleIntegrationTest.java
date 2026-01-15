@@ -5,12 +5,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryEntityRolesResponse;
-import pl.akmf.ksef.sdk.client.model.permission.search.QueryPersonalGrantRequest;
-import pl.akmf.ksef.sdk.client.model.permission.search.QueryPersonalGrantResponse;
-import pl.akmf.ksef.sdk.client.model.testdata.TestDataAuthorizedIdentifier;
-import pl.akmf.ksef.sdk.client.model.testdata.TestDataContextIdentifier;
-import pl.akmf.ksef.sdk.client.model.testdata.TestDataPermission;
-import pl.akmf.ksef.sdk.client.model.testdata.TestDataPermissionRequest;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataPersonCreateRequest;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataPersonRemoveRequest;
 import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
@@ -32,6 +26,7 @@ class SearchEntityInvoiceRoleIntegrationTest extends BaseIntegrationTest {
         request.setDescription("description");
         request.setNip(contextNip);
         request.setPesel(pesel);
+        request.setIsDeceased(false);
         request.setIsBailiff(Boolean.TRUE);
 
         ksefClient.createTestPerson(request);

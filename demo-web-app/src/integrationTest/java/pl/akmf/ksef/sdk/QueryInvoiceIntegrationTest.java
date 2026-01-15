@@ -9,11 +9,16 @@ import pl.akmf.ksef.sdk.api.builders.invoices.InvoicesAsyncQueryFiltersBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
+import pl.akmf.ksef.sdk.client.ExceptionDetails;
 import pl.akmf.ksef.sdk.client.model.ApiException;
+import pl.akmf.ksef.sdk.client.model.ExceptionResponse;
+import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.invoice.InitAsyncInvoicesQueryResponse;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportFilters;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportRequest;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportStatus;
+import pl.akmf.ksef.sdk.client.model.invoice.InvoicePackageMetadata;
+import pl.akmf.ksef.sdk.client.model.invoice.InvoicePackagePart;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceQueryDateRange;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceQueryDateType;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceQueryFilters;
@@ -32,7 +37,9 @@ import pl.akmf.ksef.sdk.client.model.session.online.OpenOnlineSessionRequest;
 import pl.akmf.ksef.sdk.client.model.session.online.OpenOnlineSessionResponse;
 import pl.akmf.ksef.sdk.client.model.session.online.SendInvoiceOnlineSessionRequest;
 import pl.akmf.ksef.sdk.client.model.session.online.SendInvoiceResponse;
+import pl.akmf.ksef.sdk.client.model.util.SortOrder;
 import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
+import pl.akmf.ksef.sdk.system.FilesUtil;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
@@ -40,6 +47,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Base64;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -47,51 +56,48 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertThrows;
 
-public class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
+class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private DefaultCryptographyService defaultCryptographyService;
-    private EncryptionData encryptionData;
 
     @Test
     void queryInvoiceE2ETest() throws JAXBException, IOException, ApiException {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
 
-        encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
 
         String sessionReferenceNumber = openOnlineSession(encryptionData, SystemCode.FA_3, SchemaVersion.VERSION_1_0E, SessionValue.FA, accessToken);
 
         String invoiceReferenceNumber = sendInvoiceOnlineSession(contextNip, sessionReferenceNumber, encryptionData, "/xml/invoices/sample/invoice-template_v3.xml", accessToken);
 
-        isInvoicesInSessionProcessed(sessionReferenceNumber, accessToken);
+        await().atMost(50, SECONDS)
+                .pollInterval(5, SECONDS)
+                .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessToken));
 
-        isInvoiceProcessed(sessionReferenceNumber, invoiceReferenceNumber, accessToken);
+        await().atMost(50, SECONDS)
+                .pollInterval(5, SECONDS)
+                .until(() -> waitForStoringInvoice(sessionReferenceNumber, invoiceReferenceNumber, accessToken));
 
         throwWhileSendingInvoiceMetadataRequestWithWrongPageSize(accessToken);
 
-        waitForStoringInvoice();
-
         getInvoiceMetadata(accessToken);
 
-        fetchAsyncInvoice(accessToken);
-    }
+        InvoiceExportStatus invoiceExportStatus = fetchAsyncInvoiceExportStatus(accessToken, encryptionData);
 
-    private void waitForStoringInvoice() {
-        await().timeout(45, SECONDS)
-                .pollDelay(44, SECONDS)
-                .untilAsserted(() -> Assertions.assertTrue(true));
+        downloadAndProcessPackageAsync(invoiceExportStatus, encryptionData);
     }
 
     private void getInvoiceMetadata(String accessToken) throws ApiException {
         InvoiceQueryFilters request = new InvoiceQueryFiltersBuilder()
                 .withSubjectType(InvoiceQuerySubjectType.SUBJECT1)
                 .withDateRange(
-                        new InvoiceQueryDateRange(InvoiceQueryDateType.INVOICING, OffsetDateTime.now().minusYears(1),
-                                OffsetDateTime.now()))
+                        new InvoiceQueryDateRange(InvoiceQueryDateType.INVOICING, OffsetDateTime.now().minusDays(10),
+                                OffsetDateTime.now().plusDays(2)))
                 .build();
 
-        QueryInvoiceMetadataResponse response = ksefClient.queryInvoiceMetadata(0, 10, request, accessToken);
+        QueryInvoiceMetadataResponse response = ksefClient.queryInvoiceMetadata(0, 10, SortOrder.ASC, request, accessToken);
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(1, response.getInvoices().size());
@@ -106,41 +112,49 @@ public class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
 
 
         ApiException apiException = assertThrows(ApiException.class, () ->
-                ksefClient.queryInvoiceMetadata(0, 5, request, accessToken)
+                ksefClient.queryInvoiceMetadata(0, 5, SortOrder.ASC, request, accessToken)
         );
         Assertions.assertEquals(400, apiException.getCode());
-        Assertions.assertTrue(apiException.getResponseBody().contains("must be between 10 and 250. You entered 5"));
+        ExceptionResponse exceptionResponse = apiException.getExceptionResponse();
+        Assertions.assertFalse(exceptionResponse.getException().getExceptionDetailList().isEmpty());
+        ExceptionDetails details = exceptionResponse.getException().getExceptionDetailList().getFirst();
+        Assertions.assertEquals(21405, details.getExceptionCode());
+        Assertions.assertEquals("Błąd walidacji danych wejściowych.", details.getExceptionDescription());
+        Assertions.assertEquals("'pageSize' must be between 10 and 250. You entered 5.", details.getDetails().getFirst());
     }
 
     private boolean isInvoicesInSessionProcessed(String sessionReferenceNumber, String accessToken) {
         try {
             SessionStatusResponse statusResponse = ksefClient.getSessionStatus(sessionReferenceNumber, accessToken);
             return statusResponse != null &&
-                    statusResponse.getSuccessfulInvoiceCount() != null &&
-                    statusResponse.getSuccessfulInvoiceCount() > 0;
+                   statusResponse.getSuccessfulInvoiceCount() != null &&
+                   statusResponse.getSuccessfulInvoiceCount() > 0;
         } catch (Exception e) {
             Assertions.fail(e.getMessage());
         }
         return false;
     }
 
-    private boolean isInvoiceProcessed(String sessionReferenceNumber, String invoiceReferenceNumber, String accessToken) {
+    private boolean waitForStoringInvoice(String sessionReferenceNumber, String invoiceReferenceNumber, String accessToken) {
         try {
             SessionInvoiceStatusResponse statusResponse = ksefClient.getSessionInvoiceStatus(sessionReferenceNumber, invoiceReferenceNumber, accessToken);
-            return statusResponse != null && statusResponse.getStatus().getCode() == 200;
+            return Objects.nonNull(statusResponse.getPermanentStorageDate());
         } catch (Exception e) {
             Assertions.fail(e.getMessage());
         }
         return false;
     }
 
-    private String openOnlineSession(EncryptionData encryptionData, SystemCode systemCode, SchemaVersion schemaVersion, SessionValue value, String accessToken) throws ApiException {
+    private String openOnlineSession(EncryptionData encryptionData, SystemCode systemCode,
+                                     SchemaVersion schemaVersion,
+                                     SessionValue value,
+                                     String accessToken) throws ApiException {
         OpenOnlineSessionRequest request = new OpenOnlineSessionRequestBuilder()
                 .withFormCode(new FormCode(systemCode, schemaVersion, value))
                 .withEncryptionInfo(encryptionData.encryptionInfo())
                 .build();
 
-        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, accessToken);
+        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, UpoVersion.UPO_4_3, accessToken);
         Assertions.assertNotNull(openOnlineSessionResponse);
         Assertions.assertNotNull(openOnlineSessionResponse.getReferenceNumber());
         return openOnlineSessionResponse.getReferenceNumber();
@@ -148,8 +162,7 @@ public class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
 
     private String sendInvoiceOnlineSession(String nip, String sessionReferenceNumber, EncryptionData encryptionData,
                                             String path, String accessToken) throws IOException, ApiException {
-        String invoiceTemplate = new String(Objects.requireNonNull(BaseIntegrationTest.class.getResourceAsStream(path))
-                .readAllBytes(), StandardCharsets.UTF_8)
+        String invoiceTemplate = new String(readBytesFromPath(path), StandardCharsets.UTF_8)
                 .replace("#nip#", nip)
                 .replace("#invoicing_date#",
                         LocalDate.of(2025, 9, 15).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")))
@@ -179,7 +192,7 @@ public class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
         return sendInvoiceResponse.getReferenceNumber();
     }
 
-    private void fetchAsyncInvoice(String accessToken) throws ApiException {
+    private InvoiceExportStatus fetchAsyncInvoiceExportStatus(String accessToken, EncryptionData encryptionData) throws ApiException {
         InvoiceExportFilters filters = new InvoicesAsyncQueryFiltersBuilder()
                 .withSubjectType(InvoiceQuerySubjectType.SUBJECT1)
                 .withDateRange(
@@ -192,17 +205,46 @@ public class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
 
         InitAsyncInvoicesQueryResponse response = ksefClient.initAsyncQueryInvoice(request, accessToken);
 
-        await().atMost(30, SECONDS)
+        await().atMost(45, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isInvoiceFetched(response.getReferenceNumber(), accessToken));
+
+        return ksefClient.checkStatusAsyncQueryInvoice(response.getReferenceNumber(), accessToken);
     }
 
     private Boolean isInvoiceFetched(String referenceNumber, String accessToken) throws ApiException {
         InvoiceExportStatus response = ksefClient.checkStatusAsyncQueryInvoice(referenceNumber, accessToken);
 
         Assertions.assertNotNull(response);
-        Assertions.assertNotNull(response.getPackageParts());
-        Assertions.assertFalse(response.getPackageParts().getParts().isEmpty());
         return response.getStatus().getCode().equals(200);
+    }
+
+
+    private void downloadAndProcessPackageAsync(InvoiceExportStatus invoiceExportStatus, EncryptionData encryptionData) throws IOException {
+        List<InvoicePackagePart> parts = invoiceExportStatus.getPackageParts().getParts();
+        byte[] mergedZip = FilesUtil.mergeZipParts(
+                encryptionData,
+                parts,
+                part -> ksefClient.downloadPackagePart(part),
+                (encryptedPackagePart, key, iv) -> defaultCryptographyService.decryptBytesWithAes256(encryptedPackagePart, key, iv)
+        );
+        Map<String, String> downloadedFiles = FilesUtil.unzip(mergedZip);
+
+        String metadataJson = downloadedFiles.keySet()
+                .stream()
+                .filter(fileName -> fileName.endsWith(".json"))
+                .findFirst()
+                .map(downloadedFiles::get)
+                .orElse(null);
+        InvoicePackageMetadata invoicePackageMetadata = objectMapper.readValue(metadataJson, InvoicePackageMetadata.class);
+
+        List<String> invoices = downloadedFiles.keySet()
+                .stream()
+                .filter(fileName -> fileName.endsWith(".xml"))
+                .toList();
+
+        Assertions.assertEquals(1, invoices.size());
+        Assertions.assertEquals(1, invoicePackageMetadata.getInvoices().size());
+        Assertions.assertTrue(invoices.getFirst().contains(invoicePackageMetadata.getInvoices().getFirst().getKsefNumber()));
     }
 }

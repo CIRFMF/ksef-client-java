@@ -131,12 +131,11 @@ class KsefTokenIntegrationTest extends BaseIntegrationTest {
                     .encryptKsefTokenWithRSAUsingPublicKey(ksefToken.getToken(), challenge.getTimestamp());
             case ECDsa -> defaultCryptographyService
                     .encryptKsefTokenWithECDsaUsingPublicKey(ksefToken.getToken(), challenge.getTimestamp());
-            default -> throw new IllegalArgumentException();
         };
 
         AuthKsefTokenRequest authTokenRequest = new AuthKsefTokenRequestBuilder()
                 .withChallenge(challenge.getChallenge())
-                .withContextIdentifier(new ContextIdentifier(ContextIdentifier.IdentifierType.NIP , contextNip))
+                .withContextIdentifier(new ContextIdentifier(ContextIdentifier.IdentifierType.NIP, contextNip))
                 .withEncryptedToken(Base64.getEncoder().encodeToString(encryptedToken))
                 .build();
 

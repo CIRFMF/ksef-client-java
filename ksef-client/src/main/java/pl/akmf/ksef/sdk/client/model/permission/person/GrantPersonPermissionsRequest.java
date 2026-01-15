@@ -6,6 +6,7 @@ public class GrantPersonPermissionsRequest {
     private PersonPermissionsSubjectIdentifier subjectIdentifier;
     private List<PersonPermissionType> permissions;
     private String description;
+    private PersonPermissionSubjectDetails subjectDetails;
 
     public GrantPersonPermissionsRequest() {
     }
@@ -14,6 +15,13 @@ public class GrantPersonPermissionsRequest {
         this.subjectIdentifier = subjectIdentifier;
         this.permissions = permissions;
         this.description = description;
+    }
+
+    public GrantPersonPermissionsRequest(PersonPermissionsSubjectIdentifier subjectIdentifier, List<PersonPermissionType> permissions, String description, PersonPermissionSubjectDetails subjectDetails) {
+        this.subjectIdentifier = subjectIdentifier;
+        this.permissions = permissions;
+        this.description = description;
+        this.subjectDetails = subjectDetails;
     }
 
     public PersonPermissionsSubjectIdentifier getSubjectIdentifier() {
@@ -38,6 +46,14 @@ public class GrantPersonPermissionsRequest {
 
     public void setDescription(final String description) {
         this.description = description;
+    }
+
+    public PersonPermissionSubjectDetails getSubjectDetails() {
+        return subjectDetails;
+    }
+
+    public void setSubjectDetails(PersonPermissionSubjectDetails subjectDetails) {
+        this.subjectDetails = subjectDetails;
     }
 }
 

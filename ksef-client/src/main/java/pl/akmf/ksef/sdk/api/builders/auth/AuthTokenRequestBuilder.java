@@ -2,7 +2,6 @@ package pl.akmf.ksef.sdk.api.builders.auth;
 
 import org.apache.commons.lang3.StringUtils;
 import pl.akmf.ksef.sdk.client.model.xml.AuthTokenRequest;
-import pl.akmf.ksef.sdk.client.model.xml.IpChangePolicyEnum;
 import pl.akmf.ksef.sdk.client.model.xml.SubjectIdentifierTypeEnum;
 import pl.akmf.ksef.sdk.client.model.xml.TContextIdentifier;
 
@@ -13,7 +12,7 @@ public class AuthTokenRequestBuilder {
     private boolean challengeSet = false;
     private final TContextIdentifier context = new TContextIdentifier();
     private SubjectIdentifierTypeEnum subjectIdentifierTypeEnum;
-    private AuthTokenRequest.IpAddressPolicy ipPolicy;
+    private AuthTokenRequest.AuthorizationPolicy authorizationPolicy;
 
     public AuthTokenRequestBuilder withChallenge(String challenge) {
         if (challenge == null || challenge.trim().isEmpty()) {
@@ -30,7 +29,7 @@ public class AuthTokenRequestBuilder {
             throw new IllegalArgumentException("Context value cannot be null or empty.");
         }
 
-        if (StringUtils.isNotBlank(context.getInternalId()) || StringUtils.isNotBlank(context.getNipVatUe())) {
+        if (StringUtils.isNotBlank(context.getInternalId()) || StringUtils.isNotBlank(context.getNipVatUe()) || StringUtils.isNotBlank(context.getPeppolId())) {
             throw new IllegalArgumentException("Other context type has beem already set");
         }
 
@@ -43,7 +42,7 @@ public class AuthTokenRequestBuilder {
             throw new IllegalArgumentException("Context value cannot be null or empty.");
         }
 
-        if (StringUtils.isNotBlank(context.getNip()) || StringUtils.isNotBlank(context.getNipVatUe())) {
+        if (StringUtils.isNotBlank(context.getNip()) || StringUtils.isNotBlank(context.getNipVatUe()) || StringUtils.isNotBlank(context.getPeppolId())) {
             throw new IllegalArgumentException("Other context type has beem already set");
         }
 
@@ -56,7 +55,7 @@ public class AuthTokenRequestBuilder {
             throw new IllegalArgumentException("Context value cannot be null or empty.");
         }
 
-        if (StringUtils.isNotBlank(context.getInternalId()) || StringUtils.isNotBlank(context.getNip())) {
+        if (StringUtils.isNotBlank(context.getInternalId()) || StringUtils.isNotBlank(context.getNip()) || StringUtils.isNotBlank(context.getPeppolId())) {
             throw new IllegalArgumentException("Other context type has beem already set");
         }
 
@@ -64,23 +63,35 @@ public class AuthTokenRequestBuilder {
         return this;
     }
 
+    public AuthTokenRequestBuilder withPeppolId(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException("Context value cannot be null or empty.");
+        }
+
+        if (StringUtils.isNotBlank(context.getInternalId()) || StringUtils.isNotBlank(context.getNip()) || StringUtils.isNotBlank(context.getNipVatUe())) {
+            throw new IllegalArgumentException("Other context type has beem already set");
+        }
+
+        this.context.setPeppolId(value);
+        return this;
+    }
+
+
     public AuthTokenRequestBuilder withSubjectType(SubjectIdentifierTypeEnum value) {
         this.subjectIdentifierTypeEnum = value;
         return this;
     }
 
-    public AuthTokenRequestBuilder withIpAddressPolicy(String ipPolicyChanges,
-                                                       List<String> ipAddress,
-                                                       List<String> ipRange,
-                                                       List<String> ipMask) {
-        AuthTokenRequest.IpAddressPolicy.AllowedIps allowedIps = new AuthTokenRequest.IpAddressPolicy.AllowedIps();
-        allowedIps.withIpAddress(ipAddress);
-        allowedIps.withIpRange(ipRange);
-        allowedIps.withIpMask(ipMask);
-
-        this.ipPolicy = new AuthTokenRequest.IpAddressPolicy();
-        this.ipPolicy.setOnClientIpChange(IpChangePolicyEnum.fromValue(ipPolicyChanges));
-        this.ipPolicy.setAllowedIps(allowedIps);
+    public AuthTokenRequestBuilder withAuthorizationPolicy(List<String> ipAddress,
+                                                           List<String> ipRange,
+                                                           List<String> ipMask) {
+        AuthTokenRequest.AuthorizationPolicy.AllowedIps allowedIps = new AuthTokenRequest.AuthorizationPolicy.AllowedIps();
+        allowedIps.getIp4Mask().addAll(ipMask);
+        allowedIps.getIp4Address().addAll(ipAddress);
+        allowedIps.getIp4Range().addAll(ipRange);
+        AuthTokenRequest.AuthorizationPolicy authorizationPolicy = new AuthTokenRequest.AuthorizationPolicy();
+        authorizationPolicy.setAllowedIps(allowedIps);
+        this.authorizationPolicy = authorizationPolicy;
         return this;
     }
 
@@ -93,7 +104,7 @@ public class AuthTokenRequestBuilder {
         request.setChallenge(challenge);
         request.setContextIdentifier(context);
         request.setSubjectIdentifierType(subjectIdentifierTypeEnum);
-        request.setIpAddressPolicy(ipPolicy);
+        request.setAuthorizationPolicy(authorizationPolicy);
         return request;
     }
 }

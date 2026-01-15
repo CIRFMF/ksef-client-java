@@ -28,7 +28,7 @@ public class SearchPersonalGrantPermissionIntegrationTest extends BaseIntegratio
         TestDataPermissionRequest testDataPermissionRequest = new TestDataPermissionRequest();
         testDataPermissionRequest.setContextIdentifier(new TestDataContextIdentifier(TestDataContextIdentifier.ContextIdentifierType.NIP, contextNip));
         testDataPermissionRequest.setAuthorizedIdentifier(new TestDataAuthorizedIdentifier(TestDataAuthorizedIdentifier.TestDataAuthorizedIdentifierType.NIP, authNip));
-        testDataPermissionRequest.setPermissions(List.of(new TestDataPermission("test", TestDataPermission.PermissionType.INVOICE_READ)));
+        testDataPermissionRequest.setPermissions(List.of(new TestDataPermission("test-e2e", TestDataPermission.PermissionType.INVOICE_READ)));
 
         ksefClient.addTestPermission(testDataPermissionRequest);
 

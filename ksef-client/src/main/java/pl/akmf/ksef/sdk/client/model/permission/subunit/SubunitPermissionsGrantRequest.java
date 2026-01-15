@@ -5,6 +5,18 @@ public class SubunitPermissionsGrantRequest {
     private ContextIdentifier contextIdentifier;
     private String description;
     private String subunitName;
+    private SubunitSubjectDetails subjectDetails;
+
+    public SubunitPermissionsGrantRequest() {
+    }
+
+    public SubunitPermissionsGrantRequest(SubjectIdentifier subjectIdentifier, ContextIdentifier contextIdentifier, String description, String subunitName, SubunitSubjectDetails subjectDetails) {
+        this.subjectIdentifier = subjectIdentifier;
+        this.contextIdentifier = contextIdentifier;
+        this.description = description;
+        this.subunitName = subunitName;
+        this.subjectDetails = subjectDetails;
+    }
 
     public SubjectIdentifier getSubjectIdentifier() {
         return subjectIdentifier;
@@ -36,6 +48,14 @@ public class SubunitPermissionsGrantRequest {
 
     public void setSubunitName(String subunitName) {
         this.subunitName = subunitName;
+    }
+
+    public SubunitSubjectDetails getSubjectDetails() {
+        return subjectDetails;
+    }
+
+    public void setSubjectDetails(SubunitSubjectDetails subjectDetails) {
+        this.subjectDetails = subjectDetails;
     }
 }
 

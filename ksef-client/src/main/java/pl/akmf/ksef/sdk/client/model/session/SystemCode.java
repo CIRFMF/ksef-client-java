@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum SystemCode {
     FA_2("FA (2)"),
     PEF_3("PEF (3)"),
-    KOR_PEF_3("KOR_PEF (3)"),
+    KOR_PEF_3("PEF_KOR (3)"),
     FA_3("FA (3)");
 
     private final String value;

@@ -1,4 +1,13 @@
 server:
   port: 8082
-ksef:
-  base-uri: "https://ksef-test.mf.gov.pl"
+
+sdk:
+  config:
+    base-uri: "https://api-test.ksef.mf.gov.pl"
+    suffix-uri: "v2"
+    qr-uri: "https://qr-test.ksef.mf.gov.pl"
+    request-timeout: 100
+
+spring:
+  profiles:
+    default: local

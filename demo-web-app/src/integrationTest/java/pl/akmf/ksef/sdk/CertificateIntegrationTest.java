@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.certificate.CertificateMetadataListRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.certificate.CertificateRevokeRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.certificate.SendCertificateEnrollmentRequestBuilder;
+import pl.akmf.ksef.sdk.api.builders.permission.person.GrantPersonPermissionsRequestBuilder;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.certificate.CertificateEnrollmentResponse;
@@ -22,11 +23,15 @@ import pl.akmf.ksef.sdk.client.model.certificate.CertificateType;
 import pl.akmf.ksef.sdk.client.model.certificate.CsrResult;
 import pl.akmf.ksef.sdk.client.model.certificate.QueryCertificatesRequest;
 import pl.akmf.ksef.sdk.client.model.certificate.SendCertificateEnrollmentRequest;
+import pl.akmf.ksef.sdk.client.model.permission.OperationResponse;
+import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
+import pl.akmf.ksef.sdk.client.model.permission.person.GrantPersonPermissionsRequest;
+import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionType;
+import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionsSubjectIdentifier;
 import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -40,26 +45,45 @@ class CertificateIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void certificateE2EIntegrationTest() throws JAXBException, IOException, ApiException {
-        String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
-        String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
+        String ownerNip = IdentifierGeneratorUtils.generateRandomNIP();
+        String delegateNip = IdentifierGeneratorUtils.generateRandomNIP();
 
-        getCertificateLimitAsync(accessToken);
+        //login as owner
+        String accessToken = authWithCustomNip(ownerNip, ownerNip).accessToken();
 
-        CertificateEnrollmentsInfoResponse enrollmentInfo = getEnrolmentInfo(accessToken);
+        //grant credential to delegate
+        String grantReferenceNumber = grantPermission(delegateNip, accessToken);
 
-        String referenceNumber = sendEnrollment(enrollmentInfo, accessToken);
+        await().atMost(15, SECONDS)
+                .pollInterval(1, SECONDS)
+                .until(() -> isOperationFinish(grantReferenceNumber, accessToken));
+
+        //login as delegate in owner context
+        String delegateAccessToken = authWithCustomNip(ownerNip, delegateNip).accessToken();
+
+        //check certificate limit
+        getCertificateLimitAsync(delegateAccessToken);
+
+        //get enrollment info
+        CertificateEnrollmentsInfoResponse enrollmentInfo = getEnrolmentInfo(delegateAccessToken);
+
+        //generate certificate
+        String referenceNumber = sendEnrollment(enrollmentInfo, delegateAccessToken);
 
         await().atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
-                .until(() -> isEnrolmentStatusReady(referenceNumber, accessToken));
+                .until(() -> isEnrolmentStatusReady(referenceNumber, delegateAccessToken));
 
-        CertificateEnrollmentStatusResponse enrolmentStatus = getEnrolmentStatus(referenceNumber, accessToken);
+        CertificateEnrollmentStatusResponse enrolmentStatus = getEnrolmentStatus(referenceNumber, delegateAccessToken);
 
-        getCertificateList(enrolmentStatus.getCertificateSerialNumber(), accessToken);
+        //retrieve certificate
+        getCertificateList(enrolmentStatus.getCertificateSerialNumber(), delegateAccessToken);
 
-        revokeCertificate(enrolmentStatus.getCertificateSerialNumber(), accessToken);
+        //revoke certificate
+        revokeCertificate(enrolmentStatus.getCertificateSerialNumber(), delegateAccessToken);
 
-        getMedataCertificateList(enrolmentStatus.getCertificateSerialNumber(), accessToken);
+        //get certificate
+        getMedataCertificateList(enrolmentStatus.getCertificateSerialNumber(), delegateAccessToken);
     }
 
     private Boolean isEnrolmentStatusReady(String referenceNumber, String accessToken) {
@@ -70,6 +94,23 @@ class CertificateIntegrationTest extends BaseIntegrationTest {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private String grantPermission(String nipValue, String accessToken) throws ApiException {
+        GrantPersonPermissionsRequest request = new GrantPersonPermissionsRequestBuilder()
+                .withSubjectIdentifier(new PersonPermissionsSubjectIdentifier(PersonPermissionsSubjectIdentifier.IdentifierType.NIP, nipValue))
+                .withPermissions(List.of(PersonPermissionType.CREDENTIALSMANAGE))
+                .withDescription("e2e test")
+                .build();
+
+        OperationResponse response = ksefClient.grantsPermissionPerson(request, accessToken);
+        Assertions.assertNotNull(response);
+        return response.getReferenceNumber();
+    }
+
+    private Boolean isOperationFinish(String referenceNumber, String accessToken) throws ApiException {
+        PermissionStatusInfo operations = ksefClient.permissionOperationStatus(referenceNumber, accessToken);
+        return operations != null && operations.getStatus().getCode() == 200;
     }
 
     private void getMedataCertificateList(String certificateSerialNumber, String accessToken) throws ApiException {

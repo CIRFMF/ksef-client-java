@@ -5,6 +5,20 @@ public class EuEntityPermissionsGrantRequest {
     private ContextIdentifier contextIdentifier;
     private String description;
     private String euEntityName;
+    private PermissionsEuEntitySubjectDetails subjectDetails;
+    private PermissionsEuEntityDetails euEntityDetails;
+
+    public EuEntityPermissionsGrantRequest() {
+    }
+
+    public EuEntityPermissionsGrantRequest(SubjectIdentifier subjectIdentifier, ContextIdentifier contextIdentifier, String description, String euEntityName, PermissionsEuEntitySubjectDetails subjectDetails, PermissionsEuEntityDetails euEntityDetails) {
+        this.subjectIdentifier = subjectIdentifier;
+        this.contextIdentifier = contextIdentifier;
+        this.description = description;
+        this.euEntityName = euEntityName;
+        this.subjectDetails = subjectDetails;
+        this.euEntityDetails = euEntityDetails;
+    }
 
     public SubjectIdentifier getSubjectIdentifier() {
         return subjectIdentifier;
@@ -36,6 +50,22 @@ public class EuEntityPermissionsGrantRequest {
 
     public void setEuEntityName(String euEntityName) {
         this.euEntityName = euEntityName;
+    }
+
+    public PermissionsEuEntitySubjectDetails getSubjectDetails() {
+        return subjectDetails;
+    }
+
+    public void setSubjectDetails(PermissionsEuEntitySubjectDetails subjectDetails) {
+        this.subjectDetails = subjectDetails;
+    }
+
+    public PermissionsEuEntityDetails getEuEntityDetails() {
+        return euEntityDetails;
+    }
+
+    public void setEuEntityDetails(PermissionsEuEntityDetails euEntityDetails) {
+        this.euEntityDetails = euEntityDetails;
     }
 }
 

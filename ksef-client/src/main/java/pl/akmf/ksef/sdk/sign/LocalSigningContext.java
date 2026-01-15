@@ -17,6 +17,10 @@ import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.ECPublicKey;
+
+import static pl.akmf.ksef.sdk.sign.CertUtil.isMatchingEcdsaPair;
+import static pl.akmf.ksef.sdk.sign.CertUtil.isMatchingRsaPair;
 
 public class LocalSigningContext implements SignContextProvider {
     public static final String PKCS_12 = "PKCS12";
@@ -42,12 +46,33 @@ public class LocalSigningContext implements SignContextProvider {
             byte[] keystoreBytes = baos.toByteArray();
 
             DSSPrivateKeyEntry dssPrivateKeyEntry = getPrivateKeyEntry(keystore);
+
+            SignatureAlgorithm signatureAlgorithm;
+            if (isMatchingRsaPair(signatureCertificate, privateKey)) {
+                signatureAlgorithm = SignatureAlgorithm.RSA_SHA256;
+            } else if (isMatchingEcdsaPair(signatureCertificate, privateKey)) {
+                ECPublicKey ecPublicKey = (ECPublicKey) signatureCertificate.getPublicKey();
+                int keySize = ecPublicKey.getParams().getCurve().getField().getFieldSize();
+
+                if (keySize <= 256) {
+                    signatureAlgorithm = SignatureAlgorithm.ECDSA_SHA256;
+                } else if (keySize <= 384) {
+                    signatureAlgorithm = SignatureAlgorithm.ECDSA_SHA384;
+                } else {
+                    signatureAlgorithm = SignatureAlgorithm.ECDSA_SHA512;
+                }
+            } else {
+                throw new IllegalArgumentException("Encoding data are incorrect: \nCertificate signatureAlg: " + signatureCertificate.getSigAlgName()
+                + "\nPublicKey signatureAlg: " + signatureCertificate.getPublicKey().getAlgorithm()
+                + "\nPrivateKEy signatureAlg: " + privateKey.getAlgorithm());
+            }
+
             try (Pkcs12SignatureToken token = createPkcs12Token(keystoreBytes)) {
-                return token.sign(toBeSigned, SignatureAlgorithm.RSA_SHA256, dssPrivateKeyEntry);
+                return token.sign(toBeSigned, signatureAlgorithm, dssPrivateKeyEntry);
             }
         } catch (UnrecoverableEntryException | CertificateException | IOException | NoSuchAlgorithmException |
                  KeyStoreException e) {
-            throw new SignSignatureException("Failed to create signature value for signing UPO", e);
+            throw new SignSignatureException("Failed to create signature value", e);
         }
     }
 

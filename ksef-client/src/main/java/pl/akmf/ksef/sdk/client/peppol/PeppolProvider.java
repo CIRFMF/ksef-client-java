@@ -1,8 +1,11 @@
 package pl.akmf.ksef.sdk.client.peppol;
 
+import java.time.OffsetDateTime;
+
 public class PeppolProvider {
     private String id;
     private String name;
+    private OffsetDateTime dateCreated;
 
     public PeppolProvider() {
     }
@@ -21,5 +24,13 @@ public class PeppolProvider {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public OffsetDateTime getDateCreated() {
+        return dateCreated;
+    }
+
+    public void setDateCreated(OffsetDateTime dateCreated) {
+        this.dateCreated = dateCreated;
     }
 }

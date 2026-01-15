@@ -2,7 +2,6 @@ package pl.akmf.ksef.sdk.client.model.invoice;
 
 import java.net.URI;
 import java.time.OffsetDateTime;
-import java.util.Map;
 
 
 public class InvoicePackagePart {

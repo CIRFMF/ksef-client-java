@@ -36,6 +36,5 @@ public enum CommonSessionStatus {
         }
         throw new IllegalArgumentException("Unexpected value '" + value + "'");
     }
-
 }
 

@@ -46,13 +46,13 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link AuthTokenRequest.IpAddressPolicy }
+     * Create an instance of {@link AuthTokenRequest.AuthorizationPolicy }
      * 
      * @return
-     *     the new instance of {@link AuthTokenRequest.IpAddressPolicy }
+     *     the new instance of {@link AuthTokenRequest.AuthorizationPolicy }
      */
-    public AuthTokenRequest.IpAddressPolicy createAuthTokenRequestIpAddressPolicy() {
-        return new AuthTokenRequest.IpAddressPolicy();
+    public AuthTokenRequest.AuthorizationPolicy createAuthTokenRequestAuthorizationPolicy() {
+        return new AuthTokenRequest.AuthorizationPolicy();
     }
 
     /**
@@ -66,13 +66,13 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link AuthTokenRequest.IpAddressPolicy.AllowedIps }
+     * Create an instance of {@link AuthTokenRequest.AuthorizationPolicy.AllowedIps }
      * 
      * @return
-     *     the new instance of {@link AuthTokenRequest.IpAddressPolicy.AllowedIps }
+     *     the new instance of {@link AuthTokenRequest.AuthorizationPolicy.AllowedIps }
      */
-    public AuthTokenRequest.IpAddressPolicy.AllowedIps createAuthTokenRequestIpAddressPolicyAllowedIps() {
-        return new AuthTokenRequest.IpAddressPolicy.AllowedIps();
+    public AuthTokenRequest.AuthorizationPolicy.AllowedIps createAuthTokenRequestAuthorizationPolicyAllowedIps() {
+        return new AuthTokenRequest.AuthorizationPolicy.AllowedIps();
     }
 
 }

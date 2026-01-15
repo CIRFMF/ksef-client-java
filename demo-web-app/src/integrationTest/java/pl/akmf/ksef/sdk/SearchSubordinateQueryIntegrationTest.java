@@ -30,7 +30,7 @@ class SearchSubordinateQueryIntegrationTest extends BaseIntegrationTest {
         request.setCreatedDate(OffsetDateTime.now());
         request.setDescription("description");
         request.setSubjectNip(subjectNip);
-        request.setSubunits(List.of(new Subunit(subunitNip, "test")));
+        request.setSubunits(List.of(new Subunit(subunitNip, "test-e2e")));
         request.setSubjectType(SubjectTypeTestData.VAT_GROUP);
 
         ksefClient.createTestSubject(request);

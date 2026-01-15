@@ -40,35 +40,34 @@ import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
  *         &lt;/element&gt;
  *         &lt;element name="ContextIdentifier" type="{http://ksef.mf.gov.pl/auth/token/2.0}TContextIdentifier"/&gt;
  *         &lt;element name="SubjectIdentifierType" type="{http://ksef.mf.gov.pl/auth/token/2.0}SubjectIdentifierTypeEnum"/&gt;
- *         &lt;element name="IpAddressPolicy" minOccurs="0"&gt;
+ *         &lt;element name="AuthorizationPolicy" minOccurs="0"&gt;
  *           &lt;complexType&gt;
  *             &lt;complexContent&gt;
  *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *                 &lt;sequence&gt;
- *                   &lt;element name="OnClientIpChange" type="{http://ksef.mf.gov.pl/auth/token/2.0}IpChangePolicyEnum" minOccurs="0"/&gt;
- *                   &lt;element name="AllowedIps" minOccurs="0"&gt;
+ *                   &lt;element name="AllowedIps"&gt;
  *                     &lt;complexType&gt;
  *                       &lt;complexContent&gt;
  *                         &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
- *                           &lt;sequence minOccurs="0"&gt;
- *                             &lt;element name="IpAddress" maxOccurs="unbounded" minOccurs="0"&gt;
+ *                           &lt;sequence&gt;
+ *                             &lt;element name="Ip4Address" maxOccurs="10" minOccurs="0"&gt;
  *                               &lt;simpleType&gt;
  *                                 &lt;restriction base="{http://www.w3.org/2001/XMLSchema}token"&gt;
- *                                   &lt;pattern value="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"/&gt;
+ *                                   &lt;pattern value="([0-9]{1,3}\.){3}[0-9]{1,3}"/&gt;
  *                                 &lt;/restriction&gt;
  *                               &lt;/simpleType&gt;
  *                             &lt;/element&gt;
- *                             &lt;element name="IpRange" maxOccurs="unbounded" minOccurs="0"&gt;
+ *                             &lt;element name="Ip4Range" maxOccurs="10" minOccurs="0"&gt;
  *                               &lt;simpleType&gt;
  *                                 &lt;restriction base="{http://www.w3.org/2001/XMLSchema}token"&gt;
- *                                   &lt;pattern value="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}-\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"/&gt;
+ *                                   &lt;pattern value="((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.){3}(25[0-5]|(2[0-4]|1\d|[1-9]|)\d)-((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.){3}(25[0-5]|(2[0-4]|1\d|[1-9]|)\d)"/&gt;
  *                                 &lt;/restriction&gt;
  *                               &lt;/simpleType&gt;
  *                             &lt;/element&gt;
- *                             &lt;element name="IpMask" maxOccurs="unbounded" minOccurs="0"&gt;
+ *                             &lt;element name="Ip4Mask" maxOccurs="10" minOccurs="0"&gt;
  *                               &lt;simpleType&gt;
  *                                 &lt;restriction base="{http://www.w3.org/2001/XMLSchema}token"&gt;
- *                                   &lt;pattern value="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/(8|16|24|32)"/&gt;
+ *                                   &lt;pattern value="([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])"/&gt;
  *                                 &lt;/restriction&gt;
  *                               &lt;/simpleType&gt;
  *                             &lt;/element&gt;
@@ -95,7 +94,7 @@ import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
     "challenge",
     "contextIdentifier",
     "subjectIdentifierType",
-    "ipAddressPolicy"
+    "authorizationPolicy"
 })
 @XmlRootElement(name = "AuthTokenRequest")
 public class AuthTokenRequest {
@@ -108,8 +107,8 @@ public class AuthTokenRequest {
     @XmlElement(name = "SubjectIdentifierType", required = true)
     @XmlSchemaType(name = "token")
     protected SubjectIdentifierTypeEnum subjectIdentifierType;
-    @XmlElement(name = "IpAddressPolicy")
-    protected AuthTokenRequest.IpAddressPolicy ipAddressPolicy;
+    @XmlElement(name = "AuthorizationPolicy")
+    protected AuthTokenRequest.AuthorizationPolicy authorizationPolicy;
 
     /**
      * Gets the value of the challenge property.
@@ -184,27 +183,27 @@ public class AuthTokenRequest {
     }
 
     /**
-     * Gets the value of the ipAddressPolicy property.
+     * Gets the value of the authorizationPolicy property.
      * 
      * @return
      *     possible object is
-     *     {@link AuthTokenRequest.IpAddressPolicy }
+     *     {@link AuthTokenRequest.AuthorizationPolicy }
      *     
      */
-    public AuthTokenRequest.IpAddressPolicy getIpAddressPolicy() {
-        return ipAddressPolicy;
+    public AuthTokenRequest.AuthorizationPolicy getAuthorizationPolicy() {
+        return authorizationPolicy;
     }
 
     /**
-     * Sets the value of the ipAddressPolicy property.
+     * Sets the value of the authorizationPolicy property.
      * 
      * @param value
      *     allowed object is
-     *     {@link AuthTokenRequest.IpAddressPolicy }
+     *     {@link AuthTokenRequest.AuthorizationPolicy }
      *     
      */
-    public void setIpAddressPolicy(AuthTokenRequest.IpAddressPolicy value) {
-        this.ipAddressPolicy = value;
+    public void setAuthorizationPolicy(AuthTokenRequest.AuthorizationPolicy value) {
+        this.authorizationPolicy = value;
     }
 
     public AuthTokenRequest withChallenge(String value) {
@@ -222,8 +221,8 @@ public class AuthTokenRequest {
         return this;
     }
 
-    public AuthTokenRequest withIpAddressPolicy(AuthTokenRequest.IpAddressPolicy value) {
-        setIpAddressPolicy(value);
+    public AuthTokenRequest withAuthorizationPolicy(AuthTokenRequest.AuthorizationPolicy value) {
+        setAuthorizationPolicy(value);
         return this;
     }
 
@@ -238,30 +237,29 @@ public class AuthTokenRequest {
      *   &lt;complexContent&gt;
      *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
      *       &lt;sequence&gt;
-     *         &lt;element name="OnClientIpChange" type="{http://ksef.mf.gov.pl/auth/token/2.0}IpChangePolicyEnum" minOccurs="0"/&gt;
-     *         &lt;element name="AllowedIps" minOccurs="0"&gt;
+     *         &lt;element name="AllowedIps"&gt;
      *           &lt;complexType&gt;
      *             &lt;complexContent&gt;
      *               &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
-     *                 &lt;sequence minOccurs="0"&gt;
-     *                   &lt;element name="IpAddress" maxOccurs="unbounded" minOccurs="0"&gt;
+     *                 &lt;sequence&gt;
+     *                   &lt;element name="Ip4Address" maxOccurs="10" minOccurs="0"&gt;
      *                     &lt;simpleType&gt;
      *                       &lt;restriction base="{http://www.w3.org/2001/XMLSchema}token"&gt;
-     *                         &lt;pattern value="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"/&gt;
+     *                         &lt;pattern value="([0-9]{1,3}\.){3}[0-9]{1,3}"/&gt;
      *                       &lt;/restriction&gt;
      *                     &lt;/simpleType&gt;
      *                   &lt;/element&gt;
-     *                   &lt;element name="IpRange" maxOccurs="unbounded" minOccurs="0"&gt;
+     *                   &lt;element name="Ip4Range" maxOccurs="10" minOccurs="0"&gt;
      *                     &lt;simpleType&gt;
      *                       &lt;restriction base="{http://www.w3.org/2001/XMLSchema}token"&gt;
-     *                         &lt;pattern value="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}-\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"/&gt;
+     *                         &lt;pattern value="((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.){3}(25[0-5]|(2[0-4]|1\d|[1-9]|)\d)-((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.){3}(25[0-5]|(2[0-4]|1\d|[1-9]|)\d)"/&gt;
      *                       &lt;/restriction&gt;
      *                     &lt;/simpleType&gt;
      *                   &lt;/element&gt;
-     *                   &lt;element name="IpMask" maxOccurs="unbounded" minOccurs="0"&gt;
+     *                   &lt;element name="Ip4Mask" maxOccurs="10" minOccurs="0"&gt;
      *                     &lt;simpleType&gt;
      *                       &lt;restriction base="{http://www.w3.org/2001/XMLSchema}token"&gt;
-     *                         &lt;pattern value="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/(8|16|24|32)"/&gt;
+     *                         &lt;pattern value="([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])"/&gt;
      *                       &lt;/restriction&gt;
      *                     &lt;/simpleType&gt;
      *                   &lt;/element&gt;
@@ -280,50 +278,22 @@ public class AuthTokenRequest {
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
-        "onClientIpChange",
         "allowedIps"
     })
-    public static class IpAddressPolicy {
+    public static class AuthorizationPolicy {
 
-        @XmlElement(name = "OnClientIpChange")
-        @XmlSchemaType(name = "string")
-        protected IpChangePolicyEnum onClientIpChange;
-        @XmlElement(name = "AllowedIps")
-        protected AuthTokenRequest.IpAddressPolicy.AllowedIps allowedIps;
-
-        /**
-         * Gets the value of the onClientIpChange property.
-         * 
-         * @return
-         *     possible object is
-         *     {@link IpChangePolicyEnum }
-         *     
-         */
-        public IpChangePolicyEnum getOnClientIpChange() {
-            return onClientIpChange;
-        }
-
-        /**
-         * Sets the value of the onClientIpChange property.
-         * 
-         * @param value
-         *     allowed object is
-         *     {@link IpChangePolicyEnum }
-         *     
-         */
-        public void setOnClientIpChange(IpChangePolicyEnum value) {
-            this.onClientIpChange = value;
-        }
+        @XmlElement(name = "AllowedIps", required = true)
+        protected AuthTokenRequest.AuthorizationPolicy.AllowedIps allowedIps;
 
         /**
          * Gets the value of the allowedIps property.
          * 
          * @return
          *     possible object is
-         *     {@link AuthTokenRequest.IpAddressPolicy.AllowedIps }
+         *     {@link AuthTokenRequest.AuthorizationPolicy.AllowedIps }
          *     
          */
-        public AuthTokenRequest.IpAddressPolicy.AllowedIps getAllowedIps() {
+        public AuthTokenRequest.AuthorizationPolicy.AllowedIps getAllowedIps() {
             return allowedIps;
         }
 
@@ -332,19 +302,14 @@ public class AuthTokenRequest {
          * 
          * @param value
          *     allowed object is
-         *     {@link AuthTokenRequest.IpAddressPolicy.AllowedIps }
+         *     {@link AuthTokenRequest.AuthorizationPolicy.AllowedIps }
          *     
          */
-        public void setAllowedIps(AuthTokenRequest.IpAddressPolicy.AllowedIps value) {
+        public void setAllowedIps(AuthTokenRequest.AuthorizationPolicy.AllowedIps value) {
             this.allowedIps = value;
         }
 
-        public AuthTokenRequest.IpAddressPolicy withOnClientIpChange(IpChangePolicyEnum value) {
-            setOnClientIpChange(value);
-            return this;
-        }
-
-        public AuthTokenRequest.IpAddressPolicy withAllowedIps(AuthTokenRequest.IpAddressPolicy.AllowedIps value) {
+        public AuthTokenRequest.AuthorizationPolicy withAllowedIps(AuthTokenRequest.AuthorizationPolicy.AllowedIps value) {
             setAllowedIps(value);
             return this;
         }
@@ -359,25 +324,25 @@ public class AuthTokenRequest {
          * &lt;complexType&gt;
          *   &lt;complexContent&gt;
          *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
-         *       &lt;sequence minOccurs="0"&gt;
-         *         &lt;element name="IpAddress" maxOccurs="unbounded" minOccurs="0"&gt;
+         *       &lt;sequence&gt;
+         *         &lt;element name="Ip4Address" maxOccurs="10" minOccurs="0"&gt;
          *           &lt;simpleType&gt;
          *             &lt;restriction base="{http://www.w3.org/2001/XMLSchema}token"&gt;
-         *               &lt;pattern value="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"/&gt;
+         *               &lt;pattern value="([0-9]{1,3}\.){3}[0-9]{1,3}"/&gt;
          *             &lt;/restriction&gt;
          *           &lt;/simpleType&gt;
          *         &lt;/element&gt;
-         *         &lt;element name="IpRange" maxOccurs="unbounded" minOccurs="0"&gt;
+         *         &lt;element name="Ip4Range" maxOccurs="10" minOccurs="0"&gt;
          *           &lt;simpleType&gt;
          *             &lt;restriction base="{http://www.w3.org/2001/XMLSchema}token"&gt;
-         *               &lt;pattern value="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}-\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"/&gt;
+         *               &lt;pattern value="((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.){3}(25[0-5]|(2[0-4]|1\d|[1-9]|)\d)-((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.){3}(25[0-5]|(2[0-4]|1\d|[1-9]|)\d)"/&gt;
          *             &lt;/restriction&gt;
          *           &lt;/simpleType&gt;
          *         &lt;/element&gt;
-         *         &lt;element name="IpMask" maxOccurs="unbounded" minOccurs="0"&gt;
+         *         &lt;element name="Ip4Mask" maxOccurs="10" minOccurs="0"&gt;
          *           &lt;simpleType&gt;
          *             &lt;restriction base="{http://www.w3.org/2001/XMLSchema}token"&gt;
-         *               &lt;pattern value="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/(8|16|24|32)"/&gt;
+         *               &lt;pattern value="([0-9]{1,3}\.){3}[0-9]{1,3}/([0-9]|[1-2][0-9]|3[0-2])"/&gt;
          *             &lt;/restriction&gt;
          *           &lt;/simpleType&gt;
          *         &lt;/element&gt;
@@ -391,35 +356,35 @@ public class AuthTokenRequest {
          */
         @XmlAccessorType(XmlAccessType.FIELD)
         @XmlType(name = "", propOrder = {
-            "ipAddress",
-            "ipRange",
-            "ipMask"
+            "ip4Address",
+            "ip4Range",
+            "ip4Mask"
         })
         public static class AllowedIps {
 
-            @XmlElement(name = "IpAddress")
+            @XmlElement(name = "Ip4Address")
             @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
-            protected List<String> ipAddress;
-            @XmlElement(name = "IpRange")
+            protected List<String> ip4Address;
+            @XmlElement(name = "Ip4Range")
             @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
-            protected List<String> ipRange;
-            @XmlElement(name = "IpMask")
+            protected List<String> ip4Range;
+            @XmlElement(name = "Ip4Mask")
             @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
-            protected List<String> ipMask;
+            protected List<String> ip4Mask;
 
             /**
-             * Gets the value of the ipAddress property.
+             * Gets the value of the ip4Address property.
              * 
              * <p>This accessor method returns a reference to the live list,
              * not a snapshot. Therefore any modification you make to the
              * returned list will be present inside the Jakarta XML Binding object.
-             * This is why there is not a {@code set} method for the ipAddress property.</p>
+             * This is why there is not a {@code set} method for the ip4Address property.</p>
              * 
              * <p>
              * For example, to add a new item, do as follows:
              * </p>
              * <pre>
-             * getIpAddress().add(newItem);
+             * getIp4Address().add(newItem);
              * </pre>
              * 
              * 
@@ -430,28 +395,28 @@ public class AuthTokenRequest {
              * 
              * 
              * @return
-             *     The value of the ipAddress property.
+             *     The value of the ip4Address property.
              */
-            public List<String> getIpAddress() {
-                if (ipAddress == null) {
-                    ipAddress = new ArrayList<>();
+            public List<String> getIp4Address() {
+                if (ip4Address == null) {
+                    ip4Address = new ArrayList<>();
                 }
-                return this.ipAddress;
+                return this.ip4Address;
             }
 
             /**
-             * Gets the value of the ipRange property.
+             * Gets the value of the ip4Range property.
              * 
              * <p>This accessor method returns a reference to the live list,
              * not a snapshot. Therefore any modification you make to the
              * returned list will be present inside the Jakarta XML Binding object.
-             * This is why there is not a {@code set} method for the ipRange property.</p>
+             * This is why there is not a {@code set} method for the ip4Range property.</p>
              * 
              * <p>
              * For example, to add a new item, do as follows:
              * </p>
              * <pre>
-             * getIpRange().add(newItem);
+             * getIp4Range().add(newItem);
              * </pre>
              * 
              * 
@@ -462,28 +427,28 @@ public class AuthTokenRequest {
              * 
              * 
              * @return
-             *     The value of the ipRange property.
+             *     The value of the ip4Range property.
              */
-            public List<String> getIpRange() {
-                if (ipRange == null) {
-                    ipRange = new ArrayList<>();
+            public List<String> getIp4Range() {
+                if (ip4Range == null) {
+                    ip4Range = new ArrayList<>();
                 }
-                return this.ipRange;
+                return this.ip4Range;
             }
 
             /**
-             * Gets the value of the ipMask property.
+             * Gets the value of the ip4Mask property.
              * 
              * <p>This accessor method returns a reference to the live list,
              * not a snapshot. Therefore any modification you make to the
              * returned list will be present inside the Jakarta XML Binding object.
-             * This is why there is not a {@code set} method for the ipMask property.</p>
+             * This is why there is not a {@code set} method for the ip4Mask property.</p>
              * 
              * <p>
              * For example, to add a new item, do as follows:
              * </p>
              * <pre>
-             * getIpMask().add(newItem);
+             * getIp4Mask().add(newItem);
              * </pre>
              * 
              * 
@@ -494,59 +459,59 @@ public class AuthTokenRequest {
              * 
              * 
              * @return
-             *     The value of the ipMask property.
+             *     The value of the ip4Mask property.
              */
-            public List<String> getIpMask() {
-                if (ipMask == null) {
-                    ipMask = new ArrayList<>();
+            public List<String> getIp4Mask() {
+                if (ip4Mask == null) {
+                    ip4Mask = new ArrayList<>();
                 }
-                return this.ipMask;
+                return this.ip4Mask;
             }
 
-            public AuthTokenRequest.IpAddressPolicy.AllowedIps withIpAddress(String... values) {
+            public AuthTokenRequest.AuthorizationPolicy.AllowedIps withIp4Address(String... values) {
                 if (values!= null) {
                     for (String value: values) {
-                        getIpAddress().add(value);
+                        getIp4Address().add(value);
                     }
                 }
                 return this;
             }
 
-            public AuthTokenRequest.IpAddressPolicy.AllowedIps withIpAddress(Collection<String> values) {
+            public AuthTokenRequest.AuthorizationPolicy.AllowedIps withIp4Address(Collection<String> values) {
                 if (values!= null) {
-                    getIpAddress().addAll(values);
+                    getIp4Address().addAll(values);
                 }
                 return this;
             }
 
-            public AuthTokenRequest.IpAddressPolicy.AllowedIps withIpRange(String... values) {
+            public AuthTokenRequest.AuthorizationPolicy.AllowedIps withIp4Range(String... values) {
                 if (values!= null) {
                     for (String value: values) {
-                        getIpRange().add(value);
+                        getIp4Range().add(value);
                     }
                 }
                 return this;
             }
 
-            public AuthTokenRequest.IpAddressPolicy.AllowedIps withIpRange(Collection<String> values) {
+            public AuthTokenRequest.AuthorizationPolicy.AllowedIps withIp4Range(Collection<String> values) {
                 if (values!= null) {
-                    getIpRange().addAll(values);
+                    getIp4Range().addAll(values);
                 }
                 return this;
             }
 
-            public AuthTokenRequest.IpAddressPolicy.AllowedIps withIpMask(String... values) {
+            public AuthTokenRequest.AuthorizationPolicy.AllowedIps withIp4Mask(String... values) {
                 if (values!= null) {
                     for (String value: values) {
-                        getIpMask().add(value);
+                        getIp4Mask().add(value);
                     }
                 }
                 return this;
             }
 
-            public AuthTokenRequest.IpAddressPolicy.AllowedIps withIpMask(Collection<String> values) {
+            public AuthTokenRequest.AuthorizationPolicy.AllowedIps withIp4Mask(Collection<String> values) {
                 if (values!= null) {
-                    getIpMask().addAll(values);
+                    getIp4Mask().addAll(values);
                 }
                 return this;
             }

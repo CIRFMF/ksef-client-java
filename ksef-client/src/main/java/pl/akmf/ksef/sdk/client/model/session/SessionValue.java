@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum SessionValue {
     FA("FA"),
-    FA_PEF("FA_PEF");
+    FA_PEF("PEF");
 
     private final String value;
 

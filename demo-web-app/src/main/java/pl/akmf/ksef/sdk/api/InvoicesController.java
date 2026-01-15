@@ -9,12 +9,12 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.invoice.DownloadInvoiceRequest;
 import pl.akmf.ksef.sdk.client.model.invoice.InitAsyncInvoicesQueryResponse;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportRequest;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportStatus;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceQueryFilters;
 import pl.akmf.ksef.sdk.client.model.invoice.QueryInvoiceMetadataResponse;
+import pl.akmf.ksef.sdk.client.model.util.SortOrder;
 
 import static pl.akmf.ksef.sdk.client.Headers.AUTHORIZATION;
 
@@ -29,18 +29,12 @@ public class InvoicesController {
         return ksefClient.getInvoice(ksefReferenceNumber, authToken);
     }
 
-    @PostMapping("/invoices/")
-    public byte[] getInvoice(@RequestBody DownloadInvoiceRequest downloadInvoiceRequest,
-                             @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
-        return ksefClient.getInvoice(downloadInvoiceRequest, authToken);
-    }
-
     @PostMapping("/invoices/metadata")
     QueryInvoiceMetadataResponse getInvoiceMetadata(@RequestParam Integer pageOffset,
                                                     @RequestParam Integer pageSize,
                                                     @RequestBody InvoiceQueryFilters request,
                                                     @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
-        return ksefClient.queryInvoiceMetadata(pageOffset, pageSize, request, authToken);
+        return ksefClient.queryInvoiceMetadata(pageOffset, pageSize, SortOrder.ASC, request, authToken);
     }
 
     @PostMapping("/invoices/query/async")

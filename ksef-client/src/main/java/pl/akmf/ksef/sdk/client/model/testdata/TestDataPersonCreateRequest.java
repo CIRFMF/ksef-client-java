@@ -7,6 +7,7 @@ public class TestDataPersonCreateRequest {
     private String pesel;
     private Boolean isBailiff;
     private String description;
+    private Boolean isDeceased;
     private OffsetDateTime createdDate;
 
     public TestDataPersonCreateRequest() {
@@ -35,6 +36,14 @@ public class TestDataPersonCreateRequest {
 
     public void setIsBailiff(Boolean isBailiff) {
         this.isBailiff = isBailiff;
+    }
+
+    public Boolean getIsDeceased() {
+        return isDeceased;
+    }
+
+    public void setIsDeceased(Boolean isDeceased){
+        this.isDeceased = isDeceased;
     }
 
     public String getDescription() {

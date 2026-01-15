@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pl.akmf.ksef.sdk.api.builders.batch.OpenBatchSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
+import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
 import pl.akmf.ksef.sdk.client.model.session.FileMetadata;
 import pl.akmf.ksef.sdk.client.model.session.SchemaVersion;
@@ -133,7 +134,7 @@ public class BatchSessionController {
 
         for (int i = 0; i < encryptedZipParts.size(); i++) {
             var part = encryptedZipParts.get(i);
-            builder = builder.addBatchFilePart(i + 1, "faktura_part" + (i + 1) + ".zip.aes",
+            builder = builder.addBatchFilePart(i + 1,
                     part.getMetadata().getFileSize(), part.getMetadata().getHashSHA());
         }
 
@@ -144,7 +145,7 @@ public class BatchSessionController {
                 )
                 .build();
 
-        var response = ksefClient.openBatchSession(request, authToken);
+        var response = ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, authToken);
         log.info("batch session opened " + response);
         ksefClient.sendBatchParts(response, encryptedZipParts);
         log.info("all parts send");

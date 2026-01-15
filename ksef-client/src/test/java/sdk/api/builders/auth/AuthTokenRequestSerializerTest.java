@@ -20,14 +20,13 @@ public class AuthTokenRequestSerializerTest {
             "        <Nip>111111111</Nip>\n" +
             "    </ContextIdentifier>\n" +
             "    <SubjectIdentifierType>certificateSubject</SubjectIdentifierType>\n" +
-            "    <IpAddressPolicy>\n" +
-            "        <OnClientIpChange>reject</OnClientIpChange>\n" +
+            "    <AuthorizationPolicy>\n" +
             "        <AllowedIps>\n" +
-            "            <IpAddress>321</IpAddress>\n" +
-            "            <IpRange>range</IpRange>\n" +
-            "            <IpMask>mask</IpMask>\n" +
+            "            <Ip4Address>321</Ip4Address>\n" +
+            "            <Ip4Range>range</Ip4Range>\n" +
+            "            <Ip4Mask>mask</Ip4Mask>\n" +
             "        </AllowedIps>\n" +
-            "    </IpAddressPolicy>\n" +
+            "    </AuthorizationPolicy>\n" +
             "</AuthTokenRequest>\n";
 
     @Test
@@ -37,7 +36,7 @@ public class AuthTokenRequestSerializerTest {
                 .withChallenge("222-222-2222-2222")
                 .withContextNip( "111111111")
                 .withSubjectType(SubjectIdentifierTypeEnum.CERTIFICATE_SUBJECT)
-                .withIpAddressPolicy("reject", List.of("321"), List.of("range"), List.of("mask"))
+                .withAuthorizationPolicy(List.of("321"), List.of("range"), List.of("mask"))
                 .build();
 
 

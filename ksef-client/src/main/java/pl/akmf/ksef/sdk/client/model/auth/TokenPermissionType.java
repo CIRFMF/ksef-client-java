@@ -8,6 +8,7 @@ public enum TokenPermissionType {
     INVOICE_WRITE("InvoiceWrite"),
     SUBUNIT_MANAGE("SubunitManage"),
     ENFORCEMENT_OPERATION("EnforcementOperations"),
+    PEPPOL_ID("PeppolId"),
     CREDENTIALS_READ("CredentialsRead"),
     CREDENTIALS_MANAGE("CredentialsManage");
 

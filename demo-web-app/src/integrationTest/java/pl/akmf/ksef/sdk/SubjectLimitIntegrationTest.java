@@ -57,8 +57,8 @@ class SubjectLimitIntegrationTest extends BaseIntegrationTest {
     private GetSubjectLimitResponse getExpectedBaseResponse() {
         GetSubjectLimitResponse response = new GetSubjectLimitResponse();
 
-        response.setCertificate(new CertificateLimit(15));
-        response.setEnrollment(new EnrollmentLimit(15));
+        response.setCertificate(new CertificateLimit(100));
+        response.setEnrollment(new EnrollmentLimit(300));
 
         return response;
     }

@@ -7,6 +7,7 @@ public class GrantIndirectEntityPermissionsRequest {
     private TargetIdentifier targetIdentifier;
     private List<IndirectPermissionType> permissions;
     private String description;
+    private PermissionsIndirectEntitySubjectDetails subjectDetails;
 
     public GrantIndirectEntityPermissionsRequest() {
 
@@ -20,6 +21,14 @@ public class GrantIndirectEntityPermissionsRequest {
         this.targetIdentifier = targetIdentifier;
         this.permissions = permissions;
         this.description = description;
+    }
+
+    public GrantIndirectEntityPermissionsRequest(SubjectIdentifier subjectIdentifier, TargetIdentifier targetIdentifier, List<IndirectPermissionType> permissions, String description, PermissionsIndirectEntitySubjectDetails subjectDetails) {
+        this.subjectIdentifier = subjectIdentifier;
+        this.targetIdentifier = targetIdentifier;
+        this.permissions = permissions;
+        this.description = description;
+        this.subjectDetails = subjectDetails;
     }
 
     public SubjectIdentifier getSubjectIdentifier() {
@@ -54,4 +63,11 @@ public class GrantIndirectEntityPermissionsRequest {
         this.targetIdentifier = targetIdentifier;
     }
 
+    public PermissionsIndirectEntitySubjectDetails getSubjectDetails() {
+        return subjectDetails;
+    }
+
+    public void setSubjectDetails(PermissionsIndirectEntitySubjectDetails subjectDetails) {
+        this.subjectDetails = subjectDetails;
+    }
 }

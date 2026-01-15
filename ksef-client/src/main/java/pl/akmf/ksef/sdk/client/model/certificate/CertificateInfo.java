@@ -12,6 +12,7 @@ public class CertificateInfo {
     private OffsetDateTime validFrom;
     private OffsetDateTime validTo;
     private OffsetDateTime lastUseDate;
+    private OffsetDateTime requestDate;
 
     public CertificateInfo() {
 
@@ -87,5 +88,13 @@ public class CertificateInfo {
 
     public void setType(CertificateType type) {
         this.type = type;
+    }
+
+    public OffsetDateTime getRequestDate() {
+        return requestDate;
+    }
+
+    public void setRequestDate(OffsetDateTime requestDate) {
+        this.requestDate = requestDate;
     }
 }

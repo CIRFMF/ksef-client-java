@@ -35,6 +35,7 @@ public class QueryPersonalGrantTargetIdentifier {
     public enum IdentifierType {
 
         ALL_PARTNERS("AllPartners"),
+        INTERNAL_ID("InternalId"),
         NIP("Nip");
 
         private final String value;

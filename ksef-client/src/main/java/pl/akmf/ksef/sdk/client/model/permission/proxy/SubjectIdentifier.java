@@ -31,7 +31,7 @@ public class SubjectIdentifier {
     }
 
     public enum IdentifierType {
-
+        PEPPOL_ID("PeppolId"),
         NIP("Nip");
 
         private final String value;

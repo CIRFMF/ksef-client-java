@@ -8,6 +8,7 @@ public final class Parameter {
 
     ///QUERY
     public static final String PAGE_SIZE = "pageSize";
+    public static final String SORT_ORDER = "sortOrder";
     public static final String PAGE_OFFSET = "pageOffset";
     public static final String STATUS = "status";
     public static final String STATUSES = "statuses";

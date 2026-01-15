@@ -17,6 +17,7 @@ public class SessionInvoiceStatusResponse {
     private StatusInfo status;
     private OffsetDateTime permanentStorageDate;
     private String upoDownloadUrl;
+    private String upoDownloadUrlExpirationDate;
     private InvoicingMode invoicingMode;
 
     public SessionInvoiceStatusResponse() {
@@ -109,6 +110,14 @@ public class SessionInvoiceStatusResponse {
 
     public void setUpoDownloadUrl(String upoDownloadUrl) {
         this.upoDownloadUrl = upoDownloadUrl;
+    }
+
+    public String getUpoDownloadUrlExpirationDate() {
+        return upoDownloadUrlExpirationDate;
+    }
+
+    public void setUpoDownloadUrlExpirationDate(String upoDownloadUrlExpirationDate) {
+        this.upoDownloadUrlExpirationDate = upoDownloadUrlExpirationDate;
     }
 
     public InvoicingMode getInvoicingMode() {

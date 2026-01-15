@@ -76,12 +76,12 @@ class ContextLimitIntegrationTest extends BaseIntegrationTest {
         GetContextLimitResponse response = new GetContextLimitResponse();
         OnlineSessionLimit onlineSessionLimit = new OnlineSessionLimit();
         onlineSessionLimit.setMaxInvoiceSizeInMB(1);
-        onlineSessionLimit.setMaxInvoiceWithAttachmentSizeInMB(10);
-        onlineSessionLimit.setMaxInvoices(100);
+        onlineSessionLimit.setMaxInvoiceWithAttachmentSizeInMB(3);
+        onlineSessionLimit.setMaxInvoices(10000);
         BatchSessionLimit batchSessionLimit = new BatchSessionLimit();
         batchSessionLimit.setMaxInvoiceSizeInMB(1);
-        batchSessionLimit.setMaxInvoiceWithAttachmentSizeInMB(10);
-        batchSessionLimit.setMaxInvoices(100);
+        batchSessionLimit.setMaxInvoiceWithAttachmentSizeInMB(3);
+        batchSessionLimit.setMaxInvoices(10000);
         response.setOnlineSession(onlineSessionLimit);
         response.setBatchSession(batchSessionLimit);
 

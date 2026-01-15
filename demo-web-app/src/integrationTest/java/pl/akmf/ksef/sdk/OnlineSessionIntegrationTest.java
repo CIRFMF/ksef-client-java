@@ -9,7 +9,7 @@ import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuil
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.StatusInfo;
-import pl.akmf.ksef.sdk.client.model.invoice.DownloadInvoiceRequest;
+import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
 import pl.akmf.ksef.sdk.client.model.session.FileMetadata;
 import pl.akmf.ksef.sdk.client.model.session.FormCode;
@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Base64;
-import java.util.Objects;
 import java.util.UUID;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -86,7 +85,7 @@ class OnlineSessionIntegrationTest extends BaseIntegrationTest {
         getOnlineSessionUpo(sessionReferenceNumber, upoReferenceNumber, accessToken);
 
         // Step 8: Get invoice
-        getInvoice(sessionInvoice.getInvoiceNumber(), accessToken);
+        getInvoice(sessionInvoice.getKsefNumber(), accessToken);
     }
 
     @Test
@@ -105,7 +104,7 @@ class OnlineSessionIntegrationTest extends BaseIntegrationTest {
                 .pollInterval(2, SECONDS)
                 .until(() -> {
                     SessionStatusResponse statusResponse = ksefClient.getSessionStatus(sessionReferenceNumber, accessToken);
-                    return statusResponse != null && statusResponse.getFailedInvoiceCount() > 0;
+                    return statusResponse.getFailedInvoiceCount() != null && statusResponse.getFailedInvoiceCount() > 0;
                 });
 
         closeOnlineSession(sessionReferenceNumber, accessToken);
@@ -161,7 +160,7 @@ class OnlineSessionIntegrationTest extends BaseIntegrationTest {
         getOnlineSessionUpo(sessionReferenceNumber, upoReferenceNumber, accessToken);
 
         // Step 8: Get invoice
-        getInvoice(sessionInvoice.getInvoiceNumber(), accessToken);
+        getInvoice(sessionInvoice.getKsefNumber(), accessToken);
     }
 
     private static void validKseFNumber(String ksefNumber) {
@@ -213,7 +212,7 @@ class OnlineSessionIntegrationTest extends BaseIntegrationTest {
                 .withEncryptionInfo(encryptionData.encryptionInfo())
                 .build();
 
-        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, accessToken);
+        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, UpoVersion.UPO_4_3, accessToken);
         Assertions.assertNotNull(openOnlineSessionResponse);
         Assertions.assertNotNull(openOnlineSessionResponse.getReferenceNumber());
         return openOnlineSessionResponse.getReferenceNumber();
@@ -221,8 +220,7 @@ class OnlineSessionIntegrationTest extends BaseIntegrationTest {
 
     private String sendInvoiceOnlineSession(String nip, String sessionReferenceNumber, EncryptionData encryptionData,
                                             String path, String accessToken) throws IOException, ApiException {
-        String invoiceTemplate = new String(Objects.requireNonNull(BaseIntegrationTest.class.getResourceAsStream(path))
-                .readAllBytes(), StandardCharsets.UTF_8)
+        String invoiceTemplate = new String(readBytesFromPath(path), StandardCharsets.UTF_8)
                 .replace("#nip#", nip)
                 .replace("#invoicing_date#", LocalDate.of(2025, 6, 15).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                 .replace("#invoice_number#", UUID.randomUUID().toString());
@@ -292,11 +290,6 @@ class OnlineSessionIntegrationTest extends BaseIntegrationTest {
 
     private void getInvoice(String ksefNumber, String accessToken) throws ApiException {
         byte[] invoice = ksefClient.getInvoice(ksefNumber, accessToken);
-        Assertions.assertNotNull(invoice);
-
-        DownloadInvoiceRequest request = new DownloadInvoiceRequest();
-        request.setKsefNumber(ksefNumber);
-        invoice = ksefClient.getInvoice(request, accessToken);
         Assertions.assertNotNull(invoice);
     }
 }

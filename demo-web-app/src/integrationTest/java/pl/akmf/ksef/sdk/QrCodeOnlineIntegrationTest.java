@@ -8,6 +8,7 @@ import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
+import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
 import pl.akmf.ksef.sdk.client.model.session.FileMetadata;
 import pl.akmf.ksef.sdk.client.model.session.FormCode;
@@ -29,7 +30,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Base64;
-import java.util.Objects;
 import java.util.UUID;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -38,6 +38,7 @@ import static org.awaitility.Awaitility.await;
 public class QrCodeOnlineIntegrationTest extends BaseIntegrationTest {
     private static final int SESSION_SUCCESSFUL_STATUS_CODE = 200;
     private static final int SESSION_FAILED_STATUS_CODE = 445;
+
     @Autowired
     private DefaultCryptographyService defaultCryptographyService;
 
@@ -68,8 +69,9 @@ public class QrCodeOnlineIntegrationTest extends BaseIntegrationTest {
         //Otwarcie sesji online z szyfrowaniem RSA.
         String sessionReferenceNumber = openOnlineSession(encryptionData, SystemCode.FA_2, SchemaVersion.VERSION_1_0E, SessionValue.FA, accessToken);
 
+        LocalDate invoicingDate = LocalDate.of(2025, 6, 15);
         //Utworzenie i wysłanie faktury FA(2)
-        String invoiceReferenceNumber = sendInvoiceOnlineSession(contextNip, sessionReferenceNumber, encryptionData, "/xml/invoices/sample/invoice-template.xml", accessToken);
+        String invoiceReferenceNumber = sendInvoiceOnlineSession(contextNip, sessionReferenceNumber, invoicingDate, encryptionData, "/xml/invoices/sample/invoice-template.xml", accessToken);
 
         //Weryfikacja, czy faktura została dodana do sesji.
         await().atMost(30, SECONDS)
@@ -108,10 +110,9 @@ public class QrCodeOnlineIntegrationTest extends BaseIntegrationTest {
                 .orElseThrow();
         String invoiceKsefNumber = invoiceMetadata.getKsefNumber();
         String invoiceHash = invoiceMetadata.getInvoiceHash();
-        OffsetDateTime invoicingDate = invoiceMetadata.getInvoicingDate();
 
         //Stworzenie linku weryfikacyjnego do faktury za pomoca certyfikatu oraz hashu faktury
-        String invoiceForOnlineUrl = verificationLinkService.buildInvoiceVerificationUrl(contextNip, invoicingDate.toLocalDate(), invoiceHash);
+        String invoiceForOnlineUrl = verificationLinkService.buildInvoiceVerificationUrl(contextNip, invoicingDate, invoiceHash);
 
         Assertions.assertNotNull(invoiceForOnlineUrl);
         Assertions.assertTrue(invoiceForOnlineUrl.contains(Base64.getUrlEncoder().withoutPadding().encodeToString(Base64.getDecoder().decode(invoiceHash))));
@@ -135,18 +136,17 @@ public class QrCodeOnlineIntegrationTest extends BaseIntegrationTest {
                 .withEncryptionInfo(encryptionData.encryptionInfo())
                 .build();
 
-        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, accessToken);
+        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, UpoVersion.UPO_4_3, accessToken);
         Assertions.assertNotNull(openOnlineSessionResponse);
         Assertions.assertNotNull(openOnlineSessionResponse.getReferenceNumber());
         return openOnlineSessionResponse.getReferenceNumber();
     }
 
-    private String sendInvoiceOnlineSession(String nip, String sessionReferenceNumber, EncryptionData encryptionData,
+    private String sendInvoiceOnlineSession(String nip, String sessionReferenceNumber, LocalDate invoicingDate, EncryptionData encryptionData,
                                             String path, String accessToken) throws IOException, ApiException {
-        String invoiceTemplate = new String(Objects.requireNonNull(BaseIntegrationTest.class.getResourceAsStream(path))
-                .readAllBytes(), StandardCharsets.UTF_8)
+        String invoiceTemplate = new String(readBytesFromPath(path), StandardCharsets.UTF_8)
                 .replace("#nip#", nip)
-                .replace("#invoicing_date#", LocalDate.of(2025, 6, 15).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                .replace("#invoicing_date#", invoicingDate.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                 .replace("#invoice_number#", UUID.randomUUID().toString());
 
         byte[] invoice = invoiceTemplate.getBytes(StandardCharsets.UTF_8);

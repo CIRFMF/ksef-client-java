@@ -19,8 +19,7 @@ import static org.junit.Assert.assertTrue;
 
 class QrCodeTests {
 
-    private final VerificationLinkService linkSvc = new DefaultVerificationLinkService();
-    private final QrCodeService qrSvc = new DefaultQrCodeService();
+    private String qrUrl = "https://ksef-test.mf.gov.pl/";
 
     // =============================================
     // Testy RSA; NIEZALECANE):
@@ -32,6 +31,8 @@ class QrCodeTests {
     // =============================================
     @Test
     void buildCertificateQr_WithEmbeddedPrivateKey_ShouldReturnBase64Png() throws Exception {
+        VerificationLinkService linkSvc = new DefaultVerificationLinkService(qrUrl);
+        QrCodeService qrSvc = new DefaultQrCodeService();
         CertificateBuilders.X500NameHolder x500 = new CertificateBuilders()
                 .buildForOrganization("Kowalski sp. z o.o", "VATPL-1111111111", "Kowalski", "PL");
         SelfSignedCertificate cert = new DefaultCertificateService().generateSelfSignedCertificateRsa(x500);
@@ -54,6 +55,7 @@ class QrCodeTests {
 
     @Test
     void buildCertificateQr_PublicOnlyWithoutPrivateKey_ShouldThrow() throws Exception {
+        VerificationLinkService linkSvc = new DefaultVerificationLinkService(qrUrl);
         String nip = "0000000000";
         String xml = "<x/>";
         String serial = UUID.randomUUID().toString();
@@ -73,6 +75,8 @@ class QrCodeTests {
     // =============================================
     @Test
     void buildCertificateQr_WithEmbeddedEccPrivateKey_ShouldReturnBase64Png() throws Exception {
+        VerificationLinkService linkSvc = new DefaultVerificationLinkService(qrUrl);
+        QrCodeService qrSvc = new DefaultQrCodeService();
         CertificateBuilders.X500NameHolder x500 = new CertificateBuilders()
                 .buildForOrganization("Kowalski sp. z o.o", "VATPL-1111111111", "TestEcc", "PL");
         SelfSignedCertificate cert = new DefaultCertificateService().generateSelfSignedCertificateEcdsa(x500);
