@@ -9,6 +9,9 @@ import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.permission.OperationResponse;
 import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
 import pl.akmf.ksef.sdk.client.model.permission.person.GrantPersonPermissionsRequest;
+import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionPersonById;
+import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionSubjectDetails;
+import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionSubjectDetailsType;
 import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionType;
 import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionsSubjectIdentifier;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermission;
@@ -90,6 +93,13 @@ class PersonalPermissionAuthorizedPeselInNipContext extends BaseIntegrationTest 
                 .withSubjectIdentifier(new PersonPermissionsSubjectIdentifier(PersonPermissionsSubjectIdentifier.IdentifierType.PESEL, personValue))
                 .withPermissions(List.of(PersonPermissionType.INVOICEWRITE, PersonPermissionType.INVOICEREAD))
                 .withDescription("e2e test grant")
+                .withSubjectDetails(
+                        new PersonPermissionSubjectDetails(PersonPermissionSubjectDetailsType.PERSON_BY_IDENTIFIER,
+                                new PersonPermissionPersonById("Anna", "Testowa"),
+                                null,
+                                null
+                        )
+                )
                 .build();
 
         OperationResponse response = ksefClient.grantsPermissionPerson(request, accessToken);

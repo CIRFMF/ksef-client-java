@@ -2,9 +2,12 @@ package pl.akmf.ksef.sdk.api;
 
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
@@ -14,6 +17,7 @@ import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
 import pl.akmf.ksef.sdk.client.model.session.FormCode;
 import pl.akmf.ksef.sdk.client.model.session.SchemaVersion;
+import pl.akmf.ksef.sdk.client.model.session.SessionInvoiceStatusResponse;
 import pl.akmf.ksef.sdk.client.model.session.SessionValue;
 import pl.akmf.ksef.sdk.client.model.session.SystemCode;
 import pl.akmf.ksef.sdk.client.model.session.online.OpenOnlineSessionResponse;
@@ -43,12 +47,12 @@ public class OnlineSessionController {
      * @throws ApiException if fails to make API call
      */
     @PostMapping(value = "/open-session")
-    public OpenOnlineSessionResponse initSession(@RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
+    public OpenOnlineSessionResponse openSession(@RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
         encryptionData = defaultCryptographyService.getEncryptionData();
 
         //stworzenie zapytania
         var request = new OpenOnlineSessionRequestBuilder()
-                .withFormCode(new FormCode(SystemCode.FA_2, SchemaVersion.VERSION_1_0E, SessionValue.FA))
+                .withFormCode(new FormCode(SystemCode.FA_3, SchemaVersion.VERSION_1_0E, SessionValue.FA))
                 .withEncryptionInfo(encryptionData.encryptionInfo())
                 .build();
 
@@ -57,7 +61,7 @@ public class OnlineSessionController {
     }
 
     /**
-     * Wysłanie faktury
+     * Wysłanie przykładowej faktury wypełnionej danymi
      *
      * @param referenceNumber numer referencyjny otwartej sesji
      * @return OpenOnlineSessionResponse
@@ -68,7 +72,7 @@ public class OnlineSessionController {
                                                              @PathVariable String contextIdentifier,
                                                              @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException, IOException {
         //read example invoice
-        String invoicePath = "demo-web-app/src/main/resources/xml/invoices/sample/invoice-template.xml";
+        String invoicePath = "demo-web-app/src/main/resources/xml/invoices/sample/invoice-template_v3.xml";
         String invoiceTemplate = Files.readString(Paths.get(invoicePath), StandardCharsets.UTF_8)
                 .replace("#nip#", contextIdentifier)
                 .replace("#invoicing_date#", LocalDate.of(2025, 6, 15).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")))
@@ -148,5 +152,41 @@ public class OnlineSessionController {
     public void sessionClose(@PathVariable String referenceNumber,
                              @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
         ksefClient.closeOnlineSession(referenceNumber, authToken);
+    }
+
+    /**
+     * Unieważnienie tokenu
+     *
+     * @throws ApiException if fails to make API call
+     */
+    @DeleteMapping("/revoke/current")
+    public void revokeCurrentSession(@RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
+        ksefClient.revokeCurrentSession(authToken);
+    }
+
+    /**
+     * Pobranie statusu faktury
+     *
+     * @throws ApiException if fails to make API call
+     */
+    @GetMapping("/invoice-status")
+    public SessionInvoiceStatusResponse getSessionInvoiceStatus(
+            @RequestParam String referenceNumber,
+            @RequestParam String invoiceReferenceNumber,
+            @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
+        return ksefClient.getSessionInvoiceStatus(referenceNumber, invoiceReferenceNumber, authToken);
+    }
+
+    /**
+     * Pobranie UPO dla faktury
+     *
+     * @throws ApiException if fails to make API call
+     */
+    @GetMapping("/invoice-upo-by-invoice-number")
+    public byte[] getInvoiceUpoByReferenceNumber(
+            @RequestParam String referenceNumber,
+            @RequestParam String invoiceReferenceNumber,
+            @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
+        return ksefClient.getSessionInvoiceUpoByReferenceNumber(referenceNumber, invoiceReferenceNumber, authToken);
     }
 }

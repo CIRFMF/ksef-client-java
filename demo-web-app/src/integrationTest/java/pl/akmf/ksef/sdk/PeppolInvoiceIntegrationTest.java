@@ -186,10 +186,14 @@ class PeppolInvoiceIntegrationTest extends BaseIntegrationTest {
     }
 
     private void grantPefInvoicingToProvider(String peppolProvider, String accessToken) throws ApiException {
+        GrantAuthorizationPermissionsRequest.PermissionsAuthorizationSubjectDetails subjectDetails =
+                new GrantAuthorizationPermissionsRequest.PermissionsAuthorizationSubjectDetails();
+        subjectDetails.setFullName("fullName");
         GrantAuthorizationPermissionsRequest request = new GrantAuthorizationPermissionsRequestBuilder()
                 .withSubjectIdentifier(new SubjectIdentifier(SubjectIdentifier.IdentifierType.PEPPOL_ID, peppolProvider))
                 .withPermission(InvoicePermissionType.PEF_INVOICING)
                 .withDescription("pef grant")
+                .withSubjectDetails(subjectDetails)
                 .build();
 
         OperationResponse response = ksefClient.grantsPermissionsProxyEntity(request, accessToken);
@@ -222,8 +226,8 @@ class PeppolInvoiceIntegrationTest extends BaseIntegrationTest {
         try {
             SessionStatusResponse statusResponse = ksefClient.getSessionStatus(sessionReferenceNumber, accessToken);
             return statusResponse != null &&
-                   statusResponse.getSuccessfulInvoiceCount() != null &&
-                   statusResponse.getSuccessfulInvoiceCount() > 0;
+                    statusResponse.getSuccessfulInvoiceCount() != null &&
+                    statusResponse.getSuccessfulInvoiceCount() > 0;
         } catch (Exception e) {
             return false;
         }

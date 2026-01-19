@@ -85,11 +85,11 @@ public abstract class BaseIntegrationTest {
     }
 
     protected AuthTokensPair authWithCustomNip(String context, String subject) throws ApiException, JAXBException, IOException {
-        return authWithCustomNip(context, subject, EncryptionMethod.Rsa);
+        return authWithCustomNip(context, subject, EncryptionMethod.RSA);
     }
 
     protected AuthTokensPair authWithCustomPesel(String context, String subject) throws ApiException, JAXBException, IOException {
-        return authWithCustomPesel(context, subject, EncryptionMethod.Rsa);
+        return authWithCustomPesel(context, subject, EncryptionMethod.RSA);
     }
 
     protected AuthTokensPair authWithCustomNip(String context, String subject, EncryptionMethod encryptionMethod) throws ApiException, JAXBException, IOException {
@@ -183,6 +183,34 @@ public abstract class BaseIntegrationTest {
         String xml = AuthTokenRequestSerializer.authTokenRequestSerializer(authTokenRequest);
 
         SelfSignedCertificate cert = certificateService.getCompanySeal("Kowalski sp. z o.o", peppolId, peppolId);
+
+        String signedXml = signatureService.sign(xml.getBytes(), cert.certificate(), cert.getPrivateKey());
+
+        SignatureResponse submitAuthTokenResponse = ksefClient.submitAuthTokenRequest(signedXml, false);
+
+        //Czekanie na zakończenie procesu
+        await().atMost(14, SECONDS)
+                .pollInterval(1, SECONDS)
+                .until(() -> isAuthProcessReady(submitAuthTokenResponse.getReferenceNumber(), submitAuthTokenResponse.getAuthenticationToken().getToken()));
+
+        AuthOperationStatusResponse tokenResponse = ksefClient.redeemToken(submitAuthTokenResponse.getAuthenticationToken().getToken());
+
+        return new AuthTokensPair(tokenResponse.getAccessToken().getToken(), tokenResponse.getRefreshToken().getToken());
+    }
+
+    protected AuthTokensPair authAsInternalId(String internalId, String pesel) throws ApiException, JAXBException,
+            IOException {
+        AuthenticationChallengeResponse challenge = ksefClient.getAuthChallenge();
+
+        AuthTokenRequest authTokenRequest = new AuthTokenRequestBuilder()
+                .withChallenge(challenge.getChallenge())
+                .withInternalId(internalId)
+                .withSubjectType(SubjectIdentifierTypeEnum.CERTIFICATE_SUBJECT)
+                .build();
+
+        String xml = AuthTokenRequestSerializer.authTokenRequestSerializer(authTokenRequest);
+
+        SelfSignedCertificate cert = certificateService.getPersonalCertificate("A", "R", "TINPL", pesel, "A R");
 
         String signedXml = signatureService.sign(xml.getBytes(), cert.certificate(), cert.getPrivateKey());
 

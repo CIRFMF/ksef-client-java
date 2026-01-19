@@ -8,6 +8,9 @@ import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.permission.OperationResponse;
 import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
 import pl.akmf.ksef.sdk.client.model.permission.person.GrantPersonPermissionsRequest;
+import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionPersonById;
+import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionSubjectDetails;
+import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionSubjectDetailsType;
 import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionsSubjectIdentifier;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermissionQueryType;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermissionsAuthorizedIdentifier;
@@ -23,7 +26,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionType.ENFORCEMENTOPERATIONS;
 
-public class EnforcementOperationNegativeIntegrationTest extends BaseIntegrationTest {
+class EnforcementOperationNegativeIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void grantEnforcementOperationAsCourtBailiffE2E() throws JAXBException, IOException, ApiException {
@@ -56,6 +59,13 @@ public class EnforcementOperationNegativeIntegrationTest extends BaseIntegration
         request.setPermissions(List.of(ENFORCEMENTOPERATIONS));
         request.setSubjectIdentifier(new PersonPermissionsSubjectIdentifier(PersonPermissionsSubjectIdentifier.IdentifierType.NIP, subjectNip));
         request.setDescription("e2e enforement test");
+        request.setSubjectDetails(
+                new PersonPermissionSubjectDetails(PersonPermissionSubjectDetailsType.PERSON_BY_IDENTIFIER,
+                        new PersonPermissionPersonById("Anna", "Testowa"),
+                        null,
+                        null
+                )
+        );
 
         OperationResponse response = ksefClient.grantsPermissionPerson(request, accessToken);
         Assertions.assertNotNull(response);

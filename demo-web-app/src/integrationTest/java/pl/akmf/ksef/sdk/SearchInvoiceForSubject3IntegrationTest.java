@@ -42,7 +42,7 @@ import java.util.UUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
-public class SearchInvoiceForSubject3IntegrationTest extends BaseIntegrationTest {
+class SearchInvoiceForSubject3IntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private DefaultCryptographyService defaultCryptographyService;

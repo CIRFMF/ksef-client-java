@@ -65,10 +65,14 @@ class ProxyPermissionIntegrationTest extends BaseIntegrationTest {
     }
 
     private String grantPermission(String subjectNip, String accessToken) throws ApiException {
+        GrantAuthorizationPermissionsRequest.PermissionsAuthorizationSubjectDetails subjectDetails = new GrantAuthorizationPermissionsRequest.PermissionsAuthorizationSubjectDetails();
+        subjectDetails.setFullName("test12");
+
         GrantAuthorizationPermissionsRequest request = new GrantAuthorizationPermissionsRequestBuilder()
                 .withSubjectIdentifier(new SubjectIdentifier(SubjectIdentifier.IdentifierType.NIP, subjectNip))
                 .withPermission(InvoicePermissionType.SELF_INVOICING)
                 .withDescription("e2e test grant")
+                .withSubjectDetails(subjectDetails)
                 .build();
 
         OperationResponse response = ksefClient.grantsPermissionsProxyEntity(request, accessToken);

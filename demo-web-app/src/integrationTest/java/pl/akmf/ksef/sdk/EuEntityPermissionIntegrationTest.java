@@ -10,6 +10,10 @@ import pl.akmf.ksef.sdk.client.model.permission.OperationResponse;
 import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.ContextIdentifier;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.EuEntityPermissionsGrantRequest;
+import pl.akmf.ksef.sdk.client.model.permission.euentity.PermissionsEuEntityDetails;
+import pl.akmf.ksef.sdk.client.model.permission.euentity.PermissionsEuEntityEntityByFp;
+import pl.akmf.ksef.sdk.client.model.permission.euentity.PermissionsEuEntitySubjectDetails;
+import pl.akmf.ksef.sdk.client.model.permission.euentity.PermissionsEuEntitySubjectDetailsType;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.SubjectIdentifier;
 import pl.akmf.ksef.sdk.client.model.permission.search.EuEntityPermission;
 import pl.akmf.ksef.sdk.client.model.permission.search.EuEntityPermissionsQueryPermissionType;
@@ -87,6 +91,19 @@ class EuEntityPermissionIntegrationTest extends BaseIntegrationTest {
                 .withEuEntityName("Sample Subject Name")
                 .withContext(new ContextIdentifier(ContextIdentifier.IdentifierType.NIP_VAT_UE, nipVatUe))
                 .withDescription("E2E EU Entity Permission Test")
+                .withSubjectDetails(
+                        new PermissionsEuEntitySubjectDetails(
+                                PermissionsEuEntitySubjectDetailsType.EntityByFingerprint,
+                                null,
+                                null,
+                                new PermissionsEuEntityEntityByFp("EU Admin Full Name", "EU Admin Address")
+                        )
+                )
+                .withEuEntityDetails(
+                        new PermissionsEuEntityDetails(
+                                "Podmiot Testowy 2",
+                                "ul. Testowa 2, 00-000 Miasto")
+                )
                 .build();
 
         OperationResponse response = ksefClient.grantsPermissionEUEntity(request, accessToken);

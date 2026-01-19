@@ -34,6 +34,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class SessionIntegrationTest extends BaseIntegrationTest {
+
     @Autowired
     private DefaultCryptographyService defaultCryptographyService;
 
@@ -72,9 +73,9 @@ class SessionIntegrationTest extends BaseIntegrationTest {
         ExceptionResponse exceptionResponse = apiException.getExceptionResponse();
         Assertions.assertFalse(exceptionResponse.getException().getExceptionDetailList().isEmpty());
         ExceptionDetails details = exceptionResponse.getException().getExceptionDetailList().getFirst();
-        Assertions.assertEquals(21304, details.getExceptionCode());
-        Assertions.assertEquals("Brak uwierzytelnienia.", details.getExceptionDescription());
-        Assertions.assertEquals("Nieprawidłowy token.", details.getDetails().getFirst());
+        Assertions.assertEquals(21301, details.getExceptionCode());
+        Assertions.assertEquals("Brak autoryzacji.", details.getExceptionDescription());
+        Assertions.assertEquals("Status uwierzytelnienia (425) nie pozwala na odświeżenie tokenu dostępowego.", details.getDetails().getFirst());
     }
 
     @Test

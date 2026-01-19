@@ -22,7 +22,7 @@ import java.util.List;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
-public class EntityPermissionAccountingIntegrationTest extends BaseIntegrationTest {
+class EntityPermissionAccountingIntegrationTest extends BaseIntegrationTest {
 
     private static final String DESCRIPTION = "E2E test grant";
 
@@ -95,6 +95,9 @@ public class EntityPermissionAccountingIntegrationTest extends BaseIntegrationTe
                         new EntityPermission(EntityPermissionType.INVOICE_WRITE, false)))
                 .withDescription(DESCRIPTION)
                 .withSubjectIdentifier(new SubjectIdentifier(SubjectIdentifier.IdentifierType.NIP, targetNip))
+                .withSubjectDetails(
+                        new GrantEntityPermissionsRequest.PermissionsEntitySubjectDetails("Testowo")
+                )
                 .build();
 
         OperationResponse response = ksefClient.grantsPermissionEntity(request, accessToken);

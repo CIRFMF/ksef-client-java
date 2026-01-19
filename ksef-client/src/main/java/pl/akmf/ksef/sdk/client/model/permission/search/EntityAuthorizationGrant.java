@@ -10,6 +10,7 @@ public class EntityAuthorizationGrant {
     private InvoicePermissionType authorizationScope;
     private String description;
     private OffsetDateTime startDate;
+    private EuAdministrationSubjectEntityDetails euAdministrationSubjectEntityDetails;
 
     public EntityAuthorizationGrant() {
     }
@@ -68,5 +69,13 @@ public class EntityAuthorizationGrant {
 
     public void setStartDate(OffsetDateTime startDate) {
         this.startDate = startDate;
+    }
+
+    public EuAdministrationSubjectEntityDetails getEuAdministrationSubjectEntityDetails() {
+        return euAdministrationSubjectEntityDetails;
+    }
+
+    public void setEuAdministrationSubjectEntityDetails(EuAdministrationSubjectEntityDetails euAdministrationSubjectEntityDetails) {
+        this.euAdministrationSubjectEntityDetails = euAdministrationSubjectEntityDetails;
     }
 }

@@ -9,6 +9,7 @@ public class SubunitPermission {
     private SubunitPermissionsAuthorIdentifier authorIdentifier;
     private SubunitPermissionType permissionScope;
     private String description;
+    private SubunitPermissionSubjectPersonDetails subjectPersonDetails;
     private String subunitName;
     private OffsetDateTime startDate;
 
@@ -69,6 +70,14 @@ public class SubunitPermission {
 
     public void setSubunitName(String subunitName) {
         this.subunitName = subunitName;
+    }
+
+    public SubunitPermissionSubjectPersonDetails getSubjectPersonDetails() {
+        return subjectPersonDetails;
+    }
+
+    public void setSubjectPersonDetails(SubunitPermissionSubjectPersonDetails subjectPersonDetails) {
+        this.subjectPersonDetails = subjectPersonDetails;
     }
 
     public OffsetDateTime getStartDate() {

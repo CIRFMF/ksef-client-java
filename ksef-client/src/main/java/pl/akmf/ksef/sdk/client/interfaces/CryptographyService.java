@@ -38,6 +38,7 @@ public interface CryptographyService {
      * @return
      * @throws SystemKSeFSDKException
      */
+    @Deprecated
     byte[] encryptKsefTokenWithRSAUsingPublicKey(String ksefToken, Instant challengeTimestamp) throws SystemKSeFSDKException;
 
     /**
@@ -53,8 +54,10 @@ public interface CryptographyService {
      * @throws IllegalBlockSizeException
      * @throws BadPaddingException
      */
+    @Deprecated
     byte[] encryptKsefTokenWithECDsaUsingPublicKey(String ksefToken, Instant challengeTimestamp) throws SystemKSeFSDKException;
 
+    byte[] encryptUsingPublicKey(byte[] content);
     /**
      * Zwraca zaszyfrowany content przy użyciu algorytmu RSA z publicznym kluczem.
      *
@@ -62,6 +65,7 @@ public interface CryptographyService {
      * @return
      * @throws SystemKSeFSDKException
      */
+    @Deprecated
     byte[] encryptWithRSAUsingPublicKey(byte[] content) throws SystemKSeFSDKException;
 
     /**
@@ -76,6 +80,7 @@ public interface CryptographyService {
      * @throws IllegalBlockSizeException
      * @throws BadPaddingException
      */
+    @Deprecated
     byte[] encryptWithECDsaUsingPublicKey(byte[] content) throws SystemKSeFSDKException;
 
     /**

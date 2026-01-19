@@ -2,7 +2,6 @@ package pl.akmf.ksef.sdk.api;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -23,21 +22,15 @@ import static pl.akmf.ksef.sdk.client.Headers.AUTHORIZATION;
 public class InvoicesController {
     private final DefaultKsefClient ksefClient;
 
-    @GetMapping("/invoices/ksef/{ksefReferenceNumber}")
-    public byte[] getInvoice(@PathVariable String ksefReferenceNumber,
-                             @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
-        return ksefClient.getInvoice(ksefReferenceNumber, authToken);
-    }
-
     @PostMapping("/invoices/metadata")
-    QueryInvoiceMetadataResponse getInvoiceMetadata(@RequestParam Integer pageOffset,
-                                                    @RequestParam Integer pageSize,
-                                                    @RequestBody InvoiceQueryFilters request,
-                                                    @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
+    public QueryInvoiceMetadataResponse getInvoiceMetadata(@RequestParam Integer pageOffset,
+                                                           @RequestParam Integer pageSize,
+                                                           @RequestBody InvoiceQueryFilters request,
+                                                           @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
         return ksefClient.queryInvoiceMetadata(pageOffset, pageSize, SortOrder.ASC, request, authToken);
     }
 
-    @PostMapping("/invoices/query/async")
+    @PostMapping("/invoices/query/init/async")
     InitAsyncInvoicesQueryResponse initAsyncInvoiceQuery(@RequestBody InvoiceExportRequest request,
                                                          @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
         return ksefClient.initAsyncQueryInvoice(request, authToken);

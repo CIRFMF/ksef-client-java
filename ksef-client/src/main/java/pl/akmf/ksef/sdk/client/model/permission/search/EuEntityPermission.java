@@ -9,6 +9,9 @@ public class EuEntityPermission {
     private String euEntityName;
     private String authorizedFingerprintIdentifier;
     private EuEntityPermissionsQueryPermissionType permissionScope;
+    private EuEntityPermissionSubjectPersonDetails subjectPersonDetails;
+    private EuEntityPermissionSubjectEntityDetails subjectEntityDetails;
+    private EuEntityPermissionEuEntityDetails euEntityDetails;
     private String description;
     private OffsetDateTime startDate;
 
@@ -69,6 +72,30 @@ public class EuEntityPermission {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public EuEntityPermissionSubjectPersonDetails getSubjectPersonDetails() {
+        return subjectPersonDetails;
+    }
+
+    public void setSubjectPersonDetails(EuEntityPermissionSubjectPersonDetails subjectPersonDetails) {
+        this.subjectPersonDetails = subjectPersonDetails;
+    }
+
+    public EuEntityPermissionSubjectEntityDetails getSubjectEntityDetails() {
+        return subjectEntityDetails;
+    }
+
+    public void setSubjectEntityDetails(EuEntityPermissionSubjectEntityDetails subjectEntityDetails) {
+        this.subjectEntityDetails = subjectEntityDetails;
+    }
+
+    public EuEntityPermissionEuEntityDetails getEuEntityDetails() {
+        return euEntityDetails;
+    }
+
+    public void setEuEntityDetails(EuEntityPermissionEuEntityDetails euEntityDetails) {
+        this.euEntityDetails = euEntityDetails;
     }
 
     public OffsetDateTime getStartDate() {

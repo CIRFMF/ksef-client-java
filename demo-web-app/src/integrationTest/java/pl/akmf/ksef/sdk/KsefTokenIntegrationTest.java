@@ -30,6 +30,7 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Stream;
@@ -109,8 +110,8 @@ class KsefTokenIntegrationTest extends BaseIntegrationTest {
 
     static Stream<Arguments> inputTestParameters() {
         return Stream.of(
-                Arguments.of(EncryptionMethod.Rsa)
-//                Arguments.of( EncryptionMethod.ECDsa) // [ECDSA is not supported yet]
+                Arguments.of(EncryptionMethod.RSA)
+//                Arguments.of( EncryptionMethod.ECDSA) // [ECDSA is not supported yet]
         );
     }
 
@@ -125,13 +126,10 @@ class KsefTokenIntegrationTest extends BaseIntegrationTest {
                 .build();
         GenerateTokenResponse ksefToken = ksefClient.generateKsefToken(request, authToken.accessToken());
         AuthenticationChallengeResponse challenge = ksefClient.getAuthChallenge();
+        byte[] tokenWithTimestamp = (ksefToken.getToken() + "|" + challenge.getTimestamp().toEpochMilli())
+                .getBytes(StandardCharsets.UTF_8);
 
-        byte[] encryptedToken = switch (encryptionMethod) {
-            case Rsa -> defaultCryptographyService
-                    .encryptKsefTokenWithRSAUsingPublicKey(ksefToken.getToken(), challenge.getTimestamp());
-            case ECDsa -> defaultCryptographyService
-                    .encryptKsefTokenWithECDsaUsingPublicKey(ksefToken.getToken(), challenge.getTimestamp());
-        };
+        byte[] encryptedToken = defaultCryptographyService.encryptUsingPublicKey(tokenWithTimestamp);
 
         AuthKsefTokenRequest authTokenRequest = new AuthKsefTokenRequestBuilder()
                 .withChallenge(challenge.getChallenge())

@@ -1540,3 +1540,135 @@
 | ➕ dodane    | 0             |
 | 🔧 zmienione | 9             |
 | ➖ usunięte  | 0             |
+
+# Changelog zmian - `## 3.0.11 (2026-01-19)`- `API: 2.0.1`
+
+
+### 1.1 api
+- **Url.java**: 🔧 usunięcie enuma `JWT_TOKEN_REVOKE`
+- **EncryptionMethod.java**: 🔧 rozszerzenie enuma
+- **Headers.java**: 🔧 dodanie nowej wartości nagłówka APPLICATION_XML
+
+### 1.2 client.model
+- **permission/entity/GrantEntityPermissionsRequest.java**: 🔧 zmiany kosmetyczne
+- **permission/euentity/PermissionsEuEntityPersonByFpNoId.java**: 🔧 zmiany typu pola `birthDate` na LocalDate
+- **permission/euentity/PermissionsEuEntitySubjectDetails .java**: 🔧 dodanie pola `permissionsEuEntityPersonByFpWithId` typu `PermissionsEuEntityPersonByFpWithId`
+- **permission/euentity/PermissionsEuEntitySubjectDetailsType .java**: 🔧 rozszerzenie wartości enumów o `PersonByFingerprintWithIdentifier`
+- **permission/euentity/PermissionsEuEntityPersonByFpWithId.java**: ➕ dodanie nowej klasy
+- **permission/indirect/PermissionsIndirectEntityPersonByFingerprintWithoutIdentifier.java**: 🔧 zmiany typu pola `birthDate` na LocalDate
+- **permission/indirect/PermissionsIndirectEntityPersonByFingerprintWithoutIdentifier.java**: 🔧 zmiany typu pola `birthDate` na LocalDate
+- **permission/proxy/GrantAuthorizationPermissionsRequest.java**: 🔧 zmiany kosmetyczne
+- **permission/search/EuAdministrationSubjectEntityDetails.java**: ➕ dodanie nowej klasy
+- **permission/search/EuEntityPermissionEuEntityDetails.java**: ➕ dodanie nowej klasy
+- **permission/search/EuEntityPermissionSubjectEntityDetails.java**: ➕ dodanie nowej klasy
+- **permission/search/EuEntityPermissionSubjectPersonDetails.java**: ➕ dodanie nowej klasy
+- **permission/search/SubunitPermissionSubjectPersonDetails.java**: ➕ dodanie nowej klasy
+- **permission/search/EntityAuthorizationGrant.java**:  dodanie pola `euAdministrationSubjectEntityDetails` typu `EuAdministrationSubjectEntityDetails`
+- **permission/search/EuEntityPermission.java**:  dodanie pól 
+  -   `subjectPersonDetails` typu `EuEntityPermissionSubjectPersonDetails`
+  -   `subjectEntityDetails` typu `EuEntityPermissionSubjectEntityDetails`
+  -   `euEntityDetails` typu `EuEntityPermissionEuEntityDetails`
+- **session/SessionStatusResponse.java**: dodanie pól  
+  - `dateCreated` typu `OffsetDateTime `
+  - `dateUpdated` typu `OffsetDateTime `
+- **session/SessionValue.java**: 🔧 rozszerzenie wartości enumów o `RR`
+- **session/SystemCode.java**: 🔧 rozszerzenie wartości enumów o `FA_RR (1)`
+
+### 1.3 api.services
+- **DefaultCertificateService.java**: 🔧 zmiany kosmetyczne związanego z zmianami modelu
+- **DefaultCryptographyService.java**: 🔧 oznaczenie jako deprecated metod:
+  -  `byte[] encryptKsefTokenWithRSAUsingPublicKey(String ksefToken, Instant challengeTimestamp)`
+  -  `byte[] encryptKsefTokenWithECDsaUsingPublicKey(String ksefToken, Instant challengeTimestamp)`
+  -  `byte[] encryptWithRSAUsingPublicKey(byte[] content)`
+  -  `byte[] encryptWithRSAUsingPublicKey(byte[] content)`
+  dodanie publicznej metody 
+  - `public byte[] encryptUsingPublicKey(byte[] content)` odpowiadającej za szyfrowanie w zależności od pobranego klucza publicznego
+  dodanie prywatnych metod
+  - `private byte[] encryptWithECDsaUsingPublicKey(byte[] content, PublicKey publicKey)`
+  - `private static void decryptWithAes256(InputStream encryptedPackagePart, OutputStream output, Cipher cipher)`
+- **DefaultCertificateService.java**: 🔧 usunięcie metody `revokeAccessToken(String accessToken)`
+- 
+## 2. demo-web-app
+
+### 2.1 integrationTest
+- **BaseIntegrationTest.java**: 🔧 zmiany kosmetyczne
+- **AuthorizationIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **BatchIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **CertificateIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **DuplicateInvoiceIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **EnforcementOperationIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **EnforcementOperationNegativeIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **EntityPermissionAccountingIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **EntityPermissionIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **EuEntityPermissionIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **EuEntityRepresentativePermissionIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **IndirectPermissionIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **KsefTokenIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **PeppolInvoiceIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **PersonalPermissionAuthorizedPeselInNipContext.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **PersonPermissionIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu oraz rozbudowa scenariuszy testowych
+- **ProxyPermissionIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **QrCodeOfflineIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **QrCodeOnlineIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **SearchPersonalGrantPermissionIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **SelfInvoicingIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **SessionIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu
+- **SubUnitPermissionIntegrationTest.java**: 🔧 zmiany kosmetyczne związane z zmianą modelu oraz rozbudowa scenariuszy testowych
+
+### 2.2 api
+- ➖ **ActiveSessionController.java** ➖ usunięto klasę w związku z reorganizacją  aplikacji demonstracyjnej
+- ➖ **BatchSessionController.java**:  ➖ usunięto klasę w związku z reorganizacją  aplikacji demonstracyjnej
+- ➖ **EntityPermissionsController.java** ➖ usunięto klasę w związku z reorganizacją  aplikacji demonstracyjnej
+- ➖ **EuEntityPermissionsController.java** ➖ usunięto klasę w związku z reorganizacją  aplikacji demonstracyjnej
+- ➖ **EuEntityRepresentativePermissionsController.java** ➖ usunięto klasę w związku z reorganizacją  aplikacji demonstracyjnej
+- ➖ **IndirectPermissionsEntityController.java** ➖ usunięto klasę w związku z reorganizacją  aplikacji demonstracyjnej
+- ➖ **OperationStatusController.java** ➖ usunięto klasę w związku z reorganizacją aplikacji demonstracyjnej
+- ➖ **PersonPermissionController.java** ➖ usunięto klasę w związku z reorganizacją aplikacji demonstracyjnej
+- ➖ **ProxyPermissionsEntityController.java** ➖ usunięto klasę w związku z reorganizacją p aplikacji demonstracyjnej
+- ➖ **SearchPermissionTestEndpoint.java** ➖ usunięto klasę w związku z reorganizacją  aplikacji demonstracyjnej
+- ➖ **SessionController.java** ➖ usunięto klasę w związku z reorganizacją  aplikacji demonstracyjnej
+- ➖ **SubUnitPermissionsController.java** ➖ usunięto klasę w związku z reorganizacją  aplikacji demonstracyjnej
+- 🔧 **AuthController.java** 🔧 modyfikacja dostępnych endpointów w związku z reorganizacja aplikacji demonstracyjnej
+- 🔧 **CertificateController.java** 🔧 modyfikacja dostępnych endpointów w związku z reorganizacja aplikacji demonstracyjnej
+- 🔧 **InvoicesController.java** 🔧 modyfikacja dostępnych endpointów w związku z reorganizacja aplikacji demonstracyjnej
+- 🔧 **OnlineSessionController.java** 🔧 modyfikacja dostępnych endpointów w związku z reorganizacja aplikacji demonstracyjnej
+- 🔧 **QrCodeController.java** 🔧 modyfikacja dostępnych endpointów w związku z reorganizacja aplikacji demonstracyjnej
+- 🔧 **TokensController.java** 🔧 modyfikacja dostępnych endpointów w związku z reorganizacja aplikacji demonstracyjnej
+- ➕ **PermissionEndpoint.java** ➕ dodanie nowej klasy zawierającej endpointy związane z dodawanie oraz wyszukiwanie uprawnień
+
+### 2.3 api
+- 🔧 **IdentifierGeneratorUtils.java** 🔧 dodanie metody zwracającej sumę kontrolną dla identyfikatora wewnętrznego
+
+### 2.4 resources
+- ➖ `invoice-template.xml` ➖ usunięto plik
+- ➕ `invoice-template_v3.xml` ➕ dodano plik
+
+## 3. .http
+
+- ➖ `auth.http` ➖ usunięto plik
+- ➖ `batch.http` ➖ usunięto plik
+- ➖ `entity-permission.http` ➖ usunięto plik
+- ➖ `eu-entity-permission.http` ➖ usunięto plik
+- ➖ `eu-entity-representative-permission.http` ➖ usunięto plik
+- ➖ `grantPermission.http` ➖ usunięto plik
+- ➖ `invoice.http` ➖ usunięto plik
+- ➖ `personalPermissions.http` ➖ usunięto plik
+- ➖ `searchPermissions.http` ➖ usunięto plik
+- ➖ `session.http` ➖ usunięto plik
+- ➖ `sessionAndUpo.http` ➖ usunięto plik
+- ➖ `subunit-subject-permission.http` ➖ usunięto plik
+- ➖ `subunit-tokens-permission.http` ➖ usunięto plik
+- ➕ `authentication.http` ➕dodanie pliku zawierające wywołania metod z przeorganizowanej aplikacji demonstracyjnej
+- 🔧 `certificate.http` 🔧 modyfikacja pliku zawierającego wywołania metod z przeorganizowanej aplikacji demonstracyjnej
+- ➕ `permission.http` ➕dodanie pliku zawierające wywołania metod z przeorganizowanej aplikacji demonstracyjnej
+- ➕ `session_and_invoice.http` ➕dodanie pliku zawierające wywołania metod z przeorganizowanej aplikacji demonstracyjnej
+- ➕ `token.http` ➕dodanie pliku zawierające wywołania metod z przeorganizowanej aplikacji demonstracyjnej
+
+---
+## 3. Podsumowanie
+
+| Typ zmiany  | Liczba plików |
+|-------------|---------------|
+| ➕ dodane    | 11            |
+| 🔧 zmienione | 43            |
+| ➖ usunięte  | 26            |

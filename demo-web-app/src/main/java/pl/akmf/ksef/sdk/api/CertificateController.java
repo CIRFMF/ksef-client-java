@@ -32,17 +32,12 @@ public class CertificateController {
     private final DefaultKsefClient ksefClient;
     private final DefaultCryptographyService defaultCryptographyService;
 
-    @GetMapping(value = "/limits")
-    public CertificateLimitsResponse getCertificateLimit(@RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
-        return ksefClient.getCertificateLimits(authToken);
-    }
-
-    @GetMapping(value = "/enrollment-info")
+    @GetMapping(value = "/certificate/enrollment-info")
     public CertificateEnrollmentsInfoResponse getCertificateEnrollmentInfo(@RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
         return ksefClient.getCertificateEnrollmentInfo(authToken);
     }
 
-    @PostMapping(value = "/send-enrollment")
+    @PostMapping(value = "/certificate/send-enrollment")
     public CertificateEnrollmentResponse certificateEnrollment(@RequestBody CertificateEnrollmentsInfoResponse certificateEnrollmentsInfoResponse,
                                                                @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
         //wygenerowanie CSR na podstawie otrzymanych wcześniej informacji
@@ -60,26 +55,26 @@ public class CertificateController {
         return ksefClient.sendCertificateEnrollment(request, authToken);
     }
 
-    @GetMapping(value = "/enrollment-status/{referenceNumber}")
+    @GetMapping(value = "/certificate/enrollment-status/{referenceNumber}")
     public CertificateEnrollmentStatusResponse getCertificateEnrollmentStatus(@PathVariable String referenceNumber,
                                                                               @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
         return ksefClient.getCertificateEnrollmentStatus(referenceNumber, authToken);
 
     }
 
-    @PostMapping(value = "/certListMetadata")
+    @PostMapping(value = "/certificate/certListMetadata")
     public CertificateMetadataListResponse getMetadataCertificateList(@RequestBody QueryCertificatesRequest queryCertificatesRequest,
                                                                       @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
         return ksefClient.getCertificateMetadataList(queryCertificatesRequest, 10, 0, authToken);
     }
 
-    @PostMapping(value = "/retrieve")
+    @PostMapping(value = "/certificate/retrieve")
     public CertificateListResponse getCertificateList(@RequestBody CertificateListRequest request,
                                                       @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
         return ksefClient.getCertificateList(request, authToken);
     }
 
-    @PostMapping(value = "/revoke/{serialNumber}")
+    @PostMapping(value = "/certificate/revoke/{serialNumber}")
     public void revokeCertificate(@PathVariable String serialNumber, @RequestBody CertificateRevokeRequest request,
                                   @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException {
         ksefClient.revokeCertificate(request, serialNumber, authToken);

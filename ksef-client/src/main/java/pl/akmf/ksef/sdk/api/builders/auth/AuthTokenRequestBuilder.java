@@ -30,7 +30,7 @@ public class AuthTokenRequestBuilder {
         }
 
         if (StringUtils.isNotBlank(context.getInternalId()) || StringUtils.isNotBlank(context.getNipVatUe()) || StringUtils.isNotBlank(context.getPeppolId())) {
-            throw new IllegalArgumentException("Other context type has beem already set");
+            throw new IllegalArgumentException("Other context type has been already set");
         }
 
         this.context.setNip(value);
@@ -43,7 +43,7 @@ public class AuthTokenRequestBuilder {
         }
 
         if (StringUtils.isNotBlank(context.getNip()) || StringUtils.isNotBlank(context.getNipVatUe()) || StringUtils.isNotBlank(context.getPeppolId())) {
-            throw new IllegalArgumentException("Other context type has beem already set");
+            throw new IllegalArgumentException("Other context type has been already set");
         }
 
         this.context.setInternalId(value);
@@ -56,7 +56,7 @@ public class AuthTokenRequestBuilder {
         }
 
         if (StringUtils.isNotBlank(context.getInternalId()) || StringUtils.isNotBlank(context.getNip()) || StringUtils.isNotBlank(context.getPeppolId())) {
-            throw new IllegalArgumentException("Other context type has beem already set");
+            throw new IllegalArgumentException("Other context type has been already set");
         }
 
         this.context.setNipVatUe(value);
@@ -69,7 +69,7 @@ public class AuthTokenRequestBuilder {
         }
 
         if (StringUtils.isNotBlank(context.getInternalId()) || StringUtils.isNotBlank(context.getNip()) || StringUtils.isNotBlank(context.getNipVatUe())) {
-            throw new IllegalArgumentException("Other context type has beem already set");
+            throw new IllegalArgumentException("Other context type has been already set");
         }
 
         this.context.setPeppolId(value);

@@ -26,6 +26,9 @@ import pl.akmf.ksef.sdk.client.model.certificate.SendCertificateEnrollmentReques
 import pl.akmf.ksef.sdk.client.model.permission.OperationResponse;
 import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
 import pl.akmf.ksef.sdk.client.model.permission.person.GrantPersonPermissionsRequest;
+import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionPersonById;
+import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionSubjectDetails;
+import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionSubjectDetailsType;
 import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionType;
 import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionsSubjectIdentifier;
 import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
@@ -101,6 +104,13 @@ class CertificateIntegrationTest extends BaseIntegrationTest {
                 .withSubjectIdentifier(new PersonPermissionsSubjectIdentifier(PersonPermissionsSubjectIdentifier.IdentifierType.NIP, nipValue))
                 .withPermissions(List.of(PersonPermissionType.CREDENTIALSMANAGE))
                 .withDescription("e2e test")
+                .withSubjectDetails(
+                        new PersonPermissionSubjectDetails(PersonPermissionSubjectDetailsType.PERSON_BY_IDENTIFIER,
+                                new PersonPermissionPersonById("Anna", "Testowa"),
+                                null,
+                                null
+                        )
+                )
                 .build();
 
         OperationResponse response = ksefClient.grantsPermissionPerson(request, accessToken);

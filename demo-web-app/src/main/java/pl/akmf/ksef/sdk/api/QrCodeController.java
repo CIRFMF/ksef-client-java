@@ -31,11 +31,7 @@ public class QrCodeController {
 
     // 1. Faktura z numerem KSeF (online)
     @GetMapping("/invoice/ksef")
-    public QrCodeResult getInvoiceQrWithKsef(
-            @RequestParam String nip,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate issueDate,
-            @RequestParam String invoiceHash,
-            @RequestParam String ksefNumber
+    public QrCodeResult getInvoiceQrWithKsef(@RequestParam String nip, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate issueDate, @RequestParam String invoiceHash, @RequestParam String ksefNumber
     ) throws ApiException {
         String url = linkSvc.buildInvoiceVerificationUrl(nip, issueDate, invoiceHash);
         byte[] qrCode = qrSvc.generateQrCode(url);

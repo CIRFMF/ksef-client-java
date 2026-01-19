@@ -294,14 +294,6 @@ public interface KSeFClient {
     AuthenticationTokenRefreshResponse refreshAccessToken(String refreshToken) throws ApiException;
 
     /**
-     * Unieważnia aktualny token autoryzacyjny przekazany w nagłówku żądania. Po unieważnieniu token nie może być używany do żadnych operacji.
-     *
-     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
-     * @throws ApiException - Brak autoryzacji. (401 Unauthorized)
-     */
-    void revokeAccessToken(String accessToken) throws ApiException;
-
-    /**
      * Nadanie podmiotom uprawnień o charakterze upoważnień
      *
      * @param body GrantProxyEntityPermissionsRequest

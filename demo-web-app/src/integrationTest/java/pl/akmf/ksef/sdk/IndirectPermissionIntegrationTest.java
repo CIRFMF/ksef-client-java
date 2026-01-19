@@ -9,6 +9,9 @@ import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.permission.OperationResponse;
 import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
 import pl.akmf.ksef.sdk.client.model.permission.indirect.GrantIndirectEntityPermissionsRequest;
+import pl.akmf.ksef.sdk.client.model.permission.indirect.PermissionsIndirectEntityPersonByIdentifier;
+import pl.akmf.ksef.sdk.client.model.permission.indirect.PermissionsIndirectEntitySubjectDetails;
+import pl.akmf.ksef.sdk.client.model.permission.indirect.PermissionsIndirectEntitySubjectDetailsType;
 import pl.akmf.ksef.sdk.client.model.permission.indirect.SubjectIdentifier;
 import pl.akmf.ksef.sdk.client.model.permission.indirect.TargetIdentifier;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermissionQueryType;
@@ -80,12 +83,18 @@ class IndirectPermissionIntegrationTest extends BaseIntegrationTest {
     }
 
     private String grantIndirectPermission(String targetNip, String subjectNip, String accessToken) throws ApiException {
+        PermissionsIndirectEntitySubjectDetails subjectDetails = new PermissionsIndirectEntitySubjectDetails();
+        subjectDetails.setSubjectDetailsType(PermissionsIndirectEntitySubjectDetailsType.PersonByIdentifier);
+        subjectDetails.setPersonById(new PermissionsIndirectEntityPersonByIdentifier("Test","Ttest"));
+
         GrantIndirectEntityPermissionsRequest request = new GrantIndirectEntityPermissionsRequestBuilder()
                 .withSubjectIdentifier(new SubjectIdentifier(SubjectIdentifier.IdentifierType.NIP, subjectNip))
                 .withTargetIdentifier(new TargetIdentifier(TargetIdentifier.IdentifierType.NIP, targetNip))
                 .withPermissions(List.of(INVOICE_WRITE))
+                .withSubjectDetails(subjectDetails)
                 .withDescription("E2E indirect grantE2E indirect grant")
                 .build();
+
 
         OperationResponse response = ksefClient.grantsPermissionIndirectEntity(request, accessToken);
         Assertions.assertNotNull(response);

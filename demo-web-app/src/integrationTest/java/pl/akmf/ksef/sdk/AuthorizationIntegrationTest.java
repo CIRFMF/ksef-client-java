@@ -46,7 +46,7 @@ class AuthorizationIntegrationTest extends BaseIntegrationTest {
     void refreshTokenE2EIntegrationTest() throws JAXBException, IOException, ApiException {
         // given
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
-        AuthTokensPair token = authWithCustomNip(contextNip, contextNip, EncryptionMethod.ECDsa);
+        AuthTokensPair token = authWithCustomNip(contextNip, contextNip, EncryptionMethod.ECDSA);
         String initialAccessToken = token.accessToken();
         String initialRefreshToken = token.refreshToken();
 
@@ -55,7 +55,8 @@ class AuthorizationIntegrationTest extends BaseIntegrationTest {
 
         //then
         Assertions.assertNotNull(refreshTokenResult);
-        Assertions.assertNotEquals(initialAccessToken, refreshTokenResult.getAccessToken().getToken());
+        String newAccessToken =  refreshTokenResult.getAccessToken().getToken();
+        Assertions.assertNotEquals(initialAccessToken,newAccessToken);
     }
 
     @Test
