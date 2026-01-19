@@ -53,7 +53,7 @@ public class DefaultCertificateService implements CertificateService {
 
     @Override
     public SelfSignedCertificate getPersonalCertificate(String givenName, String surname, String serialNumberPrefix, String serialNumber, String commonName) {
-        return getPersonalCertificate(givenName, surname, serialNumberPrefix, serialNumber, commonName, EncryptionMethod.Rsa);
+        return getPersonalCertificate(givenName, surname, serialNumberPrefix, serialNumber, commonName, EncryptionMethod.RSA);
     }
 
     @Override
@@ -62,9 +62,9 @@ public class DefaultCertificateService implements CertificateService {
                 .buildForPerson(givenName, surname, serialNumberPrefix + "-" + serialNumber, commonName, "PL");
 
         switch (encryptionMethod) {
-            case Rsa:
+            case RSA:
                 return generateSelfSignedCertificateRsa(x500Name);
-            case ECDsa:
+            case ECDSA:
                 return generateSelfSignedCertificateEcdsa(x500Name);
             default:
                 throw new IllegalArgumentException();
@@ -73,7 +73,7 @@ public class DefaultCertificateService implements CertificateService {
 
     @Override
     public SelfSignedCertificate getCompanySeal(String organizationName, String organizationIdentifier, String commonName) {
-        return getCompanySeal(organizationName, organizationIdentifier, commonName, EncryptionMethod.Rsa);
+        return getCompanySeal(organizationName, organizationIdentifier, commonName, EncryptionMethod.RSA);
     }
 
     @Override
@@ -82,9 +82,9 @@ public class DefaultCertificateService implements CertificateService {
                 .buildForOrganization(organizationName, organizationIdentifier, commonName, "PL");
 
         switch (encryptionMethod) {
-            case Rsa:
+            case RSA:
                 return generateSelfSignedCertificateRsa(x500Name);
-            case ECDsa:
+            case ECDSA:
                 return generateSelfSignedCertificateEcdsa(x500Name);
             default:
                 throw new IllegalArgumentException();

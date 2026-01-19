@@ -3,11 +3,7 @@ package pl.akmf.ksef.sdk.util;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.YearMonth;
-import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -267,18 +263,19 @@ public class IdentifierGeneratorUtils {
     private static String generateXiVat() {
         int choice = random.nextInt(3); // 0,1,2
 
-        switch (choice) {
-            case 0:
+        return switch (choice) {
+            case 0 ->
                 // 9-cyfrowy numer
-                return getRandomDigits(9);
-            case 1:
+                    getRandomDigits(9);
+            case 1 ->
                 // 12-cyfrowy numer
-                return getRandomDigits(12);
-            default:
-                // "GD" lub "HA" + 3-cyfrowy numer
+                    getRandomDigits(12);
+            default -> {
                 String prefix = random.nextBoolean() ? "GD" : "HA";
-                return prefix + getRandomDigits(3);
-        }
+                yield prefix + getRandomDigits(3);
+                // "GD" lub "HA" + 3-cyfrowy numer
+            }
+        };
     }
 
     // --- helpers ---
@@ -329,5 +326,24 @@ public class IdentifierGeneratorUtils {
             r = random.nextLong() & Long.MAX_VALUE; // zawsze >= 0
         } while (r >= bound * ((Long.MAX_VALUE / bound)));
         return min + (r % bound);
+    }
+
+    public static int getInternalIdCheckSum(String nip, Long internalId) {
+        String value = nip + internalId.toString();
+
+        int sum = 0;
+
+        char[] charArray = value.toCharArray();
+
+        for (int i = 0; i < charArray.length; i++) {
+            int number = Integer.parseInt(String.valueOf(charArray[i]));
+
+            if (i % 2 == 0) {
+                sum += number;
+            } else
+                sum += number * 3;
+        }
+
+        return sum % 10;
     }
 }

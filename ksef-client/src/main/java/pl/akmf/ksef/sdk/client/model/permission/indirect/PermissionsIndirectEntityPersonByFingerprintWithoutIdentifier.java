@@ -1,17 +1,17 @@
 package pl.akmf.ksef.sdk.client.model.permission.indirect;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 
 public class PermissionsIndirectEntityPersonByFingerprintWithoutIdentifier {
     private String firstName;
     private String lastName;
-    private OffsetDateTime birthDate;
+    private LocalDate birthDate;
     private PermissionsIndirectEntityIdentityDocument idDocument;
 
     public PermissionsIndirectEntityPersonByFingerprintWithoutIdentifier() {
     }
 
-    public PermissionsIndirectEntityPersonByFingerprintWithoutIdentifier(String firstName, String lastName, OffsetDateTime birthDate, PermissionsIndirectEntityIdentityDocument idDocument) {
+    public PermissionsIndirectEntityPersonByFingerprintWithoutIdentifier(String firstName, String lastName, LocalDate birthDate, PermissionsIndirectEntityIdentityDocument idDocument) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.birthDate = birthDate;
@@ -34,11 +34,11 @@ public class PermissionsIndirectEntityPersonByFingerprintWithoutIdentifier {
         this.lastName = lastName;
     }
 
-    public OffsetDateTime getBirthDate() {
+    public LocalDate getBirthDate() {
         return birthDate;
     }
 
-    public void setBirthDate(OffsetDateTime birthDate) {
+    public void setBirthDate(LocalDate birthDate) {
         this.birthDate = birthDate;
     }
 

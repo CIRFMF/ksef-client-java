@@ -50,7 +50,7 @@ public class GrantEntityPermissionsRequest {
         this.subjectDetails = subjectDetails;
     }
 
-    public class PermissionsEntitySubjectDetails {
+    public static class PermissionsEntitySubjectDetails {
         private String fullName;
 
         public PermissionsEntitySubjectDetails() {

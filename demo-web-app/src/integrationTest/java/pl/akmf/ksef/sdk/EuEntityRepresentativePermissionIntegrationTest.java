@@ -15,6 +15,12 @@ import pl.akmf.ksef.sdk.client.model.permission.euentity.ContextIdentifier;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.EuEntityPermissionType;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.EuEntityPermissionsGrantRequest;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.GrantEUEntityRepresentativePermissionsRequest;
+import pl.akmf.ksef.sdk.client.model.permission.euentity.PermissionsEuEntityDetails;
+import pl.akmf.ksef.sdk.client.model.permission.euentity.PermissionsEuEntityEntityByFp;
+import pl.akmf.ksef.sdk.client.model.permission.euentity.PermissionsEuEntityIdentityDocument;
+import pl.akmf.ksef.sdk.client.model.permission.euentity.PermissionsEuEntityPersonByFpNoId;
+import pl.akmf.ksef.sdk.client.model.permission.euentity.PermissionsEuEntitySubjectDetails;
+import pl.akmf.ksef.sdk.client.model.permission.euentity.PermissionsEuEntitySubjectDetailsType;
 import pl.akmf.ksef.sdk.client.model.permission.euentity.SubjectIdentifier;
 import pl.akmf.ksef.sdk.client.model.permission.search.EuEntityPermission;
 import pl.akmf.ksef.sdk.client.model.permission.search.EuEntityPermissionsQueryRequest;
@@ -24,6 +30,7 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -141,6 +148,22 @@ class EuEntityRepresentativePermissionIntegrationTest extends BaseIntegrationTes
                 .withSubjectIdentifier(new SubjectIdentifier(SubjectIdentifier.IdentifierType.FINGERPRINT, fingerprint))
                 .withPermissions(List.of(EuEntityPermissionType.INVOICE_WRITE, EuEntityPermissionType.INVOICE_READ))
                 .withDescription("Representative for EU Entity")
+                .withSubjectDetails(new PermissionsEuEntitySubjectDetails(
+                                PermissionsEuEntitySubjectDetailsType.PersonByFingerprintWithoutIdentifier,
+                                null,
+                                new PermissionsEuEntityPersonByFpNoId(
+                                        "Reprezentant",
+                                        "Reprezentant",
+                                        LocalDate.of(2025, 9, 15),
+                                        new PermissionsEuEntityIdentityDocument(
+                                                "Passport",
+                                                "AA1234567",
+                                                "PL"
+                                        )
+                                ),
+                                null
+                        )
+                )
                 .build();
 
         OperationResponse response = ksefClient.grantsPermissionEUEntityRepresentative(request, accessToken);
@@ -160,6 +183,19 @@ class EuEntityRepresentativePermissionIntegrationTest extends BaseIntegrationTes
                 // context to moja firma - bo to ja nadaje uprawnienia, czyli wykonuje akcje w moim kontekscie
                 .withContext(new ContextIdentifier(ContextIdentifier.IdentifierType.NIP_VAT_UE, ownerNipVatEu))
                 .withDescription("EU Company")
+                .withSubjectDetails(
+                        new PermissionsEuEntitySubjectDetails(
+                                PermissionsEuEntitySubjectDetailsType.EntityByFingerprint,
+                                null,
+                                null,
+                                new PermissionsEuEntityEntityByFp("EU Admin Full Name", "EU Admin Address")
+                        )
+                )
+                .withEuEntityDetails(
+                        new PermissionsEuEntityDetails(
+                                "Podmiot Testowy 2",
+                                "ul. Testowa 2, 00-000 Miasto")
+                )
                 .build();
 
         OperationResponse response = ksefClient.grantsPermissionEUEntity(request, accessToken);

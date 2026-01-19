@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 import pl.akmf.ksef.sdk.api.builders.permission.entity.GrantEntityPermissionsRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.permission.person.PersonPermissionsQueryRequestBuilder;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
 import pl.akmf.ksef.sdk.client.model.permission.OperationResponse;
+import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
 import pl.akmf.ksef.sdk.client.model.permission.entity.EntityPermission;
 import pl.akmf.ksef.sdk.client.model.permission.entity.EntityPermissionType;
 import pl.akmf.ksef.sdk.client.model.permission.entity.GrantEntityPermissionsRequest;
@@ -91,6 +91,9 @@ class EntityPermissionIntegrationTest extends BaseIntegrationTest {
                         new EntityPermission(EntityPermissionType.INVOICE_WRITE, false)))
                 .withDescription(DESCRIPTION)
                 .withSubjectIdentifier(new SubjectIdentifier(SubjectIdentifier.IdentifierType.NIP, targetNip))
+                .withSubjectDetails(
+                        new GrantEntityPermissionsRequest.PermissionsEntitySubjectDetails("Testowo")
+                )
                 .build();
 
         OperationResponse response = ksefClient.grantsPermissionEntity(request, accessToken);

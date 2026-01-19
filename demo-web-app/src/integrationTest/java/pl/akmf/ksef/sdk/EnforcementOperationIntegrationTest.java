@@ -8,6 +8,9 @@ import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.permission.OperationResponse;
 import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
 import pl.akmf.ksef.sdk.client.model.permission.person.GrantPersonPermissionsRequest;
+import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionPersonById;
+import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionSubjectDetails;
+import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionSubjectDetailsType;
 import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionsSubjectIdentifier;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermission;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermissionQueryType;
@@ -129,7 +132,13 @@ class EnforcementOperationIntegrationTest extends BaseIntegrationTest {
         request.setPermissions(List.of(ENFORCEMENTOPERATIONS));
         request.setSubjectIdentifier(new PersonPermissionsSubjectIdentifier(PersonPermissionsSubjectIdentifier.IdentifierType.NIP, subjectNip));
         request.setDescription("e2e enforement test");
-
+        request.setSubjectDetails(
+                new PersonPermissionSubjectDetails(PersonPermissionSubjectDetailsType.PERSON_BY_IDENTIFIER,
+                        new PersonPermissionPersonById("Anna", "Testowa"),
+                        null,
+                        null
+                )
+        );
         OperationResponse response = ksefClient.grantsPermissionPerson(request, accessToken);
         Assertions.assertNotNull(response);
         return response.getReferenceNumber();
@@ -151,7 +160,6 @@ class EnforcementOperationIntegrationTest extends BaseIntegrationTest {
         request.setDescription("e2e court bailiff test");
 
         ksefClient.createTestSubject(request);
-
     }
 
     private void removeSubject(String nip) throws ApiException {

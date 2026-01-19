@@ -77,7 +77,7 @@ import java.util.stream.Stream;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
-public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
+class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private DefaultCryptographyService defaultCryptographyService;
@@ -105,23 +105,23 @@ public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
      */
     static Stream<Arguments> inputQrCodeOfflineE2ETestParameters() {
         return Stream.of(
-                Arguments.of(SystemCode.FA_2, "invoice-template.xml", EncryptionMethod.Rsa),
-                Arguments.of(SystemCode.FA_3, "invoice-template_v3.xml", EncryptionMethod.Rsa),
-                Arguments.of(SystemCode.FA_2, "invoice-template.xml", EncryptionMethod.ECDsa),
-                Arguments.of(SystemCode.FA_3, "invoice-template_v3.xml", EncryptionMethod.ECDsa)
+                Arguments.of(SystemCode.FA_2, "invoice-template.xml", EncryptionMethod.RSA),
+                Arguments.of(SystemCode.FA_3, "invoice-template_v3.xml", EncryptionMethod.RSA),
+                Arguments.of(SystemCode.FA_2, "invoice-template.xml", EncryptionMethod.ECDSA),
+                Arguments.of(SystemCode.FA_3, "invoice-template_v3.xml", EncryptionMethod.ECDSA)
         );
     }
 
     @ParameterizedTest
     @MethodSource("inputQrCodeOfflineE2ETestParameters")
-    public void qrCodeOfflineE2ETest(SystemCode systemCode, String invoiceTemplate, EncryptionMethod encryptionMethod) throws ApiException, JAXBException, IOException, InterruptedException {
+    void qrCodeOfflineE2ETest(SystemCode systemCode, String invoiceTemplate, EncryptionMethod encryptionMethod) throws ApiException, JAXBException, IOException, InterruptedException {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         //Autoryzacja, pozyskanie tokenu dostępu
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
 
         //Utworzenie Certificate Signing Request (csr) oraz klucz prywatny za pomocą ${encryptionMethod}
         CertificateEnrollmentsInfoResponse enrollmentInfo = getEnrolmentInfo(accessToken);
-        CsrResult csr = EncryptionMethod.Rsa.equals(encryptionMethod)
+        CsrResult csr = EncryptionMethod.RSA.equals(encryptionMethod)
                 ? defaultCryptographyService.generateCsrWithRsa(enrollmentInfo)
                 : defaultCryptographyService.generateCsrWithEcdsa(enrollmentInfo);
 
@@ -180,7 +180,7 @@ public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
                 contextNip,
                 certificate.getCertificateSerialNumber(),
                 invoiceHash,
-                EncryptionMethod.Rsa.equals(encryptionMethod)
+                EncryptionMethod.RSA.equals(encryptionMethod)
                         ? defaultCryptographyService.parseRsaPrivateKeyFromPem(privateKey)
                         : defaultCryptographyService.parseEcdsaPrivateKeyFromPem(privateKey));
         checkIssuerMetadataByVerificationUrl(url);
@@ -202,7 +202,7 @@ public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @Disabled("Tylko na potrzeby wyslania CSR do systemu")
-    public void sendCsr() throws IOException, OperatorCreationException, NoSuchAlgorithmException, JAXBException, ApiException, InvalidKeySpecException {
+    void sendCsr() throws IOException, OperatorCreationException, NoSuchAlgorithmException, JAXBException, ApiException, InvalidKeySpecException {
         byte[] privateKey = readBytesFromPath("/keys/private/rsa/sample/private-key.pem");
         byte[] publicKey = readBytesFromPath("/keys/private/rsa/sample/public-key.pem");
         String contextNip = "7368335898";
@@ -234,18 +234,20 @@ public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
     static Stream<Arguments> inputQrCodeOfflineE2ETestReadKeyFromDiscParameters() {
         return Stream.of(
                 // wersja z wygenerowanym wcześniej przez SDK kluczem RSA (+ wysłanym requestem enrolment z metody wyżej sendCsr() )
-                Arguments.of("7368335898", "01732D26F736E531", EncryptionMethod.Rsa, SystemCode.FA_2, "invoice-template.xml", "/keys/private/rsa/sample/private-key.pem"),
-                Arguments.of("7368335898", "01732D26F736E531", EncryptionMethod.Rsa, SystemCode.FA_3, "invoice-template_v3.xml", "/keys/private/rsa/sample/private-key.pem"),
+                Arguments.of("7368335898", "01732D26F736E531", EncryptionMethod.RSA, SystemCode.FA_2, "invoice-template.xml", "/keys/private/rsa/sample/private-key.pem"),
+                Arguments.of("7368335898", "01732D26F736E531", EncryptionMethod.RSA, SystemCode.FA_3, "invoice-template_v3.xml", "/keys/private/rsa/sample/private-key.pem"),
                 // wersja z wygenrowanym kluczem ECC przez aplikacje podatnika, enrolment również był wysłany przez aplikacje podatnika
                 // https://web2te-ksef.mf.gov.pl/web/certificates/certificate-list - logujemy sie nipem - uwaga - z racji, że każdy może nawiązać sesję tym nipem, może być sytuacja, w której inna osoba unieważni certyfikat o podanym serial number w teście i testy przestaną działać, w assercji niżej jest to sprawdzane
-                Arguments.of("8096529464", "01D1732E43B9345E", EncryptionMethod.ECDsa, SystemCode.FA_2, "invoice-template.xml", "/keys/private/ecdsa/sample/testowy_klucz_sdk.key"),// wazny 2 lata od 05.12.2025
-                Arguments.of("8096529464", "01D1732E43B9345E", EncryptionMethod.ECDsa, SystemCode.FA_3, "invoice-template_v3.xml", "/keys/private/ecdsa/sample/testowy_klucz_sdk.key")// wazny 2 lata od 05.12.2025
+                Arguments.of("8096529464", "01D1732E43B9345E", EncryptionMethod.ECDSA, SystemCode.FA_2, "invoice-template" +
+                        ".xml", "/keys/private/ecdsa/sample/testowy_klucz_sdk.key"),// wazny 2 lata od 05.12.2025
+                Arguments.of("8096529464", "01D1732E43B9345E", EncryptionMethod.ECDSA, SystemCode.FA_3, "invoice" +
+                        "-template_v3.xml", "/keys/private/ecdsa/sample/testowy_klucz_sdk.key")// wazny 2 lata od 05.12.2025
         );
     }
 
     @ParameterizedTest
     @MethodSource("inputQrCodeOfflineE2ETestReadKeyFromDiscParameters")
-    public void qrCodeOfflineE2ETestReadKeyFromDisc(String contextNip, String certificateSerialNumber, EncryptionMethod encryptionMethod, SystemCode systemCode, String invoiceTemplate, String privateKeyPath) throws ApiException, JAXBException, IOException, InterruptedException {
+    void qrCodeOfflineE2ETestReadKeyFromDisc(String contextNip, String certificateSerialNumber, EncryptionMethod encryptionMethod, SystemCode systemCode, String invoiceTemplate, String privateKeyPath) throws ApiException, JAXBException, IOException, InterruptedException {
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
         QueryCertificatesRequest request = new CertificateMetadataListRequestBuilder()
                 .build();
@@ -294,7 +296,7 @@ public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
                 contextNip,
                 certificateSerialNumber,
                 invoiceHash,
-                EncryptionMethod.Rsa.equals(encryptionMethod)
+                EncryptionMethod.RSA.equals(encryptionMethod)
                         ? defaultCryptographyService.parseRsaPrivateKeyFromPem(privateKey)
                         : defaultCryptographyService.parseEncryptedEcdsaPrivateKeyFromPem(privateKey, "ADadADad12!@adadad".toCharArray()) // haslo przekazac w sposob bezpieczny, np z env variable, czy secret managerem
         );
@@ -345,7 +347,7 @@ public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
             CertificateEnrollmentStatusResponse response =
                     ksefClient.getCertificateEnrollmentStatus(referenceNumber, accessToken);
             return response != null &&
-                   response.getStatus().getCode() == 200;
+                    response.getStatus().getCode() == 200;
         } catch (Exception e) {
             return false;
         }
@@ -457,8 +459,8 @@ public class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
         try {
             SessionStatusResponse statusResponse = ksefClient.getSessionStatus(sessionReferenceNumber, accessToken);
             return statusResponse != null &&
-                   statusResponse.getSuccessfulInvoiceCount() != null &&
-                   statusResponse.getSuccessfulInvoiceCount() > 0;
+                    statusResponse.getSuccessfulInvoiceCount() != null &&
+                    statusResponse.getSuccessfulInvoiceCount() > 0;
         } catch (Exception e) {
             return false;
         }

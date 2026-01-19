@@ -7,6 +7,8 @@ import java.time.OffsetDateTime;
 public class SessionStatusResponse {
     private StatusInfo status;
     private OffsetDateTime validUntil;
+    private OffsetDateTime dateCreated;
+    private OffsetDateTime dateUpdated;
     private UpoResponse upo;
     private Integer invoiceCount;
     private Integer successfulInvoiceCount;
@@ -17,6 +19,17 @@ public class SessionStatusResponse {
 
     public SessionStatusResponse(StatusInfo status, UpoResponse upo, Integer invoiceCount, Integer successfulInvoiceCount, Integer failedInvoiceCount) {
         this.status = status;
+        this.upo = upo;
+        this.invoiceCount = invoiceCount;
+        this.successfulInvoiceCount = successfulInvoiceCount;
+        this.failedInvoiceCount = failedInvoiceCount;
+    }
+
+    public SessionStatusResponse(StatusInfo status, OffsetDateTime validUntil, OffsetDateTime dateCreated, OffsetDateTime dateUpdated, UpoResponse upo, Integer invoiceCount, Integer successfulInvoiceCount, Integer failedInvoiceCount) {
+        this.status = status;
+        this.validUntil = validUntil;
+        this.dateCreated = dateCreated;
+        this.dateUpdated = dateUpdated;
         this.upo = upo;
         this.invoiceCount = invoiceCount;
         this.successfulInvoiceCount = successfulInvoiceCount;
@@ -37,6 +50,22 @@ public class SessionStatusResponse {
 
     public void setValidUntil(OffsetDateTime validUntil) {
         this.validUntil = validUntil;
+    }
+
+    public OffsetDateTime getDateCreated() {
+        return dateCreated;
+    }
+
+    public void setDateCreated(OffsetDateTime dateCreated) {
+        this.dateCreated = dateCreated;
+    }
+
+    public OffsetDateTime getDateUpdated() {
+        return dateUpdated;
+    }
+
+    public void setDateUpdated(OffsetDateTime dateUpdated) {
+        this.dateUpdated = dateUpdated;
     }
 
     public UpoResponse getUpo() {

@@ -28,14 +28,13 @@ import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.UUID;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
-public class QrCodeOnlineIntegrationTest extends BaseIntegrationTest {
+class QrCodeOnlineIntegrationTest extends BaseIntegrationTest {
     private static final int SESSION_SUCCESSFUL_STATUS_CODE = 200;
     private static final int SESSION_FAILED_STATUS_CODE = 445;
 

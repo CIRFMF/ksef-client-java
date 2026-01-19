@@ -141,7 +141,6 @@ import static pl.akmf.ksef.sdk.api.Url.INVOICE_EXPORT_INIT;
 import static pl.akmf.ksef.sdk.api.Url.INVOICE_EXPORT_STATUS;
 import static pl.akmf.ksef.sdk.api.Url.INVOICE_QUERY_METADATA;
 import static pl.akmf.ksef.sdk.api.Url.JWT_TOKEN_REFRESH;
-import static pl.akmf.ksef.sdk.api.Url.JWT_TOKEN_REVOKE;
 import static pl.akmf.ksef.sdk.api.Url.LIMIT_CONTEXT;
 import static pl.akmf.ksef.sdk.api.Url.LIMIT_CONTEXT_CHANGE_TEST;
 import static pl.akmf.ksef.sdk.api.Url.LIMIT_CONTEXT_RESET_TEST;
@@ -190,6 +189,7 @@ import static pl.akmf.ksef.sdk.api.Url.TOKEN_REVOKE;
 import static pl.akmf.ksef.sdk.api.Url.TOKEN_STATUS;
 import static pl.akmf.ksef.sdk.client.Headers.ACCEPT;
 import static pl.akmf.ksef.sdk.client.Headers.APPLICATION_JSON;
+import static pl.akmf.ksef.sdk.client.Headers.APPLICATION_XML;
 import static pl.akmf.ksef.sdk.client.Headers.AUTHORIZATION;
 import static pl.akmf.ksef.sdk.client.Headers.BEARER;
 import static pl.akmf.ksef.sdk.client.Headers.CONTENT_TYPE;
@@ -657,6 +657,7 @@ public class DefaultKsefClient implements KSeFClient {
         String uri = buildUrlWithParams(AUTH_TOKEN_SIGNATURE.getUrl(), params);
         Map<String, String> headers = new HashMap<>();
         headers.put(ACCEPT, APPLICATION_JSON);
+        headers.put(CONTENT_TYPE, APPLICATION_XML);
 
         HttpResponse<byte[]> response = post(uri, signedXml, headers);
 
@@ -741,23 +742,6 @@ public class DefaultKsefClient implements KSeFClient {
         HttpResponse<byte[]> response = post(JWT_TOKEN_REFRESH.getUrl(), null, headers);
 
         return getResponse(response, OK, JWT_TOKEN_REFRESH, AuthenticationTokenRefreshResponse.class);
-    }
-
-    /**
-     * Unieważnienie tokena autoryzacyjnego
-     * Unieważnia aktualny (przekazany w nagłówku wywołania tej metody) token.
-     * Po unieważnieniu tokena nie będzie można za jego pomocą wykonywać żadnych operacji.
-     *
-     * @throws ApiException if fails to make API call
-     */
-    @Override
-    public void revokeAccessToken(String accessToken) throws ApiException {
-        Map<String, String> headers = new HashMap<>();
-        headers.put(AUTHORIZATION, BEARER + accessToken);
-
-        HttpResponse<byte[]> response = post(JWT_TOKEN_REVOKE.getUrl(), null, headers);
-
-        validResponse(response, OK, JWT_TOKEN_REVOKE);
     }
 
     /**
@@ -1452,7 +1436,6 @@ public class DefaultKsefClient implements KSeFClient {
     /**
      * Unieważnienie aktualnej sesji uwierzytelnienia
      * Unieważnia sesję powiązaną z tokenem użytym do wywołania tej operacji.  Unieważnienie sesji sprawia, że powiązany z nią refresh token przestaje działać i nie można już za jego pomocą uzyskać kolejnych access tokenów. **Aktywne access tokeny działają do czasu minięcia ich termin ważności.**  Sposób uwierzytelnienia: &#x60;RefreshToken&#x60; lub &#x60;ContextToken&#x60;.
-     *
      */
     @Override
     public void revokeCurrentSession(String accessToken) throws ApiException {
@@ -1956,7 +1939,6 @@ public class DefaultKsefClient implements KSeFClient {
 
         if (continuationToken != null) {
             headers.put(CONTINUATION_TOKEN, continuationToken);
-
         }
         HttpResponse<byte[]> response = get(uri, headers);
 

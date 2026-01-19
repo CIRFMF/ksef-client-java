@@ -56,7 +56,7 @@ public class GrantAuthorizationPermissionsRequest {
         this.subjectDetails = subjectDetails;
     }
 
-    public class PermissionsAuthorizationSubjectDetails {
+    public static class PermissionsAuthorizationSubjectDetails {
         private String fullName;
 
         public PermissionsAuthorizationSubjectDetails() {

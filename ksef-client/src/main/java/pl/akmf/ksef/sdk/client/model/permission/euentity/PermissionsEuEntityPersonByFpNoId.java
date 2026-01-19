@@ -1,17 +1,17 @@
 package pl.akmf.ksef.sdk.client.model.permission.euentity;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 
 public class PermissionsEuEntityPersonByFpNoId {
     private String firstName;
     private String lastName;
-    private OffsetDateTime birthDate;
+    private LocalDate birthDate;
     private PermissionsEuEntityIdentityDocument idDocument;
 
     public PermissionsEuEntityPersonByFpNoId() {
     }
 
-    public PermissionsEuEntityPersonByFpNoId(String firstName, String lastName, OffsetDateTime birthDate, PermissionsEuEntityIdentityDocument idDocument) {
+    public PermissionsEuEntityPersonByFpNoId(String firstName, String lastName, LocalDate birthDate, PermissionsEuEntityIdentityDocument idDocument) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.birthDate = birthDate;
@@ -34,11 +34,11 @@ public class PermissionsEuEntityPersonByFpNoId {
         this.lastName = lastName;
     }
 
-    public OffsetDateTime getBirthDate() {
+    public LocalDate getBirthDate() {
         return birthDate;
     }
 
-    public void setBirthDate(OffsetDateTime birthDate) {
+    public void setBirthDate(LocalDate birthDate) {
         this.birthDate = birthDate;
     }
 

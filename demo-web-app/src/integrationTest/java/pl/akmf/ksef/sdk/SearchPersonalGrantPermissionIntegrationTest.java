@@ -17,7 +17,7 @@ import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 import java.io.IOException;
 import java.util.List;
 
-public class SearchPersonalGrantPermissionIntegrationTest extends BaseIntegrationTest {
+class SearchPersonalGrantPermissionIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void searchPersonalPermissionTest() throws JAXBException, IOException, ApiException {

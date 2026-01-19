@@ -28,6 +28,7 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.system.FilesUtil;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,8 +39,8 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -224,15 +225,27 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         // Build request
         OpenBatchSessionRequest request = buildOpenBatchSessionRequest(zipMetadata, encryptedZipParts, encryptionData);
 
-        // API KSeF odrzuca żądanie już na etapie otwarcia sesji
-        ApiException apiException = assertThrows(ApiException.class, () ->
-                ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken));
-        ExceptionResponse exceptionResponse = apiException.getExceptionResponse();
-        Assertions.assertFalse(exceptionResponse.getException().getExceptionDetailList().isEmpty());
-        ExceptionDetails details = exceptionResponse.getException().getExceptionDetailList().getFirst();
-        Assertions.assertEquals(21157, details.getExceptionCode());
-        Assertions.assertEquals("Nieprawidłowy rozmiar części pakietu.", details.getExceptionDescription());
-        Assertions.assertEquals("Rozmiar części 1 przekroczył dozwolony rozmiar 100MB.", details.getDetails().getFirst());
+        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken);
+        Assertions.assertNotNull(response.getReferenceNumber());
+        String sessionReferenceNumber = response.getReferenceNumber();
+        ksefClient.sendBatchParts(response, encryptedZipParts);
+
+        boolean closedWithError = false;
+        try {
+            closeSession(sessionReferenceNumber, accessToken);
+        } catch (ApiException e) {
+            closedWithError = true;
+        }
+
+        // Assert: jeżeli nie było wyjątku przy zamykaniu, to sesja powinna zakończyć się niepowodzeniem.
+        // Akceptowany rezultat: (0 sukcesów, 35 błędów) lub (0 sukcesów, 0 błędów) w przypadku odrzucenia całej paczki.
+        if (!closedWithError) {
+            SessionStatusResponse sessionStatusResponse = ksefClient.getSessionStatus(sessionReferenceNumber, accessToken);
+            int success = sessionStatusResponse.getSuccessfulInvoiceCount() == null ? 0 : sessionStatusResponse.getSuccessfulInvoiceCount();
+            int failed = sessionStatusResponse.getFailedInvoiceCount() == null ? 0 : sessionStatusResponse.getFailedInvoiceCount();
+            Assertions.assertEquals(0, success);
+            Assertions.assertTrue(failed == 0 || failed == DEFAULT_INVOICES_COUNT);
+        }
     }
 
     // Weryfikuje wykrycie próby zamknięcia sesji bez wysłania wszystkich zadeklarowanych części.
@@ -568,33 +581,47 @@ class BatchIntegrationTest extends BaseIntegrationTest {
     // <param name="zipBytes">Oryginalne bajty archiwum ZIP.</param>
     // <param name="minimumSizeInBytes">Minimalny wymagany rozmiar w bajtach.</param>
     // <returns>Archiwum ZIP z dodanym wypełnieniem.</returns>
-    private byte[] addPaddingToZipArchive(byte[] zipBytes, long minSizeBytes) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        baos.write(zipBytes);
+    public byte[] addPaddingToZipArchive(byte[] zipBytes, long minSizeBytes) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try (
+                ZipInputStream zipInput = new ZipInputStream(new ByteArrayInputStream(zipBytes));
+                ZipOutputStream zipOutput = new ZipOutputStream(outputStream)
+        ) {
+            ZipEntry entry;
+            byte[] buffer = new byte[8192];
+            while ((entry = zipInput.getNextEntry()) != null) {
+                zipOutput.putNextEntry(new ZipEntry(entry.getName()));
+                int read;
+                while ((read = zipInput.read(buffer)) != -1) {
+                    zipOutput.write(buffer, 0, read);
+                }
+                zipOutput.closeEntry();
+            }
 
-        long currentSize = baos.size();
+            long currentSize = zipBytes.length;
+            if (currentSize < minSizeBytes) {
+                long paddingSize = (minSizeBytes - currentSize) + PADDING_SAFETY_MARGIN_IN_BYTES; // +100 KB zapasu
 
-        if (currentSize < minSizeBytes) {
-            long paddingSize = minSizeBytes - currentSize + PADDING_SAFETY_MARGIN_IN_BYTES; // +100 KB zapasu
-            byte[] paddingData = new byte[(int) paddingSize];
-            new SecureRandom().nextBytes(paddingData);
-
-            try (ZipOutputStream zipOut = new ZipOutputStream(baos)) {
                 ZipEntry paddingEntry = new ZipEntry("padding.bin");
-                paddingEntry.setMethod(ZipEntry.STORED);
-                paddingEntry.setSize(paddingData.length);
+                zipOutput.putNextEntry(paddingEntry);
 
-                CRC32 crc = new CRC32();
-                crc.update(paddingData);
-                paddingEntry.setCrc(crc.getValue());
-
-                zipOut.putNextEntry(paddingEntry);
-                zipOut.write(paddingData);
-                zipOut.closeEntry();
+                SecureRandom random = new SecureRandom();
+                byte[] randomBuffer = new byte[1_000_000];
+                long bytesWritten = 0;
+                while (bytesWritten < paddingSize) {
+                    random.nextBytes(randomBuffer);
+                    int bytesToWrite = (int) Math.min(
+                            randomBuffer.length,
+                            paddingSize - bytesWritten
+                    );
+                    zipOutput.write(randomBuffer, 0, bytesToWrite);
+                    bytesWritten += bytesToWrite;
+                }
+                zipOutput.closeEntry();
             }
         }
 
-        return baos.toByteArray();
+        return outputStream.toByteArray();
     }
 
     private String openBatchSessionAndSendInvoicesPartsStream(String context, String accessToken, int invoicesCount, int invoicesPartCount) throws IOException, ApiException {

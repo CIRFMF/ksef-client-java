@@ -41,6 +41,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -72,7 +73,7 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
     // 6. Weryfikuje, że status zawiera informację o duplikacie (kod 440).
     @ParameterizedTest
     @MethodSource("inputTestParameters")
-    void DuplicateInvoiceEndToEndFailedListContainsDuplicate(SystemCode systemCode, String invoiceTemplatePath) throws JAXBException, IOException, ApiException {
+    void duplicateInvoiceEndToEndFailedListContainsDuplicate(SystemCode systemCode, String invoiceTemplatePath) throws JAXBException, IOException, ApiException {
         String sellerNip = IdentifierGeneratorUtils.generateRandomNIP();
         String accessToken = authWithCustomNip(sellerNip, sellerNip).accessToken();
 
@@ -103,7 +104,8 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
     // 3. Pobiera listę nieudanych faktur wsadu i oczekuje kodu duplikatu (440).
     @ParameterizedTest
     @MethodSource("inputTestParameters")
-    void DuplicateInvoiceOnlineFirstBatchFailedListContainsDuplicate(SystemCode systemCode, String invoiceTemplatePath) throws JAXBException, IOException, ApiException {
+    void duplicateInvoiceOnlineFirstBatchFailedListContainsDuplicate(SystemCode systemCode,
+                                                                     String invoiceTemplatePath) throws JAXBException, IOException, ApiException {
         String sellerNip = IdentifierGeneratorUtils.generateRandomNIP();
         String accessToken = authWithCustomNip(sellerNip, sellerNip).accessToken();
 
@@ -196,8 +198,8 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
                     SessionStatusResponse statusResponse = ksefClient.getSessionStatus(sessionReferenceNumber, accessToken);
                     return statusResponse.getStatus() != null
                            && statusResponse.getStatus().getCode() == expectedStatus
-                           && statusResponse.getSuccessfulInvoiceCount() == expectedSuccessfulInvoice
-                           && statusResponse.getFailedInvoiceCount() == expectedFailedInvoice;
+                           && Objects.equals(statusResponse.getSuccessfulInvoiceCount(), expectedSuccessfulInvoice)
+                           && Objects.equals(statusResponse.getFailedInvoiceCount(), expectedFailedInvoice);
                 });
     }
 
@@ -248,7 +250,7 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
                     SessionInvoicesResponse failedBatchInvoices = ksefClient.getSessionFailedInvoices(sessionRef, null, 10, accessToken);
                     failedInvoicesResponse.set(failedBatchInvoices);
                     return failedBatchInvoices.getInvoices() != null
-                           && failedBatchInvoices.getInvoices().size() > 0;
+                           && !failedBatchInvoices.getInvoices().isEmpty();
                 });
 
         return failedInvoicesResponse.get();

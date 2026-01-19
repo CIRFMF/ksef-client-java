@@ -2,7 +2,6 @@ package pl.akmf.ksef.sdk.api;
 
 public enum Url {
     AUTH_CHALLENGE("auth/challenge", "apiV2AuthChallengePost"),
-    JWT_TOKEN_REVOKE("auth/token", "apiV2AuthTokenDelete"),
     JWT_TOKEN_REFRESH("auth/token/refresh", "apiV2AuthTokenRefreshPost"),
     AUTH_TOKEN_SIGNATURE("auth/xades-signature", "apiV2AuthTokenSignaturePost"),
     AUTH_TOKEN_STATUS("auth/{referenceNumber}", "apiV2AuthTokenTokenReferenceNumberGet"),
