@@ -1,19 +1,18 @@
 ### 1. Faktura z numerem KSeF (online)
-GET http://localhost:8082/qr/invoice/ksef?nip=1111111111&issueDate=2025-07-02&invoiceHash=someInvoiceHash&ksefNumber=someKsefNumber
+GET http://localhost:8082/qr/invoice/ksef?nip={{contextIdentifier}}&issueDate=2025-07-02&invoiceHash=someInvoiceHash&ksefNumber=someKsefNumber
 Accept: application/json
 
 #### 2. Faktura offline (przed wysyłką)
-GET http://localhost:8082/qr/invoice/offline?nip=1111111111&issueDate=2025-07-02&invoiceHash=someInvoiceHash
+GET http://localhost:8082/qr/invoice/offline?nip={{contextIdentifier}}&issueDate=2025-07-02&invoiceHash=someInvoiceHash
 Accept: application/json
 
 #### 3. Weryfikacja certyfikatu (Kod II)
 POST http://localhost:8082/qr/certificate?contextIdentifierType=NIP
-    &contextIdentifierValue=1111111111
-    &sellerNip=1111111111
+    &contextIdentifierValue={{contextIdentifier}}
+    &sellerNip={{contextIdentifier}}
     &invoiceHash=someInvoiceHash
     &certSerial=beefdead-dead-beef-dead-beefdeadbeef
 Accept: application/json
 Content-Type: application/json
 
 MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDDj1A4kt2ej3LZDZSuXnxLpq1WflJE4Xapx+3+U7QZM2pSyNQx+xgsmUDq0FZOTgt+YOQqvLnkEEa7H5HidDzCDCc//qKHusfs8CGkEub/FTJiaISSP9AAPNMC9Hf7zNU6LsSjKHVeSA4Xhvz5W7q2LJmhc/NmaQh4DXfzvvIMONF/nIforbzLLEhxWhfIEfN0rXiOlJCxOhg+0QlxIHAp0cqQX/HImKG6qb2rVIAIWX8J3NGpghaPsMv9/5jp4mCNLl9FRmTsnq1NPNhmXZmRYNPjFJIm2akImj3x8Mil2XkGp8PQzppjeYRd6hyA+M66M4J1vMT5zBCzNYWwPT1HAgMBAAECggEAAqGVq5746psDfsuv+4wtdUjlRQvDZPD4/Rbscio8Xow2GucKnoUXsbrP6+cal4FY3yGLDM9EW7C/7Yu4FXBefVpXLNqVjiGDcqysABdddhEoRw49ZQ+voFExMErEbvQ2IyB99peUw8xtR6reoAp/eJ6vOZlVyXy8vODG2NYOMsaK5RFxHi2QQxAd5ftDj5Ru+1Acet5SKcoLvhmIIpHsb+kJebGw2sCqbXQmn7rsiQaJkfktMmWpExvS7yxP59ajFYlF9ZScs9X0xvZmdnQ0+btVSuOWvO32kyTeZf8yg8jLX0bfXdIuAw3qN6UD9ZoWJfCwl1bFWkxkE687zuMYAQKBgQDP4Ly1gBLY+B5Pz/GoH9JAm6IyQHf9CKvaV7MythlG8YK6012VO/Tv6EKm2YTTs3BPC7j1/di63kNiHwvfbFsLCaiOI4KEVZgtIhIZLTOkbJf9qfBSSiH6N71x8BheaJZZXHVBqXVVaHAGW8PorUuqqGlW2DMx35OYIZJWfS8jpQKBgQDw1JVAdFe63kyo7K70xGEmBKmHPxrboF2rBZXVzDycTOnBhquvpX0Hh3XnweDB5Q0UO0cyHe3FBKZ/c9DlMEY6PNabyYjkVLSEKPREyCF6YyWB1gwJAIORl1i8dzBENl2w7zkYiHK8wFlAhfwftk7kD83zm2Zn9Al1c0HIhOwZewKBgQC35FAro0OJCl0OL57QIm5FVygxmhRLE/uqqEBO0QYlWwpRqR81IBf6jpU/slatTCRC2NTjT48FKA+l4l8HY3xalE22h7UyyeFXs7cc7H6tqp799/IvaYMLLXn6K/HyukSegor77iNszXmkNlNlJsA0FM0y1QjcyrJvNuuUdSNZPQKBgQCJw/IFRwiQm24bDBohZt10FCKufYjtrlUm6jEGdqkNeGoYDOPVvMNDNVhbVWsvP8o1kpttrfVASSK9shEDqpPh6L+TqrwmcdY56/ugBSQxkNn55epIlASvmnZmiYAQ5VC/UHnG8PdBxn7IDF1n/rAugmP8QR9ZxB5NE7vD61XsVQJ/U/MwN+xvJmogrOOHByhJb7x/MBwmJgXLCx3hP94BjgxE7HdO/7K/LlJSbs9N3H9mLUpNgL8hjweKjkbAGR/0rpG3o0J7phN1NUvc29lNEzXDNstgZ1TfFHA6o4irJGL29MSI2nd2Ky7RUeOS7SGa7Is9mXDygnj22DhOj0j7Ng==
-

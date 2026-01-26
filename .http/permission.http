@@ -1,0 +1,55 @@
+### get my credential
+POST http://localhost:8082//permission/myCredential
+Authorization:{{token}}
+Content-Type: application/json
+
+{
+
+}
+
+### permission grant
+POST http://localhost:8082/permission/grant
+Authorization:{{token}}
+Content-Type: application/json
+
+{
+  "subjectIdentifier": {
+    "type": "Pesel",
+    "value": "80121413872"
+  },
+  "permissions": ["InvoiceWrite"],
+  "description": "example demo app",
+  "subjectDetails": {
+    "subjectDetailsType": "PersonByIdentifier",
+    "personById": {
+      "firstName": "Demo",
+      "lastName": "app"
+    }
+  }
+}
+
+> {%
+    client.global.set("grantPermissionReferenceNumber", response.body.referenceNumber);
+%}
+
+### check grant permission status
+GET http://localhost:8082/permission/{{grantPermissionReferenceNumber}}/status
+Authorization:{{token}}
+
+### permission search for granted permission
+POST http://localhost:8082/permission/search
+Authorization:{{token}}
+Content-Type: application/json
+
+{
+  "queryType": "PermissionsGrantedInCurrentContext"
+}
+
+
+> {%
+    client.global.set("permissionId", response.body.permissions[0].id);
+%}
+
+### Permission revoke
+POST http://localhost:8082/permission/revoke/{{permissionId}}
+Authorization:{{token}}

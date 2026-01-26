@@ -1,27 +1,27 @@
-### get certificate limit
-
-GET http://localhost:8082/limits
+### certificate get enrollment info
+GET http://localhost:8082/certificate/enrollment-info
 Accept: application/json
 Authorization: {{token}}
 
-### certificate enrollment
-
-GET http://localhost:8082/enrollment-info
-Accept: application/json
-Authorization: {{token}}
+> {%
+    client.global.set("commonName", response.body.commonName);
+    client.global.set("countryName", response.body.countryName);
+    client.global.set("organizationName", response.body.organizationName);
+    client.global.set("organizationIdentifier", response.body.organizationIdentifier);
+%}
 
 ### certificate enrollment process
 
-POST http://localhost:8082/send-enrollment
+POST http://localhost:8082/certificate/send-enrollment
 Accept: application/json
 Content-Type: application/json
 Authorization: {{token}}
 
 {
-  "commonName": "Kowalski",
-  "countryName": "PL",
-  "organizationName": "Kowalski sp. z o.o",
-  "organizationIdentifier": "VATPL-1111111111"
+  "commonName": "{{commonName}}",
+  "countryName": "{{countryName}}",
+  "organizationIdentifier": "{{organizationIdentifier}}",
+  "organizationName": "{{organizationName}}"
 }
 
 > {%
@@ -29,7 +29,7 @@ Authorization: {{token}}
 %}
 
 ### certificate enrollment process status
-GET http://localhost:8082/enrollment-status/{{certReferenceNumber}}
+GET http://localhost:8082/certificate/enrollment-status/{{certReferenceNumber}}
 Accept: application/json
 Authorization: {{token}}
 
@@ -39,7 +39,7 @@ Authorization: {{token}}
 
 ### certificate metadata list query
 
-POST http://localhost:8082/certListMetadata
+POST http://localhost:8082/certificate/certListMetadata
 Accept: application/json
 Content-Type: application/json
 Authorization: {{token}}
@@ -52,7 +52,7 @@ Authorization: {{token}}
 
 ### certificate list query
 
-POST http://localhost:8082/retrieve
+POST http://localhost:8082/certificate/retrieve
 Accept: application/json
 Content-Type: application/json
 Authorization: {{token}}
@@ -63,7 +63,7 @@ Authorization: {{token}}
 
 ### revoke certificate
 
-POST http://localhost:8082/revoke/{{certificateSerialNumber}}
+POST http://localhost:8082/certificate/revoke/{{certificateSerialNumber}}
 Accept: application/json
 Content-Type: application/json
 Authorization: {{token}}

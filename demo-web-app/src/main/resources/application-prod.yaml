@@ -3,3 +3,4 @@ sdk:
     base-uri: "https://api.ksef.mf.gov.pl"
     qr-uri: "https://qr.ksef.mf.gov.pl"
     request-timeout: 100
+    lighthouse-base-uri: "https://api-latarnia.ksef.mf.gov.pl/"

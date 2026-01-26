@@ -7,6 +7,7 @@ sdk:
     suffix-uri: "v2"
     qr-uri: "https://qr-test.ksef.mf.gov.pl"
     request-timeout: 100
+    lighthouse-base-uri: "https://api-latarnia-test.ksef.mf.gov.pl/"
 
 spring:
   profiles:

@@ -87,7 +87,10 @@ public enum Url {
     TOKEN_LIST("tokens", "apiV2TokensGet"),
     TOKEN_GENERATE("tokens", "apiV2TokensPost"),
     TOKEN_REVOKE("tokens/{referenceNumber}", "apiV2TokensReferenceNumberDelete"),
-    TOKEN_STATUS("tokens/{referenceNumber}", "apiV2TokensReferenceNumberGet");
+    TOKEN_STATUS("tokens/{referenceNumber}", "apiV2TokensReferenceNumberGet"),
+
+    LIGHTHOUSE_STATUS("status", "apiV2LighthouseStatusGet"),
+    LIGHTHOUSE_MESSAGES("messages", "apiV2LighthouseMessagesGet");
 
     private final String url;
     private final String operationId;

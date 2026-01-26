@@ -1,0 +1,70 @@
+
+### Session open
+POST http://localhost:8082/open-session
+Authorization:{{token}}
+
+> {%
+    client.global.set("referenceNumber", response.body.referenceNumber);
+%}
+
+### Send Invoice
+POST http://localhost:8082/send-invoice/{{referenceNumber}}/{{contextIdentifier}}
+Authorization:{{token}}
+
+> {%
+    client.global.set("invoiceReferenceNumber", response.body.referenceNumber);
+%}
+
+### Invoice status
+GET http://localhost:8082/invoice-status?referenceNumber={{referenceNumber}}&invoiceReferenceNumber={{invoiceReferenceNumber}}
+Authorization:{{token}}
+
+### get UPO
+GET http://localhost:8082/invoice-upo-by-invoice-number?referenceNumber={{referenceNumber}}&invoiceReferenceNumber={{invoiceReferenceNumber}}
+Authorization:{{token}}
+
+### get invoices sync
+POST http://localhost:8082/invoices/metadata?pageOffset=0&pageSize=10
+Authorization:{{token}}
+Content-Type: application/json
+
+{
+  "subjectType": "Subject1",
+  "dateRange": {
+    "dateType": "Invoicing",
+    "from": "2026-01-04T15:06:20.002929500+01:00",
+    "to": "2026-02-16T15:06:20.002929500+01:00"
+  }
+}
+
+### init invoices assync
+POST http://localhost:8082/invoices/query/init/async
+Authorization:{{token}}
+Content-Type: application/json
+
+{
+  "encryption": {
+    "encryptedSymmetricKey": "wghODXA6jwsrNuLNTb+768UmtYg8q8iw9esO8IAZHxxs25Taw/erL6Q0XqJnR/W65qSfBDwBEe0hG39qkvfNdbZqro9MGMmCnaQSzXi+YM3l4J/I1DMmn8TaUCf8dg13klXW3nZbyccTUiDh0Ll+Bw7YOLsE2s9+MqEEXMAc1oUhuT1kTg6UYR/IVYA2izfMediSqH9Q++Z/rrI29pqpO+3/k0Rw7G9aR9gUK3bXv/spjRLlob9cFWapxudNHIMAnKdXtJJ8a54BOLrlaJk4+A4AgKYRerDF9IFeWvNpUR3SwQNSFzFJXrLl/sekpyxgDkslJKOvCnyc1M3DdlCHIw==",
+    "initializationVector": "oo9MSCFPZaQveMCspMp30g=="
+  },
+  "filters": {
+    "subjectType": "Subject1",
+    "dateRange": {
+      "dateType": "Invoicing",
+      "from": "2026-01-04T15:06:20.002929500+01:00",
+      "to": "2026-02-16T15:06:20.002929500+01:00"
+    }
+  }
+}
+
+> {%
+    client.global.set("queryInvoiceReferenceNumber", response.body.referenceNumber);
+%}
+
+### get invoices async
+GET http://localhost:8082/invoices/query/async?operationReferenceNumber={{queryInvoiceReferenceNumber}}
+Authorization:{{token}}
+
+###Close session
+POST http://localhost:8082/close-session/{{referenceNumber}}
+Authorization:{{token}}

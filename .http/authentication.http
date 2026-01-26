@@ -1,0 +1,13 @@
+### init authentication process
+POST http://localhost:8082/authenticationProcess/5251345676
+Accept: application/json
+Content-Type: application/json
+
+> {%
+    client.global.set("token", response.body.accessToken.token);
+    client.global.set("contextIdentifier", "5251345676");
+%}
+
+### close Session
+POST http://localhost:8082/close-session/{{referenceNumber}}
+Authorization:{{token}}

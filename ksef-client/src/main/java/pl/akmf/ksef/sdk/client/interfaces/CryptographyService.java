@@ -57,7 +57,10 @@ public interface CryptographyService {
     @Deprecated
     byte[] encryptKsefTokenWithECDsaUsingPublicKey(String ksefToken, Instant challengeTimestamp) throws SystemKSeFSDKException;
 
+    byte[] encryptKsefTokenUsingPublicKey(String ksefToken, Instant challengeTimestamp);
+
     byte[] encryptUsingPublicKey(byte[] content);
+
     /**
      * Zwraca zaszyfrowany content przy użyciu algorytmu RSA z publicznym kluczem.
      *
@@ -171,8 +174,7 @@ public interface CryptographyService {
     /**
      * Zwraca klucz prywatny w formacie PrivateKey na podstawie klucza w przechowywanego byte[] (zakodowanego w RSA)
      *
-     * @param privateKey
-     * Zwraca klucz prywatny w formacie PrivateKey na podstawie klucza w przechowywanego byte[] (zakodowanego w RSA)
+     * @param privateKey Zwraca klucz prywatny w formacie PrivateKey na podstawie klucza w przechowywanego byte[] (zakodowanego w RSA)
      * @throws SystemKSeFSDKException
      */
     PrivateKey parseRsaPrivateKeyFromPem(byte[] privateKey) throws SystemKSeFSDKException;
@@ -180,8 +182,7 @@ public interface CryptographyService {
     /**
      * Zwraca klucz prywatny w formacie PrivateKey na podstawie klucza w przechowywanego byte[] (zakodowanego w Ecdsa)
      *
-     * @param privateKey
-     * Zwraca klucz prywatny w formacie PrivateKey na podstawie klucza w przechowywanego byte[] (zakodowanego w Ecdsa)
+     * @param privateKey Zwraca klucz prywatny w formacie PrivateKey na podstawie klucza w przechowywanego byte[] (zakodowanego w Ecdsa)
      * @throws SystemKSeFSDKException
      */
     PrivateKey parseEcdsaPrivateKeyFromPem(byte[] privateKey) throws SystemKSeFSDKException;
@@ -190,8 +191,7 @@ public interface CryptographyService {
      * Zwraca klucz prywatny w formacie PrivateKey na podstawie klucza w przechowywanego byte[] (zakodowanego w Ecdsa)
      *
      * @param pemBytes
-     * @param password
-     * Zwraca klucz prywatny w formacie PrivateKey na podstawie klucza w przechowywanego byte[] (zakodowanego w Ecdsa)
+     * @param password Zwraca klucz prywatny w formacie PrivateKey na podstawie klucza w przechowywanego byte[] (zakodowanego w Ecdsa)
      * @throws SystemKSeFSDKException
      */
     PrivateKey parseEncryptedEcdsaPrivateKeyFromPem(byte[] pemBytes, char[] password);
@@ -199,16 +199,16 @@ public interface CryptographyService {
     /**
      * Zwraca certyfikat w formacie X509Certificate na podstawie tablicy byte zawierającej certyfikat
      *
-     * @param certBytes
-     * Zwraca certyfikat w formacie X509Certificate na podstawie tablicy byte zawierającej certyfikat
+     * @param certBytes Zwraca certyfikat w formacie X509Certificate na podstawie tablicy byte zawierającej certyfikat
      * @throws SystemKSeFSDKException
      */
     X509Certificate parseCertificateFromBytes(byte[] certBytes) throws CertificateException;
 
     /**
      * Inicjuje pobranie certyfikat z API KSEF
-     *
+     * <p>
      * Inicjuje pobranie certyfikat z API KSEF
+     *
      * @throws SystemKSeFSDKException
      */
     void initCryptographyService();
@@ -216,8 +216,9 @@ public interface CryptographyService {
     /**
      * Zwraca status serwisu (w razie nieudanego pobrania certyfikatów podczas inicjowania serwisu jest ustawiony na OFFLINE).
      * Możliwe jest wtedy ponowne wywyłanie usługi initCryptographyService() w celu próby inicjalizacji serwisu
-     *
+     * <p>
      * Zwraca status serwisu (w razie nieudanego pobrania certyfikatów podczas inicjowania serwisu jest ustawiony na OFFLINE)
+     *
      * @throws SystemKSeFSDKException
      */
     KsefIntegrationMode getKsefIntegrationMode();
