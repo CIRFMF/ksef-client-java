@@ -156,6 +156,23 @@ public class DefaultCryptographyService implements CryptographyService {
     }
 
     @Override
+    public byte[] encryptKsefTokenUsingPublicKey(String ksefToken, Instant challengeTimestamp) throws SystemKSeFSDKException {
+        validateServiceConfiguration();
+        byte[] tokenWithTimestamp = (ksefToken + "|" + challengeTimestamp.toEpochMilli())
+                .getBytes(StandardCharsets.UTF_8);
+
+        PublicKey publicKey = parsePublicKeyFromCertificatePem(this.ksefTokenPem);
+        switch (EncryptionMethod.valueOf(publicKey.getAlgorithm())) {
+            case RSA:
+                return encryptWithRSAUsingPublicKey(tokenWithTimestamp, publicKey);
+            case ECDSA:
+                return encryptWithECDsaUsingPublicKey(tokenWithTimestamp, publicKey);
+            default:
+                throw new SystemKSeFSDKException("Unsupported key algorithm: " + publicKey.getAlgorithm());
+        }
+    }
+
+    @Override
     public byte[] decryptBytesWithAes256(byte[] encryptedPackagePart, byte[] cipherKey, byte[] cipherIv) {
         validateServiceConfiguration();
 

@@ -1672,3 +1672,54 @@
 | ➕ dodane    | 11            |
 | 🔧 zmienione | 43            |
 | ➖ usunięte  | 26            |
+
+
+# Changelog zmian - `## 3.0.12 (2026-01-26)`- `API: 2.0.1`
+
+### 1.1 api
+- **Url.java**: 🔧 dodanie dwóch enumów `LIGHTHOUSE_STATUS("status", "apiV2LighthouseStatusGet"),
+    LIGHTHOUSE_MESSAGES("messages", "apiV2LighthouseMessagesGet");`
+- **HttpUtils.java**: 🔧 przeniesienie `URI buildUri(String baseUrl, String suffix, String url)` z `DefaultKsefClient`
+- **DefaultKsefClient.java**: 🔧 zmiany w `singleBatchPartSendingProcessByStream` i `singleBatchPartSendingProcess` - użycie w pełni urla z response `PackagePartSignatureInitResponseType responsePart`
+- **DefaultLighthouseKsefClient.java**: ➕ dodanie klienta latarenki
+
+### 1.2 client.model
+- **lighthouse/Categories.java**: ➕ dodanie nowej klasy modelu latarenki
+- **lighthouse/KsefMessagesResponse.java**: ➕ dodanie nowej klasy modelu latarenki
+- **lighthouse/KsefStatusResponse.java**: ➕ dodanie nowej klasy modelu latarenki
+- **lighthouse/Message.java**: ➕ dodanie nowej klasy modelu latarenki
+- **lighthouse/Statuses.java**: ➕ dodanie nowej klasy modelu latarenki
+
+### 1.3 client.interfaces
+- **CryptographyService.java**: 🔧 dodanie definicji metody `byte[] encryptKsefTokenUsingPublicKey(String ksefToken, Instant challengeTimestamp)`
+- **LighthouseKsefClient.java**: ➕ dodanie klienta latarenki
+
+### 1.4 api.services
+- **DefaultCryptographyService.java**: 🔧 dodanie metody `public byte[] encryptKsefTokenUsingPublicKey(String ksefToken, Instant challengeTimestamp)`
+
+## 2. demo-web-app
+
+### 2.1 integrationTest
+- **KsefTokenIntegrationTest.java**: 🔧 zmiany kosmetyczne
+- **LighthouseIntegrationTest.java**: ➕ dodanie scenariuszy testowych dla latarenki
+
+### 2.2 api
+- **LighthouseController.java** ➕ dodanie nowej klasy zawierającej endpointy związane z obsługą latarenki
+- **KsefClientConfig.java** 🔧 dodanie metody inicjalizującej beana klienta latarenki `DefaultLighthouseKsefClient initDefaultLighthouseClient(@Value("${sdk.config.lighthouse-base-uri}") String lighthouseBaseUri)`
+
+### 2.3 resources
+- `application.yaml` 🔧 dodanie `lighthouse-base-uri`
+- `application-prod.yaml` 🔧 dodanie `lighthouse-base-uri`
+
+## 3. .http
+- `lighthouse.http` ➕ dodanie pliku zawierającego wywołania metod z latarenki
+
+---
+## 3. Podsumowanie
+
+| Typ zmiany  | Liczba plików |
+|-------------|---------------|
+| ➕ dodane    | 9             |
+| 🔧 zmienione | 9             |
+| ➖ usunięte  | 0             |
+

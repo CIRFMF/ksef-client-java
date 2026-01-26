@@ -1,0 +1,8 @@
+
+### Get lighthouse status
+GET http://localhost:8082/lighthouse/status
+Accept: application/json
+
+### Get lighthouse messages
+GET http://localhost:8082/lighthouse/messages
+Accept: application/json

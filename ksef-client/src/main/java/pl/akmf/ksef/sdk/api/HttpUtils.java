@@ -2,6 +2,7 @@ package pl.akmf.ksef.sdk.api;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -79,6 +80,11 @@ public class HttpUtils {
             exceptionMessage = new String(body, StandardCharsets.UTF_8);
         }
         return operationId + " call failed with: " + statusCode + " - " + exceptionMessage;
+    }
+
+    public static URI buildUri(String baseUrl, String suffix, String url) {
+        URI urlWithSuffix = URI.create(baseUrl + "/").resolve(suffix);
+        return URI.create(urlWithSuffix + "/").resolve(url);
     }
 
     public static class KeyValue {

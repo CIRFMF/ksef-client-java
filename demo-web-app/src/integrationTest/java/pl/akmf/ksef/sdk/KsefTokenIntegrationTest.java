@@ -30,7 +30,6 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Stream;
@@ -126,10 +125,8 @@ class KsefTokenIntegrationTest extends BaseIntegrationTest {
                 .build();
         GenerateTokenResponse ksefToken = ksefClient.generateKsefToken(request, authToken.accessToken());
         AuthenticationChallengeResponse challenge = ksefClient.getAuthChallenge();
-        byte[] tokenWithTimestamp = (ksefToken.getToken() + "|" + challenge.getTimestamp().toEpochMilli())
-                .getBytes(StandardCharsets.UTF_8);
 
-        byte[] encryptedToken = defaultCryptographyService.encryptUsingPublicKey(tokenWithTimestamp);
+        byte[] encryptedToken = defaultCryptographyService.encryptKsefTokenUsingPublicKey(ksefToken.getToken(), challenge.getTimestamp());
 
         AuthKsefTokenRequest authTokenRequest = new AuthKsefTokenRequestBuilder()
                 .withChallenge(challenge.getChallenge())

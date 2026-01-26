@@ -1,0 +1,27 @@
+### Generate KSeF Token
+POST http://localhost:8082//token/generate
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "permissions": ["InvoiceRead"],
+  "description": "Demo app"
+}
+
+> {%
+    client.global.set("generateToken", response.body.token);
+    client.global.set("tokenReferenceNumber", response.body.referenceNumber);
+%}
+
+### Query KSeF Tokens
+POST http://localhost:8082/token/query
+Authorization: {{token}}
+
+### Get KSeF Token by Reference Number
+GET http://localhost:8082/token/retrieve?referenceNumber={{tokenReferenceNumber}}
+Authorization: {{token}}
+
+### Revoke KSeF Token
+POST http://localhost:8082/token/revoke?referenceNumber={{tokenReferenceNumber}}
+Authorization: {{token}}
+

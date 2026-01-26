@@ -111,6 +111,7 @@ import static pl.akmf.ksef.sdk.api.HttpStatus.ACCEPTED;
 import static pl.akmf.ksef.sdk.api.HttpStatus.CREATED;
 import static pl.akmf.ksef.sdk.api.HttpStatus.NO_CONTENT;
 import static pl.akmf.ksef.sdk.api.HttpStatus.OK;
+import static pl.akmf.ksef.sdk.api.HttpUtils.buildUri;
 import static pl.akmf.ksef.sdk.api.HttpUtils.buildUrlWithParams;
 import static pl.akmf.ksef.sdk.api.HttpUtils.formatExceptionMessage;
 import static pl.akmf.ksef.sdk.api.HttpUtils.isValidResponse;
@@ -2132,10 +2133,9 @@ public class DefaultKsefClient implements KSeFClient {
         InputStream dataStream = part.getDataStream();
         Map<String, String> headers = new HashMap<>();
         headers.put(CONTENT_TYPE, OCTET_STREAM);
-        String url = responsePart.getUrl().toString().replace(baseURl, "");
 
         HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(baseURl + url))
+                .uri(responsePart.getUrl())
                 .timeout(timeout);
 
         defaultHeaders.forEach(builder::header);
@@ -2166,10 +2166,8 @@ public class DefaultKsefClient implements KSeFClient {
         Map<String, String> headers = new HashMap<>();
         headers.put(CONTENT_TYPE, OCTET_STREAM);
 
-        String url = responsePart.getUrl().toString().replace(baseURl, "");
-
         HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(baseURl + url))
+                .uri(responsePart.getUrl())
                 .timeout(timeout);
 
         defaultHeaders.forEach(builder::header);
@@ -2221,7 +2219,6 @@ public class DefaultKsefClient implements KSeFClient {
         }
     }
 
-
     private <T> T getResponse(HttpResponse<byte[]> response,
                               HttpStatus expectedStatus,
                               Url operation,
@@ -2260,10 +2257,5 @@ public class DefaultKsefClient implements KSeFClient {
         } catch (IOException e) {
             throw new ApiException(e);
         }
-    }
-
-    private URI buildUri(String baseUrl, String suffix, String url) {
-        URI urlWithSuffix = URI.create(baseUrl + "/").resolve(suffix);
-        return URI.create(urlWithSuffix + "/").resolve(url);
     }
 }

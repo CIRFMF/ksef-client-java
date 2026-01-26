@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import pl.akmf.ksef.sdk.api.DefaultKsefClient;
+import pl.akmf.ksef.sdk.api.DefaultLighthouseKsefClient;
 import pl.akmf.ksef.sdk.api.services.DefaultCertificateService;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.api.services.DefaultQrCodeService;
@@ -63,6 +64,23 @@ public class KsefClientConfig {
                 apiClient,
                 apiProperties,
                 objectMapper);
+    }
+
+    @Bean
+    public DefaultLighthouseKsefClient initDefaultLighthouseClient(@Value("${sdk.config.lighthouse-base-uri}") String lighthouseBaseUri) {
+        ObjectMapper objectMapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        HttpClient httpClient = HttpClientBuilder.createHttpBuilder(new HttpClientConfig()).build();
+        return new DefaultLighthouseKsefClient(
+                objectMapper,
+                httpClient,
+                lighthouseBaseUri,
+                apiProperties.getRequestTimeout(),
+                apiProperties.getDefaultHeaders()
+        );
     }
 
     @Bean
