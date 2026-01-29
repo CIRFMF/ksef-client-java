@@ -1723,3 +1723,18 @@
 | 🔧 zmienione | 9             |
 | ➖ usunięte  | 0             |
 
+
+# Changelog zmian - `## 3.0.13 (2026-01-29)`- `API: 2.0.1`
+
+### 1.1 api
+- **DefaultKsefClient.java**: 🔧 fix budowania adresu w `downloadPackagePart`
+
+---
+## 3. Podsumowanie
+
+| Typ zmiany  | Liczba plików |
+|-------------|---------------|
+| ➕ dodane    | 0             |
+| 🔧 zmienione | 1             |
+| ➖ usunięte  | 0             |
+
