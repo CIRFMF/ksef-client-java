@@ -2191,10 +2191,8 @@ public class DefaultKsefClient implements KSeFClient {
      */
     @Override
     public byte[] downloadPackagePart(InvoicePackagePart part) {
-        String url = part.getUrl().toString().replace(baseURl, "");
-
         HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(baseURl + url))
+                .uri(part.getUrl())
                 .timeout(timeout);
 
         defaultHeaders.forEach(builder::header);
