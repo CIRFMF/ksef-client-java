@@ -1738,3 +1738,28 @@
 | 🔧 zmienione | 1             |
 | ➖ usunięte  | 0             |
 
+
+# Changelog zmian - `## 3.0.14 (2026-02-06)`- `API: 2.0.1`
+
+## 1. ksef-client
+
+### 1.1 api.builders
+- **InvoiceQueryFiltersBuilder.java**: 🔧 pole `Boolean hasAttachment` domyślnie null
+
+### 1.2 client.model
+- **lighthouse/Message.java**: 🔧 zmiana nazwy pola `String cat` na `String category`
+
+## 2. demo-web-app
+
+### 2.1 integrationTest
+- **LighthouseIntegrationTest.java**: 🔧 dodanie dodatkowych asercji
+
+---
+## 3. Podsumowanie
+
+| Typ zmiany  | Liczba plików |
+|-------------|---------------|
+| ➕ dodane    | 0             |
+| 🔧 zmienione | 3             |
+| ➖ usunięte  | 0             |
+

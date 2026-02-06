@@ -35,6 +35,7 @@ class LighthouseIntegrationTest extends BaseIntegrationTest {
                     () -> Assertions.assertTrue(msg.getType() != null && !msg.getType().isBlank(), "type"),
                     () -> Assertions.assertTrue(msg.getTitle() != null && !msg.getTitle().isBlank(), "title"),
                     () -> Assertions.assertTrue(msg.getText() != null && !msg.getText().isBlank(), "text"),
+                    () -> Assertions.assertTrue(msg.getCategory() != null && !msg.getCategory().isBlank(), "category"),
                     () -> Assertions.assertNotNull(msg.getStart(), "start")
             ));
         }
@@ -53,6 +54,7 @@ class LighthouseIntegrationTest extends BaseIntegrationTest {
                 () -> Assertions.assertTrue(msg.getType() != null && !msg.getType().isBlank(), "type"),
                 () -> Assertions.assertTrue(msg.getTitle() != null && !msg.getTitle().isBlank(), "title"),
                 () -> Assertions.assertTrue(msg.getText() != null && !msg.getText().isBlank(), "text"),
+                () -> Assertions.assertTrue(msg.getCategory() != null && !msg.getCategory().isBlank(), "category"),
                 () -> Assertions.assertNotNull(msg.getStart(), "start")
         ));
     }
