@@ -10,7 +10,7 @@ public class Message {
     // Identyfikator zdarzenia (grupy komunikatow), pozwalajacy powiazac komunikaty (np. start i koniec tej samej awarii).
     private int eventId;
     // Kategoria komunikatu.
-    private String cat;
+    private String category;
     // Typ komunikatu.
     private String type;
     // Tytul komunikatu.
@@ -29,11 +29,11 @@ public class Message {
     public Message() {
     }
 
-    public Message(String id, int eventId, String cat, String type, String title, String text, OffsetDateTime start,
+    public Message(String id, int eventId, String category, String type, String title, String text, OffsetDateTime start,
                    OffsetDateTime end, int version, OffsetDateTime published) {
         this.id = id;
         this.eventId = eventId;
-        this.cat = cat;
+        this.category = category;
         this.type = type;
         this.title = title;
         this.text = text;
@@ -59,12 +59,12 @@ public class Message {
         this.eventId = eventId;
     }
 
-    public String getCat() {
-        return cat;
+    public String getCategory() {
+        return category;
     }
 
-    public void setCat(String cat) {
-        this.cat = cat;
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public String getType() {

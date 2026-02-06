@@ -21,7 +21,7 @@ public class InvoiceQueryFiltersBuilder {
     private String sellerNip;
     private InvoiceBuyerIdentifier buyerIdentifier;
     private List<CurrencyCode> currencyCodes;
-    private Boolean hasAttachment = false;
+    private Boolean hasAttachment;
     private InvoicingMode invoicingMode;
     private Boolean isSelfInvoicing;
     private InvoiceFormType formType;
