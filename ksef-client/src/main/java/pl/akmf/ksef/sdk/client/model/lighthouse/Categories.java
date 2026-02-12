@@ -1,14 +1,25 @@
 package pl.akmf.ksef.sdk.client.model.lighthouse;
 
-// Kategorie trwających zdarzeń raportowanych przez Latarnię.
-public class Categories {
+import com.fasterxml.jackson.annotation.JsonValue;
 
-    // Kategoria 01 — awaria.
-    public static final String failure = "01";
+public enum Categories {
+    FAILURE("01"),
+    TOTAL_FAILURE("02"),
+    PLANNED_UNAVAILABILITY("03");
 
-    // Kategoria 02 — całkowita awaria.
-    public static final String totalFailure = "02";
+    private final String value;
 
-    // Kategoria 03 — planowana niedostępność.
-    public static final String plannedUnavailability = "03";
+    Categories(String value) {
+        this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    public String toString() {
+        return value;
+    }
 }

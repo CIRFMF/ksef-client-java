@@ -1,6 +1,7 @@
 package pl.akmf.ksef.sdk.client.model;
 
 import java.net.http.HttpHeaders;
+import java.util.stream.Collectors;
 
 public class ApiException extends Exception {
     private final int code;
@@ -9,7 +10,7 @@ public class ApiException extends Exception {
 
     public ApiException(int code, String message) {
         super(message);
-         this.code = code;
+        this.code = code;
         this.responseHeaders = null;
         this.exceptionResponse = null;
     }
@@ -45,5 +46,17 @@ public class ApiException extends Exception {
 
     public HttpHeaders getResponseHeaders() {
         return responseHeaders;
+    }
+
+    @Override
+    public String toString() {
+        return "ApiException{" +
+                "\ncode=" + code +
+                ",\nresponseHeaders=" + responseHeaders.map().entrySet().stream()
+                .flatMap(entry -> entry.getValue().stream()
+                        .map(value -> "'" + entry.getKey() + ": " + value + "'"))
+                .collect(Collectors.joining(", ")) +
+                ",\n" + exceptionResponse +
+                "\n}";
     }
 }

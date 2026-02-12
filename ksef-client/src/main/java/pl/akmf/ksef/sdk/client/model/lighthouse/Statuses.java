@@ -1,17 +1,32 @@
 package pl.akmf.ksef.sdk.client.model.lighthouse;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 // Statusy systemu KSeF zwracane przez Latarnię.
-public class Statuses {
+public enum Statuses {
 
-    // Kod 0 — pełna dostępność.
-    public static final int fullAvailability = 0;
+    FULL_AVAILABILITY(0),
 
-    // Kod 100 — trwająca niedostępność.
-    public static final int ongoingUnavailability = 100;
+    ONGOING_UNAVAILABILITY(100),
 
-    // Kod 500 — trwająca awaria.
-    public static final int ongoingFailure = 500;
+    ONGOING_FAILURE(500),
 
-    // Kod 900 — trwająca awaria całkowita.
-    public static final int ongoingTotalFailure = 900;
+    ONGOING_TOTAL_FAILURE(900);
+
+    private final int value;
+
+    Statuses(int value) {
+        this.value = value;
+    }
+
+    @JsonValue
+    public int getValue() {
+        return value;
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(value);
+    }
+
 }

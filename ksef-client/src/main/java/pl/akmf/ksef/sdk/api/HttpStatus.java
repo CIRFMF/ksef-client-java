@@ -11,6 +11,7 @@ public enum HttpStatus {
     UNAUTHORIZED(401),
     FORBIDDEN(403),
     UNSUPPORTED_MEDIA_TYPE(415),
+    TOO_MANY_REQUESTS(429),
     INTERNAL_ERROR(500);
 
     private final int code;

@@ -1763,3 +1763,41 @@
 | 🔧 zmienione | 3             |
 | ➖ usunięte  | 0             |
 
+
+# Changelog zmian - `## 3.0.15 (2026-02-12)`- `API: 2.0.1`
+
+## 1. ksef-client
+
+### 1.1 api
+- **DefaultKsefClient.java**: 🔧 dodanie obsługi parsowania odpowiedzi dla status http 429 (Too Many Requests)  
+
+### 1.2 client
+- **ExceptionDetails.java**: 🔧 dodanie opisów pól i metody `toString`
+- **Headers.java**: 🔧 dodanie pola `String RETRY_AFTER = "Retry-After"`
+
+### 1.3 client.model
+- **ApiException.java**: 🔧 dodanie metody `toString`
+- **ExceptionObject.java**: 🔧 dodanie opisów pól i metody `toString`
+- **ExceptionResponse.java**: 🔧 dodanie opisów pól i metody `toString`, dodatkowo dodano pole dla obiektu z http status 429 `TooManyRequestsResponse status`
+- **HttpStatus.java**: 🔧 dodanie enuma `TOO_MANY_REQUESTS(429)`
+- **TooManyRequestsResponse.java**: ➕ dodanie klasy z modelem dla status http 429
+- **lighthouse/Categories.java**: 🔧 zmiana klasy na enuma
+- **lighthouse/Statuses.java**: 🔧 zmiana klasy na enuma
+
+## 2. demo-web-app
+
+### 2.1 integrationTest
+- **BaseIntegrationTest.java**: 🔧 wydłużenie timeoutu przy oczekiwanie na konkretny status/proces
+- **KsefTokenIntegrationTest.java**: 🔧 wydłużenie timeoutu przy oczekiwanie na konkretny status/proces
+- **DuplicateInvoiceIntegrationTest.java**: 🔧 użycie `getContinuationToken` w scenariuszu przy pobieraniu błednie przetworzonych faktur 
+- **TechnicalCorrectionIntegrationTest.java**: ➕ dodanie scenariuszy testowych dla funkcjonalności korekty technicznej faktur 
+
+---
+## 3. Podsumowanie
+
+| Typ zmiany  | Liczba plików |
+|-------------|---------------|
+| ➕ dodane    | 2             |
+| 🔧 zmienione | 12            |
+| ➖ usunięte  | 0             |
+
