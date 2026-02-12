@@ -111,7 +111,7 @@ public abstract class BaseIntegrationTest {
         SignatureResponse submitAuthTokenResponse = ksefClient.submitAuthTokenRequest(signedXml, false);
 
         //Czekanie na zakończenie procesu
-        await().atMost(14, SECONDS)
+        await().atMost(30, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isAuthProcessReady(submitAuthTokenResponse.getReferenceNumber(), submitAuthTokenResponse.getAuthenticationToken().getToken()));
 

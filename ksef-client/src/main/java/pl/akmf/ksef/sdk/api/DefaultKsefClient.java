@@ -9,6 +9,7 @@ import pl.akmf.ksef.sdk.client.interfaces.KSeFClient;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.ApiResponse;
 import pl.akmf.ksef.sdk.client.model.ExceptionResponse;
+import pl.akmf.ksef.sdk.client.model.TooManyRequestsResponse;
 import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.auth.AuthKsefTokenRequest;
 import pl.akmf.ksef.sdk.client.model.auth.AuthOperationStatusResponse;
@@ -96,11 +97,14 @@ import pl.akmf.ksef.sdk.system.SystemKSeFSDKException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -196,6 +200,7 @@ import static pl.akmf.ksef.sdk.client.Headers.BEARER;
 import static pl.akmf.ksef.sdk.client.Headers.CONTENT_TYPE;
 import static pl.akmf.ksef.sdk.client.Headers.CONTINUATION_TOKEN;
 import static pl.akmf.ksef.sdk.client.Headers.OCTET_STREAM;
+import static pl.akmf.ksef.sdk.client.Headers.RETRY_AFTER;
 import static pl.akmf.ksef.sdk.client.Headers.X_KSEF_FEATURE;
 import static pl.akmf.ksef.sdk.client.Parameter.AUTHOR_IDENTIFIER;
 import static pl.akmf.ksef.sdk.client.Parameter.AUTHOR_IDENTIFIER_TYPE;
@@ -2245,15 +2250,63 @@ public class DefaultKsefClient implements KSeFClient {
                         .orElse("")
                         .toLowerCase();
 
-                if (contentType.contains(APPLICATION_JSON)) {
-                    exception = response.body() == null ? null :
-                            objectMapper.readValue(response.body(), ExceptionResponse.class);
-                }
                 String message = formatExceptionMessage(operation.getOperationId(), response.statusCode(), response.body());
+                if (contentType.contains(APPLICATION_JSON)) {
+                    try {
+                        exception = response.body() == null ? null :
+                                objectMapper.readValue(response.body(), ExceptionResponse.class);
+                        if (HttpStatus.TOO_MANY_REQUESTS.getCode() == response.statusCode()) {
+                            setErrorDetailsFor429Status(response.headers(), exception.getStatus());
+                        }
+                    } catch (com.fasterxml.jackson.databind.DatabindException e) {
+                        throw new ApiException(response.statusCode(), message, response.headers(), exception);
+                    }
+                }
                 throw new ApiException(response.statusCode(), message, response.headers(), exception);
             }
         } catch (IOException e) {
             throw new ApiException(e);
         }
     }
+
+    private void setErrorDetailsFor429Status(HttpHeaders headers, TooManyRequestsResponse status) {
+        String retryAfterString = headers.firstValue(RETRY_AFTER)
+                .orElse(null);
+        if (retryAfterString != null && !retryAfterString.isBlank()) {
+
+            Integer seconds = tryParseInt(retryAfterString);
+            // Jeśli dostępne są sekundy z Retry-After, wykorzystanie ich wartości
+            if (seconds != null) {
+                status.setRetryAfterSeconds(seconds);
+                status.setRecommendedDelay(Duration.ofSeconds(seconds));
+                return;
+            }
+            OffsetDateTime retryAfterDate = tryParseOffsetDateTime(retryAfterString);
+            // Jeśli dostępna jest data z Retry-After, obliczenie delty
+            if (retryAfterDate != null) {
+                status.setRetryAfterDate(retryAfterDate);
+                Duration delta = Duration.between(OffsetDateTime.now(ZoneOffset.UTC), retryAfterDate);
+                status.setRecommendedDelay(delta.isNegative() || delta.isZero()
+                        ? Duration.ofSeconds(1)
+                        : delta);
+            }
+        }
+    }
+
+    private static Integer tryParseInt(String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static OffsetDateTime tryParseOffsetDateTime(String value) {
+        try {
+            return OffsetDateTime.parse(value);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
+    }
+
 }

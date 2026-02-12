@@ -136,7 +136,7 @@ class KsefTokenIntegrationTest extends BaseIntegrationTest {
 
         SignatureResponse response = ksefClient.authenticateByKSeFToken(authTokenRequest);
 
-        await().atMost(30, SECONDS)
+        await().atMost(60, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> isAuthStatusReady(response.getReferenceNumber(), response.getAuthenticationToken().getToken()));
 

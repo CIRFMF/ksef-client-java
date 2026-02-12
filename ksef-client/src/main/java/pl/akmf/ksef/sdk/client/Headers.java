@@ -16,4 +16,5 @@ public final class Headers {
     public static final String APPLICATION_XML =  "application/xml";
     public static final String BEARER = "Bearer ";
     public static final String X_KSEF_FEATURE = "X-KSeF-Feature";
+    public static final String RETRY_AFTER = "Retry-After";
 }

@@ -1,6 +1,7 @@
 package pl.akmf.ksef.sdk;
 
 import jakarta.xml.bind.JAXBException;
+import org.apache.logging.log4j.util.Strings;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -37,13 +38,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -89,9 +90,9 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
         checkSessionStatus(onlineSessionRef, accessToken, 100, null, 1);
 
         // 5. Pobranie nieudanych faktur /invoices/failed (duplikat)
-        SessionInvoicesResponse failedInvoices = getFailedInvoices(onlineSessionRef, accessToken);
+        List<SessionInvoiceStatusResponse> failedInvoices = getFailedInvoicesList(onlineSessionRef, accessToken);
 
-        SessionInvoiceStatusResponse failed = failedInvoices.getInvoices().getFirst();
+        SessionInvoiceStatusResponse failed = failedInvoices.getFirst();
         Assertions.assertNotNull(failed.getStatus());
         Assertions.assertNotNull(failed.getStatus().getCode());
         int duplicateInvoice = 440;
@@ -122,9 +123,9 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
         checkSessionStatus(batchSessionRef, accessToken, 445, 0, 1);
 
         // 3. Pobranie nieudanych faktur sesji wsadowej (polling aż dostępne)
-        SessionInvoicesResponse failedBatchInvoices = getFailedInvoices(batchSessionRef, accessToken);
+        List<SessionInvoiceStatusResponse> failedBatchInvoices = getFailedInvoicesList(batchSessionRef, accessToken);
 
-        SessionInvoiceStatusResponse failed = failedBatchInvoices.getInvoices().getFirst();
+        SessionInvoiceStatusResponse failed = failedBatchInvoices.getFirst();
         Assertions.assertNotNull(failed.getStatus());
         Assertions.assertNotNull(failed.getStatus().getCode());
         int duplicateInvoice = 440;
@@ -197,9 +198,9 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
                 .until(() -> {
                     SessionStatusResponse statusResponse = ksefClient.getSessionStatus(sessionReferenceNumber, accessToken);
                     return statusResponse.getStatus() != null
-                           && statusResponse.getStatus().getCode() == expectedStatus
-                           && Objects.equals(statusResponse.getSuccessfulInvoiceCount(), expectedSuccessfulInvoice)
-                           && Objects.equals(statusResponse.getFailedInvoiceCount(), expectedFailedInvoice);
+                            && statusResponse.getStatus().getCode() == expectedStatus
+                            && Objects.equals(statusResponse.getSuccessfulInvoiceCount(), expectedSuccessfulInvoice)
+                            && Objects.equals(statusResponse.getFailedInvoiceCount(), expectedFailedInvoice);
                 });
     }
 
@@ -242,17 +243,25 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
         return openOnlineSessionResponse.getReferenceNumber();
     }
 
-    private SessionInvoicesResponse getFailedInvoices(String sessionRef, String accessToken) {
-        AtomicReference<SessionInvoicesResponse> failedInvoicesResponse = new AtomicReference<>();
+    private List<SessionInvoiceStatusResponse> getFailedInvoicesList(String sessionRef, String accessToken) {
+        List<SessionInvoiceStatusResponse> failedInvoicesList = new ArrayList<>();
+
         await().atMost(120, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> {
-                    SessionInvoicesResponse failedBatchInvoices = ksefClient.getSessionFailedInvoices(sessionRef, null, 10, accessToken);
-                    failedInvoicesResponse.set(failedBatchInvoices);
-                    return failedBatchInvoices.getInvoices() != null
-                           && !failedBatchInvoices.getInvoices().isEmpty();
+                    SessionInvoicesResponse failedInvoices = ksefClient.getSessionFailedInvoices(sessionRef, null, 10, accessToken);
+                    if (failedInvoices.getInvoices() != null && !failedInvoices.getInvoices().isEmpty()) {
+                        failedInvoicesList.addAll(failedInvoices.getInvoices());
+                    }
+                    while (Strings.isNotBlank(failedInvoices.getContinuationToken())) {
+                        failedInvoices = ksefClient.getSessionFailedInvoices(sessionRef, failedInvoices.getContinuationToken(), 10, accessToken);
+                        if (failedInvoices.getInvoices() != null && !failedInvoices.getInvoices().isEmpty()) {
+                            failedInvoicesList.addAll(failedInvoices.getInvoices());
+                        }
+                    }
+                    return !failedInvoicesList.isEmpty();
                 });
 
-        return failedInvoicesResponse.get();
+        return failedInvoicesList;
     }
 }

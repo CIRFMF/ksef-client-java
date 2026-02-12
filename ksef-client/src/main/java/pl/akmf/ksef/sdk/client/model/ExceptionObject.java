@@ -5,12 +5,19 @@ import pl.akmf.ksef.sdk.client.ExceptionDetails;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+// Zawiera szczegółowe metadane wyjątku, w tym kod, opis i znacznik czasu.
 public class ExceptionObject {
+    // Lista szczegółów wyjątków opisujących poszczególne problemy.
     private List<ExceptionDetails> exceptionDetailList;
+    // Numer referencyjny służący do korelacji żądania i błędu.
     private String referenceNumber;
+    // Unikalny kod reprezentujący instancję usługi, która wygenerowała błąd.
     private String serviceCode;
+    // Dodatkowy kontekst usługi
     private String serviceCtx;
+    // Nazwa usługi, w której wystąpił błąd.
     private String serviceName;
+    // Znacznik czasu wystąpienia wyjątku.
     private OffsetDateTime timestamp;
 
     public ExceptionObject() {
@@ -63,5 +70,15 @@ public class ExceptionObject {
 
     public void setTimestamp(OffsetDateTime timestamp) {
         this.timestamp = timestamp;
+    }
+
+    @Override
+    public String toString() {
+        return "exceptionDetailList=" + exceptionDetailList +
+                ", referenceNumber='" + referenceNumber + '\'' +
+                ", serviceCode='" + serviceCode + '\'' +
+                ", serviceCtx='" + serviceCtx + '\'' +
+                ", serviceName='" + serviceName + '\'' +
+                ", timestamp=" + timestamp;
     }
 }
