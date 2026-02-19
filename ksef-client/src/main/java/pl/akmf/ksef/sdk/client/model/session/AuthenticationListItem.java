@@ -9,7 +9,10 @@ public class AuthenticationListItem {
 
     private OffsetDateTime startDate;
 
+    @Deprecated(since = "planowane wycofanie: 2026-11-16")
     private AuthenticationMethod authenticationMethod;
+
+    private AuthenticationMethodInfo authenticationMethodInfo;
 
     private StatusInfo status;
 
@@ -54,6 +57,14 @@ public class AuthenticationListItem {
 
     public void setAuthenticationMethod(AuthenticationMethod authenticationMethod) {
         this.authenticationMethod = authenticationMethod;
+    }
+
+    public AuthenticationMethodInfo getAuthenticationMethodInfo() {
+        return authenticationMethodInfo;
+    }
+
+    public void setAuthenticationMethodInfo(AuthenticationMethodInfo authenticationMethodInfo) {
+        this.authenticationMethodInfo = authenticationMethodInfo;
     }
 
     public StatusInfo getStatus() {

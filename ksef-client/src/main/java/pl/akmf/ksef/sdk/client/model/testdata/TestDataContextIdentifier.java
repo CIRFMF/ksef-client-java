@@ -30,7 +30,10 @@ public class TestDataContextIdentifier {
 
     public enum ContextIdentifierType {
 
-        NIP("Nip");
+        NIP("Nip"),
+        INTERNAL_ID("InternalId"),
+        NIP_VAT_UE("NipVatUe"),
+        PEPPOL_ID("PeppolId");
 
         private final String value;
 

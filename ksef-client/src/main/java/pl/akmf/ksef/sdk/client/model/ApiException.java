@@ -52,10 +52,11 @@ public class ApiException extends Exception {
     public String toString() {
         return "ApiException{" +
                 "\ncode=" + code +
-                ",\nresponseHeaders=" + responseHeaders.map().entrySet().stream()
+                ",\nresponseHeaders=" + responseHeaders != null
+                ? responseHeaders.map().entrySet().stream()
                 .flatMap(entry -> entry.getValue().stream()
                         .map(value -> "'" + entry.getKey() + ": " + value + "'"))
-                .collect(Collectors.joining(", ")) +
+                .collect(Collectors.joining(", ")) : "" +
                 ",\n" + exceptionResponse +
                 "\n}";
     }

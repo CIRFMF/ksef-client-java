@@ -1801,3 +1801,44 @@
 | 🔧 zmienione | 12            |
 | ➖ usunięte  | 0             |
 
+
+# Changelog zmian - `## 3.0.16 (2026-02-19)`- `API: 2.1.1`
+
+## 1. ksef-client
+
+### 1.1 api
+- **Url.java**: 🔧 dodanie `LIMIT_CONTEXT_BLOCK("testdata/context/block", "apiV2LimitsContextBlock"),
+                            LIMIT_CONTEXT_UNBLOCK("testdata/context/unblock", "apiV2LimitsContextUnblock"),
+                            LIMIT_CONTEXT_SET("testdata/rate-limits", "apiV2LimitsSet"),
+                            LIMIT_CONTEXT_RESTORE("testdata/rate-limits", "apiV2LimitsRestore"),`
+- **DefaultKsefClient.java**: 🔧 dodanie brakujących metod do limitów `void blockContext(TestDataContextIdentifier contextIdentifier, String accessToken)`,
+  `void unblockContext(TestDataContextIdentifier contextIdentifier, String accessToken)`,
+  `void setRateLimits(SetRateLimitsRequest setRateLimitsRequest, String accessToken)`,
+  `void restoreRateLimits(String accessToken)`
+
+### 1.2 client.interfaces
+- **KsefClient.java**: 🔧 dodanie metod zgodnie z implementacją w `DefaultKsefClient.java`
+
+### 1.3 client.model
+- **ApiException.java**: 🔧 zabezpieczenie metody `toString` dla `responseHeaders = null`
+- **auth/AuthStatus.java**: 🔧 Pole `AuthenticationMethod` oznaczono jako deprecated (planowane wycofanie: 2026-11-16), Wprowadzono nowy model `AuthenticationMethodInfo` opisujący metodę uwierzytelniania
+- **session/AuthenticationListItem.java**: 🔧 Pole `AuthenticationMethod` oznaczono jako deprecated (planowane wycofanie: 2026-11-16), Wprowadzono nowy model `AuthenticationMethodInfo` opisujący metodę uwierzytelniania
+- **session/AuthenticationMethodInfo.java**: ➕ dodano klasę
+- **limit/EffectiveApiRateLimits.java**: ➕ dodano klasę
+- **limit/SetRateLimitsRequest.java**: ➕ dodano klasę
+- **testdata/ContextIdentifierType.java**: 🔧 dodanie enumów `INTERNAL_ID("InternalId"), NIP_VAT_UE("NipVatUe"), PEPPOL_ID("PeppolId");`
+
+## 2. demo-web-app
+
+### 2.1 integrationTest
+- **GetRateLimitIntegrationTest.java**: 🔧 dodanie nowych scenariuszy testowych
+
+---
+## 3. Podsumowanie
+
+| Typ zmiany  | Liczba plików |
+|-------------|---------------|
+| ➕ dodane    | 3             |
+| 🔧 zmienione | 8             |
+| ➖ usunięte  | 0             |
+

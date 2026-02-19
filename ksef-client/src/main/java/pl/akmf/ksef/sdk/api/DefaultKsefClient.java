@@ -45,6 +45,7 @@ import pl.akmf.ksef.sdk.client.model.limit.ChangeSubjectCertificateLimitRequest;
 import pl.akmf.ksef.sdk.client.model.limit.GetContextLimitResponse;
 import pl.akmf.ksef.sdk.client.model.limit.GetRateLimitResponse;
 import pl.akmf.ksef.sdk.client.model.limit.GetSubjectLimitResponse;
+import pl.akmf.ksef.sdk.client.model.limit.SetRateLimitsRequest;
 import pl.akmf.ksef.sdk.client.model.permission.OperationResponse;
 import pl.akmf.ksef.sdk.client.model.permission.PermissionAttachmentStatusResponse;
 import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
@@ -85,6 +86,7 @@ import pl.akmf.ksef.sdk.client.model.session.online.SendInvoiceOnlineSessionRequ
 import pl.akmf.ksef.sdk.client.model.session.online.SendInvoiceResponse;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataAttachmentRemoveRequest;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataAttachmentRequest;
+import pl.akmf.ksef.sdk.client.model.testdata.TestDataContextIdentifier;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataPermissionRemoveRequest;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataPermissionRequest;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataPersonCreateRequest;
@@ -147,9 +149,13 @@ import static pl.akmf.ksef.sdk.api.Url.INVOICE_EXPORT_STATUS;
 import static pl.akmf.ksef.sdk.api.Url.INVOICE_QUERY_METADATA;
 import static pl.akmf.ksef.sdk.api.Url.JWT_TOKEN_REFRESH;
 import static pl.akmf.ksef.sdk.api.Url.LIMIT_CONTEXT;
+import static pl.akmf.ksef.sdk.api.Url.LIMIT_CONTEXT_BLOCK;
 import static pl.akmf.ksef.sdk.api.Url.LIMIT_CONTEXT_CHANGE_TEST;
 import static pl.akmf.ksef.sdk.api.Url.LIMIT_CONTEXT_RESET_TEST;
+import static pl.akmf.ksef.sdk.api.Url.LIMIT_CONTEXT_RESTORE;
+import static pl.akmf.ksef.sdk.api.Url.LIMIT_CONTEXT_SET;
 import static pl.akmf.ksef.sdk.api.Url.LIMIT_CONTEXT_SET_PRODUCTION;
+import static pl.akmf.ksef.sdk.api.Url.LIMIT_CONTEXT_UNBLOCK;
 import static pl.akmf.ksef.sdk.api.Url.LIMIT_SUBJECT_CERTIFICATE;
 import static pl.akmf.ksef.sdk.api.Url.LIMIT_SUBJECT_CERTIFICATE_CHANGE_TEST;
 import static pl.akmf.ksef.sdk.api.Url.LIMIT_SUBJECT_CERTIFICATE_RESET_TEST;
@@ -1568,6 +1574,81 @@ public class DefaultKsefClient implements KSeFClient {
         HttpResponse<byte[]> response = post(url, null, headers);
 
         validResponse(response, OK, LIMIT_CONTEXT_SET_PRODUCTION);
+    }
+
+    /**
+     * Blokuje możliwość uwierzytelniania dla bieżącego kontekstu. Tylko na środowiskach testowych.
+     * Zablokowanie kontekstu testowego w środowisku DEMO.
+     *
+     * @param contextIdentifier
+     * @throws ApiException
+     */
+    @Override
+    public void blockContext(TestDataContextIdentifier contextIdentifier, String accessToken) throws ApiException {
+        Map<String, String> headers = new HashMap<>();
+        headers.put(AUTHORIZATION, BEARER + accessToken);
+        headers.put(CONTENT_TYPE, APPLICATION_JSON);
+
+        String url = LIMIT_CONTEXT_BLOCK.getUrl();
+        HttpResponse<byte[]> response = post(url, contextIdentifier, headers);
+
+        validResponse(response, OK, LIMIT_CONTEXT_BLOCK);
+    }
+
+    /**
+     * Odblokowuje możliwość uwierzytelniania dla bieżącego kontekstu. Tylko na środowiskach testowych.
+     * Odblokowanie kontekstu testowego w środowisku DEMO.
+     *
+     * @param contextIdentifier
+     * @throws ApiException
+     */
+    @Override
+    public void unblockContext(TestDataContextIdentifier contextIdentifier, String accessToken) throws ApiException {
+        Map<String, String> headers = new HashMap<>();
+        headers.put(AUTHORIZATION, BEARER + accessToken);
+        headers.put(CONTENT_TYPE, APPLICATION_JSON);
+
+        String url = LIMIT_CONTEXT_UNBLOCK.getUrl();
+        HttpResponse<byte[]> response = post(url, contextIdentifier, headers);
+
+        validResponse(response, OK, LIMIT_CONTEXT_UNBLOCK);
+    }
+
+    /**
+     * Zmienia wartości aktualnie obowiązujących limitów żądań przesyłanych do API dla bieżącego kontekstu.
+     * Tylko na środowisku testowym.
+     *
+     * @param setRateLimitsRequest
+     * @throws ApiException
+     */
+    @Override
+    public void setRateLimits(SetRateLimitsRequest setRateLimitsRequest, String accessToken) throws ApiException {
+        Map<String, String> headers = new HashMap<>();
+        headers.put(AUTHORIZATION, BEARER + accessToken);
+        headers.put(CONTENT_TYPE, APPLICATION_JSON);
+
+        String url = LIMIT_CONTEXT_SET.getUrl();
+        HttpResponse<byte[]> response = post(url, setRateLimitsRequest, headers);
+
+        validResponse(response, OK, LIMIT_CONTEXT_SET);
+    }
+
+    /**
+     * Przywraca wartości aktualnie obowiązujących limitów żądań przesyłanych do API dla bieżącego kontekstu do wartości domyślnych.
+     * Tylko na środowiskach testowych.
+     *
+     * @throws ApiException
+     */
+    @Override
+    public void restoreRateLimits(String accessToken) throws ApiException {
+        Map<String, String> headers = new HashMap<>();
+        headers.put(AUTHORIZATION, BEARER + accessToken);
+        headers.put(CONTENT_TYPE, APPLICATION_JSON);
+
+        String url = LIMIT_CONTEXT_RESTORE.getUrl();
+        HttpResponse<byte[]> response = delete(url, headers);
+
+        validResponse(response, OK, LIMIT_CONTEXT_RESTORE);
     }
 
     /**
