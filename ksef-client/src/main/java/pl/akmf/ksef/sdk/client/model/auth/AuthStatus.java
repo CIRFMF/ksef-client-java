@@ -2,13 +2,17 @@ package pl.akmf.ksef.sdk.client.model.auth;
 
 import pl.akmf.ksef.sdk.client.model.StatusInfo;
 import pl.akmf.ksef.sdk.client.model.session.AuthenticationMethod;
+import pl.akmf.ksef.sdk.client.model.session.AuthenticationMethodInfo;
 
 import java.time.OffsetDateTime;
 
 public class AuthStatus {
     private OffsetDateTime startDate;
 
+    @Deprecated(since = "planowane wycofanie: 2026-11-16")
     private AuthenticationMethod authenticationMethod;
+
+    private AuthenticationMethodInfo authenticationMethodInfo;
 
     private StatusInfo status;
 
@@ -35,6 +39,14 @@ public class AuthStatus {
 
     public void setAuthenticationMethod(AuthenticationMethod authenticationMethod) {
         this.authenticationMethod = authenticationMethod;
+    }
+
+    public AuthenticationMethodInfo getAuthenticationMethodInfo() {
+        return authenticationMethodInfo;
+    }
+
+    public void setAuthenticationMethodInfo(AuthenticationMethodInfo authenticationMethodInfo) {
+        this.authenticationMethodInfo = authenticationMethodInfo;
     }
 
     public StatusInfo getStatus() {

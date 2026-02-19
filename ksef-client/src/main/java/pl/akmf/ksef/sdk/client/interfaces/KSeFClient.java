@@ -36,6 +36,7 @@ import pl.akmf.ksef.sdk.client.model.limit.ChangeSubjectCertificateLimitRequest;
 import pl.akmf.ksef.sdk.client.model.limit.GetContextLimitResponse;
 import pl.akmf.ksef.sdk.client.model.limit.GetRateLimitResponse;
 import pl.akmf.ksef.sdk.client.model.limit.GetSubjectLimitResponse;
+import pl.akmf.ksef.sdk.client.model.limit.SetRateLimitsRequest;
 import pl.akmf.ksef.sdk.client.model.permission.OperationResponse;
 import pl.akmf.ksef.sdk.client.model.permission.PermissionAttachmentStatusResponse;
 import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
@@ -76,6 +77,7 @@ import pl.akmf.ksef.sdk.client.model.session.online.SendInvoiceOnlineSessionRequ
 import pl.akmf.ksef.sdk.client.model.session.online.SendInvoiceResponse;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataAttachmentRemoveRequest;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataAttachmentRequest;
+import pl.akmf.ksef.sdk.client.model.testdata.TestDataContextIdentifier;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataPermissionRemoveRequest;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataPermissionRequest;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataPersonCreateRequest;
@@ -762,6 +764,41 @@ public interface KSeFClient {
      * @throws ApiException
      */
     void restoreProductionRateLimitsAsync(String accessToken) throws ApiException;
+
+    /**
+     * Blokuje możliwość uwierzytelniania dla bieżącego kontekstu. Tylko na środowiskach testowych.
+     * Zablokowanie kontekstu testowego w środowisku DEMO.
+     *
+     * @param contextIdentifier
+     * @throws ApiException
+     */
+    void blockContext(TestDataContextIdentifier contextIdentifier, String accessToken) throws ApiException;
+
+    /**
+     * Odblokowuje możliwość uwierzytelniania dla bieżącego kontekstu. Tylko na środowiskach testowych.
+     * Odblokowanie kontekstu testowego w środowisku DEMO.
+     *
+     * @param contextIdentifier
+     * @throws ApiException
+     */
+    void unblockContext(TestDataContextIdentifier contextIdentifier, String accessToken) throws ApiException;
+
+    /**
+     * Zmienia wartości aktualnie obowiązujących limitów żądań przesyłanych do API dla bieżącego kontekstu.
+     * Tylko na środowisku testowym.
+     *
+     * @param setRateLimitsRequest
+     * @throws ApiException
+     */
+    void setRateLimits(SetRateLimitsRequest setRateLimitsRequest, String accessToken) throws ApiException;
+
+    /**
+     * Przywraca wartości aktualnie obowiązujących limitów żądań przesyłanych do API dla bieżącego kontekstu do wartości domyślnych.
+     * Tylko na środowiskach testowych.
+     *
+     * @throws ApiException
+     */
+    void restoreRateLimits(String accessToken) throws ApiException;
 
     /**
      * Zmienia wartości aktualnie obowiązujących limitów certyfikatów dla bieżącego podmiotu. Tylko na środowiskach testowych.
