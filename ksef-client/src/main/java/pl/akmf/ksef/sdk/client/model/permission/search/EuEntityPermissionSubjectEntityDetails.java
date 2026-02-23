@@ -7,6 +7,7 @@ public class EuEntityPermissionSubjectEntityDetails {
     private SubjectDetailsType subjectDetailsType;
     private String firstName;
     private String address;
+    private String fullName;
 
     public EuEntityPermissionSubjectEntityDetails() {
 
@@ -34,6 +35,14 @@ public class EuEntityPermissionSubjectEntityDetails {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public enum SubjectDetailsType {

@@ -52,15 +52,15 @@ class EuEntityRepresentativePermissionIntegrationTest extends BaseIntegrationTes
      */
     @Test
     void grantAdministrativePermission_E2E_ReturnsExpectedResults() throws JAXBException, IOException, ApiException {
-        String ownerNip = IdentifierGeneratorUtils.getRandomNip();
+        String ownerNip = IdentifierGeneratorUtils.generateRandomNIP();
         String ownerVatEu = IdentifierGeneratorUtils.getRandomVatEU("ES");
         String ownerNipVatEu = IdentifierGeneratorUtils.getNipVatEU(ownerNip, ownerVatEu);
 
-        String euEntityNip = IdentifierGeneratorUtils.getRandomNip();
+        String euEntityNip = IdentifierGeneratorUtils.generateRandomNIP();
         String euEntityVatEu = IdentifierGeneratorUtils.getRandomVatEU("ES");
         String euEntityNipVatEu = IdentifierGeneratorUtils.getNipVatEU(euEntityNip, euEntityVatEu);
 
-        String euRepresentativeEntityNip = IdentifierGeneratorUtils.getRandomNip();
+        String euRepresentativeEntityNip = IdentifierGeneratorUtils.generateRandomNIP();
         String euRepresentativeEntityVatEu = IdentifierGeneratorUtils.getRandomVatEU("ES");
         String euRepresentativeEntityNipVatEu = IdentifierGeneratorUtils.getNipVatEU(euRepresentativeEntityNip, euRepresentativeEntityVatEu);
 

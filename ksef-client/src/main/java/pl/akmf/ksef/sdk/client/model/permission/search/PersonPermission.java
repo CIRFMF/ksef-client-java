@@ -15,6 +15,8 @@ public class PersonPermission {
     private PermissionState permissionState;
     private OffsetDateTime startDate;
     private boolean canDelegate;
+    private PersonPermissionSubjectPersonDetails subjectPersonDetails;
+    private EntityPermissionSubjectEntityDetails subjectEntityDetails;
 
     public PersonPermission() {
     }
@@ -97,6 +99,22 @@ public class PersonPermission {
 
     public void setCanDelegate(boolean canDelegate) {
         this.canDelegate = canDelegate;
+    }
+
+    public PersonPermissionSubjectPersonDetails getSubjectPersonDetails() {
+        return subjectPersonDetails;
+    }
+
+    public void setSubjectPersonDetails(PersonPermissionSubjectPersonDetails subjectPersonDetails) {
+        this.subjectPersonDetails = subjectPersonDetails;
+    }
+
+    public EntityPermissionSubjectEntityDetails getSubjectEntityDetails() {
+        return subjectEntityDetails;
+    }
+
+    public void setSubjectEntityDetails(EntityPermissionSubjectEntityDetails subjectEntityDetails) {
+        this.subjectEntityDetails = subjectEntityDetails;
     }
 }
 

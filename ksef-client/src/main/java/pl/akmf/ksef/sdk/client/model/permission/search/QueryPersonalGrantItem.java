@@ -12,6 +12,8 @@ public class QueryPersonalGrantItem {
     private PermissionState permissionState;
     private OffsetDateTime startDate;
     private Boolean canDelegate;
+    private EntityPermissionSubjectEntityDetails subjectEntityDetails;
+    private PersonPermissionSubjectPersonDetails subjectPersonDetails;
 
     public QueryPersonalGrantItem() {
 
@@ -87,5 +89,21 @@ public class QueryPersonalGrantItem {
 
     public void setCanDelegate(Boolean canDelegate) {
         this.canDelegate = canDelegate;
+    }
+
+    public EntityPermissionSubjectEntityDetails getSubjectEntityDetails() {
+        return subjectEntityDetails;
+    }
+
+    public void setSubjectEntityDetails(EntityPermissionSubjectEntityDetails subjectEntityDetails) {
+        this.subjectEntityDetails = subjectEntityDetails;
+    }
+
+    public PersonPermissionSubjectPersonDetails getSubjectPersonDetails() {
+        return subjectPersonDetails;
+    }
+
+    public void setSubjectPersonDetails(PersonPermissionSubjectPersonDetails subjectPersonDetails) {
+        this.subjectPersonDetails = subjectPersonDetails;
     }
 }

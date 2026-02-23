@@ -1,5 +1,7 @@
 package pl.akmf.ksef.sdk.client.model.limit;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class GetRateLimitResponse {
     private OnlineSessionRateLimit onlineSession;
     private BatchSessionRateLimit batchSession;
@@ -10,6 +12,7 @@ public class GetRateLimitResponse {
     private SessionMiscRateLimits sessionMisc;
     private InvoiceMetadataRateLimit invoiceMetadata;
     private InvoiceExportRateLimit invoiceExport;
+    @JsonProperty("invoiceExportStatus")
     private InvoiceExportStatusRateLimit invoiceStatusExport;
     private InvoiceDownloadRateLimit invoiceDownload;
     private OtherRateLimit other;

@@ -12,6 +12,8 @@ public class EntityAuthorizationGrant {
     private OffsetDateTime startDate;
     private EuAdministrationSubjectEntityDetails euAdministrationSubjectEntityDetails;
 
+    private EntityPermissionSubjectEntityDetails subjectEntityDetails;
+
     public EntityAuthorizationGrant() {
     }
 
@@ -77,5 +79,13 @@ public class EntityAuthorizationGrant {
 
     public void setEuAdministrationSubjectEntityDetails(EuAdministrationSubjectEntityDetails euAdministrationSubjectEntityDetails) {
         this.euAdministrationSubjectEntityDetails = euAdministrationSubjectEntityDetails;
+    }
+
+    public EntityPermissionSubjectEntityDetails getSubjectEntityDetails() {
+        return subjectEntityDetails;
+    }
+
+    public void setSubjectEntityDetails(EntityPermissionSubjectEntityDetails subjectEntityDetails) {
+        this.subjectEntityDetails = subjectEntityDetails;
     }
 }
