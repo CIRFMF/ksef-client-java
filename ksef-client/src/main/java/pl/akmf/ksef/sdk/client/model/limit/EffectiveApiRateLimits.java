@@ -1,5 +1,7 @@
 package pl.akmf.ksef.sdk.client.model.limit;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 // Aktualnie obowiązujące limity ilości żądań przesyłanych do API.
 public class EffectiveApiRateLimits {
 
@@ -22,6 +24,7 @@ public class EffectiveApiRateLimits {
     // Limity eksportu paczki faktur.
     private InvoiceExportRateLimit invoiceExport;
     // Limity eksportu paczki faktur.
+    @JsonProperty("invoiceExportStatus")
     private InvoiceExportStatusRateLimit invoiceStatusExport;
     // Limity pobierania faktur po numerze KSeF.
     private InvoiceDownloadRateLimit invoiceDownload;

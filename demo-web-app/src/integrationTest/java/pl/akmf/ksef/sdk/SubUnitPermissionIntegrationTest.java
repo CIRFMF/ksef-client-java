@@ -72,7 +72,6 @@ import java.util.UUID;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
-import static pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils.getInternalIdCheckSum;
 
 class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
 
@@ -89,8 +88,7 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
     @Test
     void subUnitPermissionE2EIntegrationTest() throws JAXBException, IOException, ApiException {
         String unitNip = IdentifierGeneratorUtils.generateRandomNIP();
-        Long internalIdValue = 1234L;
-        String internalNip = unitNip + "-" + internalIdValue + getInternalIdCheckSum(unitNip, internalIdValue);
+        String internalNip = IdentifierGeneratorUtils.generateInternalIdentifier(unitNip);
         String subUnitNip = IdentifierGeneratorUtils.generateRandomNIP();
         String subUnitAdmin = IdentifierGeneratorUtils.generateRandomNIP();
 
@@ -136,8 +134,7 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
         String invoiceCreatorNip = IdentifierGeneratorUtils.generateRandomNIP();
 
         String municipalOfficeNip = IdentifierGeneratorUtils.generateRandomNIP();
-        Long internalIdValue = 1234L;
-        String kindergartenId = municipalOfficeNip + "-" + internalIdValue + getInternalIdCheckSum(municipalOfficeNip, internalIdValue);
+        String kindergartenId = IdentifierGeneratorUtils.generateInternalIdentifier(municipalOfficeNip);
         String directorPesel = IdentifierGeneratorUtils.getRandomPesel();
 
         EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
@@ -156,7 +153,7 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
 
         // --- Etap 2: Gmina nadaje uprawnienia dyrektorowi przedszkola do zarządzania uprawnieniami w kontekście przedszkola---
         String municipalOfficeAuthToken = authWithCustomNip(municipalOfficeNip, municipalOfficeNip).accessToken();
-        SubunitPermissionsGrantRequest request = new SubunitPermissionsGrantRequestBuilder()
+        SubunitPermissionsGrantRequest grantSubUnitRequest = new SubunitPermissionsGrantRequestBuilder()
                 .withSubjectIdentifier(new SubjectIdentifier(SubjectIdentifier.IdentifierType.PESEL, directorPesel))
                 .withContextIdentifier(new ContextIdentifier(ContextIdentifier.IdentifierType.INTERNALID, kindergartenId))
                 .withDescription("Sub-unit permission grant")
@@ -169,7 +166,7 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
                         )
                 )
                 .build();
-        String grantReferenceNumber = grantPermissionSubunit(request, municipalOfficeAuthToken);
+        String grantReferenceNumber = grantPermissionSubunit(grantSubUnitRequest, municipalOfficeAuthToken);
         await().atMost(Duration.ofSeconds(30))
                 .pollInterval(Duration.ofSeconds(5))
                 .until(() -> isPermissionStatusReady(grantReferenceNumber, municipalOfficeAuthToken));
@@ -220,8 +217,7 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
     @Test
     void subunitPermissionsAsVatGroupParentShouldReturnList() throws JAXBException, IOException, ApiException {
         String vatGroupNip = IdentifierGeneratorUtils.generateRandomNIP();
-        Long internalIdValue = 1234L;
-        String parentInternalId = vatGroupNip + "-" + internalIdValue + getInternalIdCheckSum(vatGroupNip, internalIdValue);
+        String parentInternalId = IdentifierGeneratorUtils.generateInternalIdentifier(vatGroupNip);
         String subunitNip = IdentifierGeneratorUtils.generateRandomNIP();
 
         // Arrange: utworzenie grupy VAT z jednostką podrzędną

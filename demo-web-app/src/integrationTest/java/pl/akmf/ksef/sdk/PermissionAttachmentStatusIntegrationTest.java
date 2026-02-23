@@ -33,14 +33,15 @@ class PermissionAttachmentStatusIntegrationTest extends BaseIntegrationTest {
         //then
         Assertions.assertNotNull(trueResponse);
         Assertions.assertTrue(trueResponse.getIsAttachmentAllowed());
+        Assertions.assertNull(trueResponse.getRevokedDate());
 
         TestDataAttachmentRemoveRequest removeRequest = new TestDataAttachmentRemoveRequest();
         removeRequest.setNip(contextNip);
         removeRequest.setExpectedEndDate(LocalDate.now().plusDays(1));
         ksefClient.removeAttachmentPermissionTest(removeRequest);
 
-        PermissionAttachmentStatusResponse falseResponse = ksefClient.checkPermissionAttachmentInvoiceStatus(token.accessToken());
-        Assertions.assertNotNull(falseResponse);
-        Assertions.assertFalse(falseResponse.getIsAttachmentAllowed());
+        PermissionAttachmentStatusResponse response = ksefClient.checkPermissionAttachmentInvoiceStatus(token.accessToken());
+        Assertions.assertNotNull(response);
+        Assertions.assertNotNull(response.getRevokedDate());
     }
 }

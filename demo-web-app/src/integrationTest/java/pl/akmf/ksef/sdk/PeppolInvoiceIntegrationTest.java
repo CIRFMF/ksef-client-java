@@ -117,7 +117,7 @@ class PeppolInvoiceIntegrationTest extends BaseIntegrationTest {
         // Wait for invoice to be processed
         await().atMost(30, SECONDS)
                 .pollInterval(5, SECONDS)
-                .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessToken));
+                .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessTokenForPefProvider));
 
         //7: close session
         closeSession(sessionReferenceNumber, accessTokenForPefProvider);
@@ -135,7 +135,7 @@ class PeppolInvoiceIntegrationTest extends BaseIntegrationTest {
         // Wait for invoice to be processed
         await().atMost(30, SECONDS)
                 .pollInterval(5, SECONDS)
-                .until(() -> isInvoicesInSessionProcessed(correctionSessionReferenceNumber, accessToken));
+                .until(() -> isInvoicesInSessionProcessed(correctionSessionReferenceNumber, accessTokenForPefProvider));
 
         //11: close correction session
         closeSession(correctionSessionReferenceNumber, accessTokenForPefProvider);

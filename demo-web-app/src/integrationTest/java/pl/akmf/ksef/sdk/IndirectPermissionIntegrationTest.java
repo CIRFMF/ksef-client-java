@@ -33,8 +33,8 @@ class IndirectPermissionIntegrationTest extends BaseIntegrationTest {
     void indirectPermissionE2EIntegrationTest() throws JAXBException, IOException, ApiException {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         String contextAccessToken = authWithCustomNip(contextNip, contextNip).accessToken();
-        String subjectNip = IdentifierGeneratorUtils.getRandomNip("9");
-        String targetNip = IdentifierGeneratorUtils.getRandomNip("9");
+        String subjectNip = IdentifierGeneratorUtils.generateRandomNIP("9");
+        String targetNip = IdentifierGeneratorUtils.generateRandomNIP("9");
 
         String grantIndirectReferenceNumber = grantIndirectPermission(targetNip, subjectNip, contextAccessToken);
 

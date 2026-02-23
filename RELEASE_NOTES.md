@@ -1842,3 +1842,48 @@
 | 🔧 zmienione | 8             |
 | ➖ usunięte  | 0             |
 
+
+# Changelog zmian - `## 3.0.17 (2026-02-23)`- `API: 2.1.1`
+
+## 1. ksef-client
+
+### 1.1 api
+- **DefaultKsefClient.java**: 🔧 dodano parametr `enforceXadesCompliance` w metodzie `submitAuthTokenRequest`, umożliwiający wcześniejsze włączenie nowych wymagań walidacji XAdES na środowiskach DEMO i PRD poprzez nagłówek `X-KSeF-Feature: enforce-xades-compliance`.
+
+### 1.2 client
+- **Headers.java**: 🔧 dodanie pola `String ENFORCE_XADES_COMPLIANCE = "enforce-xades-compliance"`
+
+### 1.3 client.model
+- **limit/EffectiveApiRateLimits.java**: 🔧 pole `private InvoiceExportStatusRateLimit invoiceStatusExport` oznaczono `@JsonProperty("invoiceExportStatus")`
+- **limit/GetRateLimitResponse.java**: 🔧 pole `private InvoiceExportStatusRateLimit invoiceStatusExport` oznaczono `@JsonProperty("invoiceExportStatus")`
+- **permission/search/EntityAuthorizationGrant.java**: 🔧 dodano pole `EntityPermissionSubjectEntityDetails subjectEntityDetails`
+- **permission/search/EntityPermissionSubjectEntityDetails.java**: ➕ dodano klasę
+- **permission/search/EuEntityPermissionSubjectEntityDetails.java**: 🔧 dodano pole `String fullName`
+- **permission/search/PersonPermission.java**: 🔧 dodano pól `PersonPermissionSubjectPersonDetails subjectPersonDetails` i `EntityPermissionSubjectEntityDetails subjectEntityDetails`
+- **permission/search/QueryPersonalGrantItem.java**: 🔧 dodano pól `EntityPermissionSubjectEntityDetails subjectEntityDetails` i `PersonPermissionSubjectPersonDetails subjectPersonDetails`
+- **permission/search/PersonPermissionPersonIdentifier.java**: ➕ dodano klasę
+- **permission/search/PersonPermissionSubjectPersonDetails.java**: ➕ dodano klasę
+
+## 2. demo-web-app
+
+### 2.1 integrationTest
+- **EuEntityPermissionIntegrationTest.java**: 🔧 aktualizacja metod z utilsa `IdentifierGeneratorUtils.getRandomNip()` -> `IdentifierGeneratorUtils.generateRandomNIP()`
+- **EuEntityRepresentativePermissionIntegrationTest.java**: 🔧 aktualizacja metod z utilsa `IdentifierGeneratorUtils.getRandomNip()` -> `IdentifierGeneratorUtils.generateRandomNIP()`
+- **IndirectPermissionIntegrationTest.java**: 🔧 aktualizacja metod z utilsa `IdentifierGeneratorUtils.getRandomNip()` -> `IdentifierGeneratorUtils.generateRandomNIP()`
+- **PeppolInvoiceIntegrationTest.java**: 🔧 naprawa testu
+- **PermissionAttachmentStatusIntegrationTest.java**: 🔧 aktualizacja testu
+- **SubUnitPermissionIntegrationTest.java**: 🔧 użycie `IdentifierGeneratorUtils.generateInternalIdentifier()`
+- **QueryInvoiceIntegrationTest.java**: 🔧 dodanie scenariusza testowego z wysyłką faktury z załącznikiem i bez, następnie wyszukanie ich poprzez zapytanie o metadane faktur i w zapytanie do exportu faktur z parametrem hasAttachment (true/false/null) 
+
+### 2.2 api
+- 🔧 **IdentifierGeneratorUtils.java** 🔧 poprawki w metodach generujących nip (walidacja sum kontrolnych)(prawidłowy nip wymagany jest do użycia w `addAttachmentPermissionTest`), dodanie metod `String generateInternalIdentifier`
+
+---
+## 3. Podsumowanie
+
+| Typ zmiany  | Liczba plików |
+|-------------|---------------|
+| ➕ dodane    | 3             |
+| 🔧 zmienione | 16            |
+| ➖ usunięte  | 0             |
+

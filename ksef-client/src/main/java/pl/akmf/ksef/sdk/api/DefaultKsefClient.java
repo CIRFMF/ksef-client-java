@@ -205,6 +205,7 @@ import static pl.akmf.ksef.sdk.client.Headers.AUTHORIZATION;
 import static pl.akmf.ksef.sdk.client.Headers.BEARER;
 import static pl.akmf.ksef.sdk.client.Headers.CONTENT_TYPE;
 import static pl.akmf.ksef.sdk.client.Headers.CONTINUATION_TOKEN;
+import static pl.akmf.ksef.sdk.client.Headers.ENFORCE_XADES_COMPLIANCE;
 import static pl.akmf.ksef.sdk.client.Headers.OCTET_STREAM;
 import static pl.akmf.ksef.sdk.client.Headers.RETRY_AFTER;
 import static pl.akmf.ksef.sdk.client.Headers.X_KSEF_FEATURE;
@@ -650,15 +651,31 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * Rozpoczęcie procesu uwierzytelniania
-     * Rozpoczyna proces uwierzytelniania na podstawie podpisanego XMLa.
+     * Rozpoczyna operację uwierzytelniania za pomocą dokumentu XML podpisanego podpisem elektroniczny XAdES.
+     * Rozpoczyna proces uwierzytelnienia na podstawie podpisanego XML-a.
      *
-     * @param signedXml (required)
-     * @return ApiResponse&lt;AuthenticationInitResponse&gt;
-     * @throws ApiException if fails to make API call
+     * @param signedXml              - Podpisany XML z żądaniem uwierzytelnienia.
+     * @param verifyCertificateChain - Flaga określająca, czy sprawdzić łańcuch certyfikatów. (Domyślnie false)
+     * @return AuthenticationInitResponse
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
      */
     @Override
     public SignatureResponse submitAuthTokenRequest(String signedXml, boolean verifyCertificateChain) throws ApiException {
+        return submitAuthTokenRequest(signedXml, verifyCertificateChain, false);
+    }
+
+    /**
+     * Rozpoczyna operację uwierzytelniania za pomocą dokumentu XML podpisanego podpisem elektroniczny XAdES.
+     * Rozpoczyna proces uwierzytelnienia na podstawie podpisanego XML-a.
+     *
+     * @param signedXml              - Podpisany XML z żądaniem uwierzytelnienia.
+     * @param verifyCertificateChain - Flaga określająca, czy sprawdzić łańcuch certyfikatów. (Domyślnie false)
+     * @param enforceXadesCompliance - Flaga umożliwiająca wcześniejsze włączenie nowych wymagań walidacji XAdES na środowiskach DEMO i PRD poprzez nagłówek `X-KSeF-Feature: enforce-xades-compliance`.
+     * @return AuthenticationInitResponse
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
+     */
+    @Override
+    public SignatureResponse submitAuthTokenRequest(String signedXml, boolean verifyCertificateChain, boolean enforceXadesCompliance) throws ApiException {
         if (signedXml == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'body' when calling apiV2AuthTokenSignaturePost");
         }
@@ -670,7 +687,9 @@ public class DefaultKsefClient implements KSeFClient {
         Map<String, String> headers = new HashMap<>();
         headers.put(ACCEPT, APPLICATION_JSON);
         headers.put(CONTENT_TYPE, APPLICATION_XML);
-
+        if (enforceXadesCompliance) {
+            headers.put(ENFORCE_XADES_COMPLIANCE, APPLICATION_XML);
+        }
         HttpResponse<byte[]> response = post(uri, signedXml, headers);
 
         return getResponse(response, ACCEPTED, AUTH_TOKEN_SIGNATURE, SignatureResponse.class);

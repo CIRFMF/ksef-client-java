@@ -256,6 +256,18 @@ public interface KSeFClient {
     SignatureResponse submitAuthTokenRequest(String signedXml, boolean verifyCertificateChain) throws ApiException;
 
     /**
+     * Rozpoczyna operację uwierzytelniania za pomocą dokumentu XML podpisanego podpisem elektroniczny XAdES.
+     * Rozpoczyna proces uwierzytelnienia na podstawie podpisanego XML-a.
+     *
+     * @param signedXml              - Podpisany XML z żądaniem uwierzytelnienia.
+     * @param verifyCertificateChain - Flaga określająca, czy sprawdzić łańcuch certyfikatów. (Domyślnie false)
+     * @param enforceXadesCompliance - Flaga umożliwiająca wcześniejsze włączenie nowych wymagań walidacji XAdES na środowiskach DEMO i PRD poprzez nagłówek `X-KSeF-Feature: enforce-xades-compliance`.
+     * @return AuthenticationInitResponse
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
+     */
+    SignatureResponse submitAuthTokenRequest(String signedXml, boolean verifyCertificateChain, boolean enforceXadesCompliance) throws ApiException;
+
+    /**
      * Rozpoczyna operację uwierzytelniania z wykorzystaniem wcześniej wygenerowanego tokena KSeF.
      *
      * @param body AuthKsefTokenRequest

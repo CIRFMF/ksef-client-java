@@ -37,10 +37,10 @@ class EuEntityPermissionIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void euEntityPermissionE2EIntegrationTest() throws JAXBException, IOException, ApiException {
-        String nip = IdentifierGeneratorUtils.getRandomNip();
+        String nip = IdentifierGeneratorUtils.generateRandomNIP();
         String nipVatUe = IdentifierGeneratorUtils.getRandomNipVatEU(nip, "CZ");
         String accessToken = authWithCustomNip(nip, nip).accessToken();
-        String euEntity = toSha256(IdentifierGeneratorUtils.getRandomNip());
+        String euEntity = toSha256(IdentifierGeneratorUtils.generateRandomNIP());
 
         // Nadaj uprawnienia jednostce EU
         String grantReferenceNumber = grantEuEntityPermission(euEntity, nipVatUe, accessToken);
