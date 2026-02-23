@@ -44,6 +44,7 @@ val testcontainersVersion = "1.21.3"
 val awaitilityVersion = "4.2.0"
 val googleZxing = "3.5.3"
 val reflectionsVersion = "0.10.2"
+val openApiVersion = "2.3.0"
 
 dependencies {
     implementation(project(":ksef-client"))
@@ -77,8 +78,10 @@ dependencies {
     integrationTestImplementation("org.testcontainers:testcontainers:${testcontainersVersion}")
     integrationTestImplementation("org.wiremock:wiremock-standalone:${wiremockStandaloneVersion}")
     implementation("org.awaitility:awaitility:${awaitilityVersion}")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:${openApiVersion}")
 
     testImplementation("org.reflections:reflections:${reflectionsVersion}")
+
 }
 
 sourceSets {
