@@ -1887,3 +1887,33 @@
 | 🔧 zmienione | 16            |
 | ➖ usunięte  | 0             |
 
+
+# Changelog zmian - `## 3.0.18 (2026-02-26)`- `API: 2.1.2`
+
+## 1. ksef-client
+- **build.gradle.kts**: 🔧 dodanie budowanie paczki ze źródłami - `withSourcesJar()`
+
+### 1.1 client.model
+- **auth/TokenPermissionType.java**: 🔧 dodano wartość enuma `INTROSPECTION("Introspection")`
+- **ApiException.java**: 🔧 dodanie `message` do metody `toString`
+
+### 1.2 api.client.interfaces
+- **CryptographyService.java**: 🔧 usunięcie błędnych opisów metod
+- 
+## 2. demo-web-app
+
+### 2.1 integrationTest
+- **RrInvoiceIntegrationTest.java.java**: ➕ dodano scenariusz testowy dla faktury VAT RR
+
+### 2.1.1 integrationTest.resources
+- **invoice-template-fa-rr-1.xml**: ➕ dodano plik zawierający przykładową fakturę VAT RR
+
+---
+## 3. Podsumowanie
+
+| Typ zmiany  | Liczba plików |
+|-------------|---------------|
+| ➕ dodane    | 2             |
+| 🔧 zmienione | 4             |
+| ➖ usunięte  | 0             |
+

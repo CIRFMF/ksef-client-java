@@ -4,7 +4,7 @@ plugins {
 }
 
 
-val appVersion = "3.0.17"
+val appVersion = "3.0.18"
 val artifactName = "ksef-client"
 
 val githubRepositoryToken = "token"
@@ -19,6 +19,7 @@ version = cleanVersion
 
 
 java {
+    withSourcesJar()
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
