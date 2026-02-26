@@ -58,6 +58,7 @@ public class ApiException extends Exception {
                         .map(value -> "'" + entry.getKey() + ": " + value + "'"))
                 .collect(Collectors.joining(", ")) : responseHeaders) +
                 ",\n" + exceptionResponse +
+                ",\nmessage=" + getMessage() +
                 "\n}";
     }
 }

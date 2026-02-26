@@ -47,12 +47,7 @@ public interface CryptographyService {
      * @param ksefToken
      * @param challengeTimestamp
      * @return
-     * @throws InvalidAlgorithmParameterException
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeyException
-     * @throws NoSuchPaddingException
-     * @throws IllegalBlockSizeException
-     * @throws BadPaddingException
+     * @throws SystemKSeFSDKException
      */
     @Deprecated
     byte[] encryptKsefTokenWithECDsaUsingPublicKey(String ksefToken, Instant challengeTimestamp) throws SystemKSeFSDKException;
@@ -76,12 +71,7 @@ public interface CryptographyService {
      *
      * @param content
      * @return
-     * @throws InvalidAlgorithmParameterException
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeyException
-     * @throws NoSuchPaddingException
-     * @throws IllegalBlockSizeException
-     * @throws BadPaddingException
+     * @throws SystemKSeFSDKException
      */
     @Deprecated
     byte[] encryptWithECDsaUsingPublicKey(byte[] content) throws SystemKSeFSDKException;
