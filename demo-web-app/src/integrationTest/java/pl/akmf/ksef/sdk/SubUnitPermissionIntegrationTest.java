@@ -98,7 +98,8 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
         //Nadanie uprawnienia SubunitManage, CredentialsManage do zarządzania jednostką podrzędną
         String grantReferenceNumber = grantPermissionToAdministrateSubUnit(subUnitNip, unitAccessToken);
 
-        await().atMost(Duration.ofSeconds(30))
+        await().pollDelay(Duration.ZERO)
+                .atMost(Duration.ofSeconds(30))
                 .pollInterval(Duration.ofSeconds(5))
                 .until(() -> isPermissionStatusReady(grantReferenceNumber, unitAccessToken));
 
@@ -108,7 +109,8 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
         //Nadanie uprawnień administratora podmiotu podrzędnego jako jednostka podrzędna
         String operationGrantNumber = grantPermissionSubunit(subUnitAdmin, internalNip, subunitAccessToken);
 
-        await().atMost(Duration.ofSeconds(30))
+        await().pollDelay(Duration.ZERO)
+                .atMost(Duration.ofSeconds(30))
                 .pollInterval(Duration.ofSeconds(5))
                 .until(() -> isPermissionStatusReady(operationGrantNumber, subunitAccessToken));
 
@@ -123,7 +125,8 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
         //Cofnij uprawnienia nadane administratorowi jednostki podrzędnej
         String revokeOperationReferenceNumber = revokePermission(subUnitPermission.getFirst().getId(), subunitAccessToken);
 
-        await().atMost(Duration.ofSeconds(30))
+        await().pollDelay(Duration.ZERO)
+                .atMost(Duration.ofSeconds(30))
                 .pollInterval(Duration.ofSeconds(5))
                 .until(() -> isPermissionStatusReady(revokeOperationReferenceNumber, subunitAccessToken));
     }
@@ -144,10 +147,12 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
         String invoiceCreatorSessionReferenceNumber = openOnlineSession(encryptionData, invoiceCreatorAuthToken);
         String invoiceReferenceNumber = sendInvoiceOnlineSession(invoiceCreatorNip, municipalOfficeNip, invoiceCreatorSessionReferenceNumber,
                 encryptionData, "/xml/invoices/sample/invoice-template-fa-3-with-custom-subject_2.xml", invoiceCreatorAuthToken);
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isInvoicesInSessionProcessed(invoiceCreatorSessionReferenceNumber, invoiceCreatorAuthToken));
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> waitForStoringInvoice(invoiceCreatorSessionReferenceNumber, invoiceReferenceNumber, invoiceCreatorAuthToken));
 
@@ -167,7 +172,8 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
                 )
                 .build();
         String grantReferenceNumber = grantPermissionSubunit(grantSubUnitRequest, municipalOfficeAuthToken);
-        await().atMost(Duration.ofSeconds(30))
+        await().pollDelay(Duration.ZERO)
+                .atMost(Duration.ofSeconds(30))
                 .pollInterval(Duration.ofSeconds(5))
                 .until(() -> isPermissionStatusReady(grantReferenceNumber, municipalOfficeAuthToken));
 
@@ -187,7 +193,8 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
                 )
                 .build();
         String grantInvReadReferenceNumber = grantPermissionToAdministrateSubUnit(personRequest, kindergartenAuthToken);
-        await().atMost(Duration.ofSeconds(30))
+        await().pollDelay(Duration.ZERO)
+                .atMost(Duration.ofSeconds(30))
                 .pollInterval(Duration.ofSeconds(5))
                 .until(() -> isPermissionStatusReady(grantInvReadReferenceNumber, kindergartenAuthToken));
 
@@ -228,7 +235,8 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
 
         // Arrange: nadanie jednostce podrzędnej uprawnień SubunitManage i CredentialsManage w kontekście jednostki nadrzędnej
         String grantReferenceNumber = grantPermissionToAdministrateSubUnit(subunitNip, parentAccessToken);
-        await().atMost(Duration.ofSeconds(30))
+        await().pollDelay(Duration.ZERO)
+                .atMost(Duration.ofSeconds(30))
                 .pollInterval(Duration.ofSeconds(5))
                 .until(() -> isPermissionStatusReady(grantReferenceNumber, parentAccessToken));
 
@@ -239,7 +247,8 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
         String grantedAdminSubjectNip = IdentifierGeneratorUtils.generateRandomNIP();
         String operationGrantNumber = grantPermissionSubunit(grantedAdminSubjectNip, parentInternalId, subunitAccessToken);
 
-        await().atMost(Duration.ofSeconds(30))
+        await().pollDelay(Duration.ZERO)
+                .atMost(Duration.ofSeconds(30))
                 .pollInterval(Duration.ofSeconds(5))
                 .until(() -> isPermissionStatusReady(operationGrantNumber, subunitAccessToken));
 
@@ -263,7 +272,8 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
         permissions.forEach(e -> {
             String revokeOperationReferenceNumber = revokePermission(e.getId(), parentAccessToken);
 
-            await().atMost(30, SECONDS)
+            await().pollDelay(Duration.ZERO)
+                    .atMost(30, SECONDS)
                     .pollInterval(2, SECONDS)
                     .until(() -> isPermissionStatusReady(revokeOperationReferenceNumber, parentAccessToken));
         });

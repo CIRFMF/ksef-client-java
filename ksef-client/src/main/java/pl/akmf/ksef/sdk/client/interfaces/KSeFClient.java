@@ -47,9 +47,11 @@ import pl.akmf.ksef.sdk.client.model.permission.indirect.GrantIndirectEntityPerm
 import pl.akmf.ksef.sdk.client.model.permission.person.GrantPersonPermissionsRequest;
 import pl.akmf.ksef.sdk.client.model.permission.proxy.GrantAuthorizationPermissionsRequest;
 import pl.akmf.ksef.sdk.client.model.permission.search.EntityAuthorizationPermissionsQueryRequest;
+import pl.akmf.ksef.sdk.client.model.permission.search.EntityPermissionsQueryRequest;
 import pl.akmf.ksef.sdk.client.model.permission.search.EuEntityPermissionsQueryRequest;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermissionsQueryRequest;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryEntityAuthorizationPermissionsResponse;
+import pl.akmf.ksef.sdk.client.model.permission.search.QueryEntityPermissionsResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryEntityRolesResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryEuEntityPermissionsResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryPersonPermissionsResponse;
@@ -384,6 +386,17 @@ public interface KSeFClient {
      * @throws ApiException - Brak autoryzacji. (401 Unauthorized)
      */
     QueryEntityRolesResponse searchEntityInvoiceRoles(int pageOffset, int pageSize, String accessToken) throws ApiException;
+
+    /**
+     * Wyszukiwanie uprawnień do obsługi faktur w bieżącym kontekście.
+     *
+     * @param request EntityPermissionsQueryRequest
+     * @param pageOffset
+     * @param pageSize
+     * @return QueryEntityPermissionsResponse
+     * @throws ApiException if fails to make API call
+     */
+    QueryEntityPermissionsResponse searchEntityInvoiceContext(EntityPermissionsQueryRequest request, int pageOffset, int pageSize, String accessToken) throws ApiException;
 
     /**
      * Pobranie listy uprawnień do obsługi faktur nadanych podmiotom.

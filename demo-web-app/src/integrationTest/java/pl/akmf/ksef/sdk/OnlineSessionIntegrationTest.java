@@ -30,6 +30,7 @@ import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.UUID;
@@ -59,14 +60,16 @@ class OnlineSessionIntegrationTest extends BaseIntegrationTest {
                 "/xml/invoices/sample/invoice-template.xml", accessToken);
 
         // Wait for invoice to be processed && check session status
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessToken));
 
         // Step 3: Close session
         closeOnlineSession(sessionReferenceNumber, accessToken);
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isUpoGenerated(sessionReferenceNumber, accessToken));
 
@@ -100,7 +103,8 @@ class OnlineSessionIntegrationTest extends BaseIntegrationTest {
 
         sendInvoiceOnlineSession(wrongNip, sessionReferenceNumber, encryptionData, "/xml/invoices/sample/invoice-template.xml", accessToken);
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> {
                     SessionStatusResponse statusResponse = ksefClient.getSessionStatus(sessionReferenceNumber, accessToken);
@@ -109,7 +113,8 @@ class OnlineSessionIntegrationTest extends BaseIntegrationTest {
 
         closeOnlineSession(sessionReferenceNumber, accessToken);
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> {
                     SessionStatusResponse statusResponse = ksefClient.getSessionStatus(sessionReferenceNumber, accessToken);
@@ -133,14 +138,16 @@ class OnlineSessionIntegrationTest extends BaseIntegrationTest {
                 "/xml/invoices/sample/invoice-template_v3.xml", accessToken);
 
         // Wait for invoice to be processed
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessToken));
 
         // Step 3: Close session
         closeOnlineSession(sessionReferenceNumber, accessToken);
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isUpoGenerated(sessionReferenceNumber, accessToken));
 
@@ -173,8 +180,8 @@ class OnlineSessionIntegrationTest extends BaseIntegrationTest {
         try {
             SessionStatusResponse statusResponse = ksefClient.getSessionStatus(sessionReferenceNumber, accessToken);
             return statusResponse != null &&
-                   statusResponse.getSuccessfulInvoiceCount() != null &&
-                   statusResponse.getSuccessfulInvoiceCount() > 0;
+                    statusResponse.getSuccessfulInvoiceCount() != null &&
+                    statusResponse.getSuccessfulInvoiceCount() > 0;
         } catch (Exception e) {
             return false;
         }

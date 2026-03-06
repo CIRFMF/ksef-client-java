@@ -31,6 +31,7 @@ import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -55,8 +56,8 @@ class AuthorizationIntegrationTest extends BaseIntegrationTest {
 
         //then
         Assertions.assertNotNull(refreshTokenResult);
-        String newAccessToken =  refreshTokenResult.getAccessToken().getToken();
-        Assertions.assertNotEquals(initialAccessToken,newAccessToken);
+        String newAccessToken = refreshTokenResult.getAccessToken().getToken();
+        Assertions.assertNotEquals(initialAccessToken, newAccessToken);
     }
 
     @Test
@@ -71,7 +72,8 @@ class AuthorizationIntegrationTest extends BaseIntegrationTest {
 
         String referenceNumber = sendEnrollment(csr, accessToken);
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> isEnrolmentStatusReady(referenceNumber, accessToken));
 
@@ -103,7 +105,8 @@ class AuthorizationIntegrationTest extends BaseIntegrationTest {
         SignatureResponse submitAuthTokenResponse = ksefClient.submitAuthTokenRequest(signedXml, false);
 
         //Czekanie na zakończenie procesu
-        await().atMost(14, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(14, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isAuthProcessReady(submitAuthTokenResponse.getReferenceNumber(), submitAuthTokenResponse.getAuthenticationToken().getToken()));
 
@@ -123,7 +126,8 @@ class AuthorizationIntegrationTest extends BaseIntegrationTest {
 
         String referenceNumber = sendEnrollment(csr, accessToken);
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> isEnrolmentStatusReady(referenceNumber, accessToken));
 
@@ -155,7 +159,8 @@ class AuthorizationIntegrationTest extends BaseIntegrationTest {
         SignatureResponse submitAuthTokenResponse = ksefClient.submitAuthTokenRequest(signedXml, false);
 
         //Czekanie na zakończenie procesu
-        await().atMost(14, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(14, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isAuthProcessReady(submitAuthTokenResponse.getReferenceNumber(), submitAuthTokenResponse.getAuthenticationToken().getToken()));
 

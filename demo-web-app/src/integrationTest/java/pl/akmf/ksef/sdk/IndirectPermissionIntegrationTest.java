@@ -21,6 +21,7 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -38,7 +39,8 @@ class IndirectPermissionIntegrationTest extends BaseIntegrationTest {
 
         String grantIndirectReferenceNumber = grantIndirectPermission(targetNip, subjectNip, contextAccessToken);
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(grantIndirectReferenceNumber, contextAccessToken));
 
@@ -46,7 +48,8 @@ class IndirectPermissionIntegrationTest extends BaseIntegrationTest {
 
         String revokeReferenceNumberOperation = revokePermission(permissionId, contextAccessToken);
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(revokeReferenceNumberOperation, contextAccessToken));
 
@@ -85,7 +88,7 @@ class IndirectPermissionIntegrationTest extends BaseIntegrationTest {
     private String grantIndirectPermission(String targetNip, String subjectNip, String accessToken) throws ApiException {
         PermissionsIndirectEntitySubjectDetails subjectDetails = new PermissionsIndirectEntitySubjectDetails();
         subjectDetails.setSubjectDetailsType(PermissionsIndirectEntitySubjectDetailsType.PersonByIdentifier);
-        subjectDetails.setPersonById(new PermissionsIndirectEntityPersonByIdentifier("Test","Ttest"));
+        subjectDetails.setPersonById(new PermissionsIndirectEntityPersonByIdentifier("Test", "Ttest"));
 
         GrantIndirectEntityPermissionsRequest request = new GrantIndirectEntityPermissionsRequestBuilder()
                 .withSubjectIdentifier(new SubjectIdentifier(SubjectIdentifier.IdentifierType.NIP, subjectNip))

@@ -42,6 +42,7 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Stream;
@@ -59,7 +60,8 @@ class PersonPermissionIntegrationTest extends BaseIntegrationTest {
 
         String grantReferenceNumber = grantPersonPermission(personValue, accessToken);
 
-        await().atMost(15, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(grantReferenceNumber, accessToken));
 
@@ -68,7 +70,8 @@ class PersonPermissionIntegrationTest extends BaseIntegrationTest {
         permission.forEach(e -> {
             String revokeReferenceNumber = revokePermission(e, accessToken);
 
-            await().atMost(30, SECONDS)
+            await().pollDelay(Duration.ZERO)
+                    .atMost(30, SECONDS)
                     .pollInterval(2, SECONDS)
                     .until(() -> isOperationFinish(revokeReferenceNumber, accessToken));
         });
@@ -95,7 +98,8 @@ class PersonPermissionIntegrationTest extends BaseIntegrationTest {
                 List.of(PersonPermissionType.CREDENTIALSMANAGE),
                 "Grant CREDENTIALSMANAGE to NIP:" + delegateNip,
                 ownerAccessToken);
-        await().atMost(15, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(grantOperationReferenceNumber, ownerAccessToken));
 
@@ -110,7 +114,8 @@ class PersonPermissionIntegrationTest extends BaseIntegrationTest {
                 ),
                 "Grant permissions to: " + delegate2Value,
                 delegateAccessToken);
-        await().atMost(15, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(grantDelegate2OperationReferenceNumber, delegateAccessToken));
 
@@ -129,7 +134,8 @@ class PersonPermissionIntegrationTest extends BaseIntegrationTest {
         grantedPermissionsIds.forEach(e -> {
             String revokeReferenceNumber = revokePermission(e, ownerAccessToken);
 
-            await().atMost(30, SECONDS)
+            await().pollDelay(Duration.ZERO)
+                    .atMost(30, SECONDS)
                     .pollInterval(1, SECONDS)
                     .until(() -> isOperationFinish(revokeReferenceNumber, ownerAccessToken));
         });
@@ -152,14 +158,16 @@ class PersonPermissionIntegrationTest extends BaseIntegrationTest {
         String ownerAccessToken = authWithCustomNip(ownerNip, ownerNip).accessToken();
 
         String grantAuthorizationOperationReferenceNumber = grantAuthorizationPermission(intermediaryNip, "E2E-Indirect-OwnerToInterm-Read-" + intermediaryNip, ownerAccessToken);
-        await().atMost(15, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(grantAuthorizationOperationReferenceNumber, ownerAccessToken));
 
         String intermediaryAccessToken = authWithCustomNip(intermediaryNip, intermediaryNip).accessToken();
 
         String grantPersonOperationReferenceNumber = grantPersonPermission(personPesel, intermediaryAccessToken);
-        await().atMost(15, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(grantPersonOperationReferenceNumber, intermediaryAccessToken));
 
@@ -198,7 +206,8 @@ class PersonPermissionIntegrationTest extends BaseIntegrationTest {
                 ),
                 String.format("Nadanie uprawnień przeglądania i wystawiania faktur dla PESEL %s w kontekście NIP %s", pesel, contextNip),
                 ownerAccessToken);
-        await().atMost(15, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(grantPersonOperationReferenceNumber, ownerAccessToken));
 
@@ -247,7 +256,8 @@ class PersonPermissionIntegrationTest extends BaseIntegrationTest {
                 )
                 .build();
         String grantPersonOperationReferenceNumber = grantPersonPermission(request, ownerAccessToken);
-        await().atMost(15, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(grantPersonOperationReferenceNumber, ownerAccessToken));
 
@@ -264,7 +274,8 @@ class PersonPermissionIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         // czekamy aż pojawi się wpis Z TYM fingerprintem
-        await().atMost(25, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(25, SECONDS)
                 .pollInterval(3, SECONDS)
                 .until(() -> {
                             QueryPersonPermissionsResponse response = ksefClient.searchGrantedPersonPermissions(personPermissionsQueryRequest, 0, 10, ownerAccessToken);
@@ -312,7 +323,8 @@ class PersonPermissionIntegrationTest extends BaseIntegrationTest {
                 )
                 .build();
         String grantPersonOperationReferenceNumber = grantPersonPermission(request, ownerAccessToken);
-        await().atMost(15, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(grantPersonOperationReferenceNumber, ownerAccessToken));
 
@@ -329,7 +341,8 @@ class PersonPermissionIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         // czekamy na pojawienie się grantu w wynikach
-        await().atMost(25, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(25, SECONDS)
                 .pollInterval(3, SECONDS)
                 .until(() -> {
                             QueryPersonPermissionsResponse response = ksefClient.searchGrantedPersonPermissions(personPermissionsQueryRequest, 0, 10, ownerAccessToken);
@@ -373,7 +386,8 @@ class PersonPermissionIntegrationTest extends BaseIntegrationTest {
                 )
                 .build();
         String grantPersonOperationReferenceNumber = grantPersonPermission(request, ownerAccessToken);
-        await().atMost(15, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(grantPersonOperationReferenceNumber, ownerAccessToken));
 
@@ -390,7 +404,8 @@ class PersonPermissionIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         // czekamy na pojawienie się grantu w wynikach
-        await().atMost(25, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(25, SECONDS)
                 .pollInterval(3, SECONDS)
                 .until(() -> {
                             QueryPersonPermissionsResponse response = ksefClient.searchGrantedPersonPermissions(personPermissionsQueryRequest, 0, 10, ownerAccessToken);

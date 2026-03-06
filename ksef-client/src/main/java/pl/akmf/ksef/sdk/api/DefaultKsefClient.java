@@ -56,9 +56,11 @@ import pl.akmf.ksef.sdk.client.model.permission.indirect.GrantIndirectEntityPerm
 import pl.akmf.ksef.sdk.client.model.permission.person.GrantPersonPermissionsRequest;
 import pl.akmf.ksef.sdk.client.model.permission.proxy.GrantAuthorizationPermissionsRequest;
 import pl.akmf.ksef.sdk.client.model.permission.search.EntityAuthorizationPermissionsQueryRequest;
+import pl.akmf.ksef.sdk.client.model.permission.search.EntityPermissionsQueryRequest;
 import pl.akmf.ksef.sdk.client.model.permission.search.EuEntityPermissionsQueryRequest;
 import pl.akmf.ksef.sdk.client.model.permission.search.PersonPermissionsQueryRequest;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryEntityAuthorizationPermissionsResponse;
+import pl.akmf.ksef.sdk.client.model.permission.search.QueryEntityPermissionsResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryEntityRolesResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryEuEntityPermissionsResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryPersonPermissionsResponse;
@@ -164,6 +166,7 @@ import static pl.akmf.ksef.sdk.api.Url.PERMISSION_ATTACHMENT_STATUS;
 import static pl.akmf.ksef.sdk.api.Url.PERMISSION_REVOKE_AUTHORIZATION;
 import static pl.akmf.ksef.sdk.api.Url.PERMISSION_REVOKE_COMMON;
 import static pl.akmf.ksef.sdk.api.Url.PERMISSION_SEARCH_AUTHORIZATIONS_GRANT;
+import static pl.akmf.ksef.sdk.api.Url.PERMISSION_SEARCH_ENTITIES_GRANTS;
 import static pl.akmf.ksef.sdk.api.Url.PERMISSION_SEARCH_ENTITY_ROLES;
 import static pl.akmf.ksef.sdk.api.Url.PERMISSION_SEARCH_EU_ENTITY_GRANT;
 import static pl.akmf.ksef.sdk.api.Url.PERMISSION_SEARCH_PERSONAL_GRANTS;
@@ -899,6 +902,32 @@ public class DefaultKsefClient implements KSeFClient {
         HttpResponse<byte[]> response = get(uri, headers);
 
         return getResponse(response, OK, PERMISSION_SEARCH_ENTITY_ROLES, QueryEntityRolesResponse.class);
+    }
+
+    /**
+     * Wyszukiwanie uprawnień do obsługi faktur w bieżącym kontekście.
+     *
+     * @param request EntityPermissionsQueryRequest
+     * @param pageOffset
+     * @param pageSize
+     * @return QueryEntityPermissionsResponse
+     * @throws ApiException if fails to make API call
+     */
+    @Override
+    public QueryEntityPermissionsResponse searchEntityInvoiceContext(EntityPermissionsQueryRequest request, int pageOffset, int pageSize, String accessToken) throws ApiException {
+        HashMap<String, String> params = new HashMap<>();
+        params.put(PAGE_SIZE, String.valueOf(pageSize));
+        params.put(PAGE_OFFSET, String.valueOf(pageOffset));
+        String uri = buildUrlWithParams(PERMISSION_SEARCH_ENTITIES_GRANTS.getUrl(), params);
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put(AUTHORIZATION, BEARER + accessToken);
+        headers.put(CONTENT_TYPE, APPLICATION_JSON);
+        headers.put(ACCEPT, APPLICATION_JSON);
+
+        HttpResponse<byte[]> response = post(uri, request, headers);
+
+        return getResponse(response, OK, PERMISSION_SEARCH_ENTITIES_GRANTS, QueryEntityPermissionsResponse.class);
     }
 
     /**

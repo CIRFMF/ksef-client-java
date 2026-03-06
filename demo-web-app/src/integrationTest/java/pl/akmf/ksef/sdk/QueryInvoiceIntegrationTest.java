@@ -58,6 +58,7 @@ import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Base64;
@@ -87,11 +88,13 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
 
         String invoiceReferenceNumber = sendInvoiceOnlineSession(contextNip, sessionReferenceNumber, encryptionData, "/xml/invoices/sample/invoice-template_v3.xml", accessToken);
 
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessToken));
 
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> waitForStoringInvoice(sessionReferenceNumber, invoiceReferenceNumber, accessToken));
 
@@ -147,16 +150,20 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
         Assertions.assertNull(failedInvoicesPef.getInvoices());
 
         // oczekiwanie az obie fv sie przetworza i zapisza
-        await().atMost(60, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(60, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isInvoicesInSessionProcessed(pefSessionReferenceNumber, accessTokenForPefProvider));
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessToken));
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> waitForStoringInvoice(pefSessionReferenceNumber, pefInvoiceReferenceNumber, accessTokenForPefProvider));
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> waitForStoringInvoice(sessionReferenceNumber, invoiceReferenceNumber, accessToken));
 
@@ -305,7 +312,8 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
 
         InitAsyncInvoicesQueryResponse response = ksefClient.initAsyncQueryInvoice(request, accessToken);
 
-        await().atMost(45, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(45, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isInvoiceFetched(response.getReferenceNumber(), accessToken));
 
@@ -389,7 +397,8 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
         OperationResponse response = ksefClient.grantsPermissionsProxyEntity(request, accessToken);
         Assertions.assertNotNull(response);
 
-        await().atMost(10, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(10, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isPermissionStatusReady(response.getReferenceNumber(), accessToken));
     }

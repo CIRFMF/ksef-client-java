@@ -4,6 +4,7 @@ import java.time.Instant;
 
 public class AuthenticationChallengeResponse {
     private String challenge;
+    private String clientIp;
     private Instant timestamp;
     private long timestampMs;
 
@@ -17,6 +18,13 @@ public class AuthenticationChallengeResponse {
 
     public AuthenticationChallengeResponse(String challenge, Instant timestamp, long timestampMs) {
         this.challenge = challenge;
+        this.timestamp = timestamp;
+        this.timestampMs = timestampMs;
+    }
+
+    public AuthenticationChallengeResponse(String challenge, String clientIp, Instant timestamp, long timestampMs) {
+        this.challenge = challenge;
+        this.clientIp = clientIp;
         this.timestamp = timestamp;
         this.timestampMs = timestampMs;
     }
@@ -43,6 +51,14 @@ public class AuthenticationChallengeResponse {
 
     public void setTimestampMs(long timestampMs) {
         this.timestampMs = timestampMs;
+    }
+
+    public String getClientIp() {
+        return clientIp;
+    }
+
+    public void setClientIp(String clientIp) {
+        this.clientIp = clientIp;
     }
 }
 

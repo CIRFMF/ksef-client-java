@@ -42,6 +42,7 @@ import pl.akmf.ksef.sdk.utls.model.TimeWindows;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -236,13 +237,14 @@ class IncrementalInvoiceRetrieveIntegrationTest extends BaseIntegrationTest {
 
     private InvoiceExportStatus waitForExportCompletion(String operationReferenceNumber, String accessToken) {
         AtomicReference<InvoiceExportStatus> status = new AtomicReference<>();
-        await().atMost(20, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(20, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> {
                     status.set(ksefClient.checkStatusAsyncQueryInvoice(operationReferenceNumber, accessToken));
                     if (status.get().getStatus().getCode() > 400) {
                         Assertions.fail("Unexpected status code " + status.get().getStatus().getCode() + " "
-                                        + status.get().getStatus().getDescription());
+                                + status.get().getStatus().getDescription());
                     }
                     return status.get().getStatus().getCode().equals(200);
                 });
@@ -254,8 +256,8 @@ class IncrementalInvoiceRetrieveIntegrationTest extends BaseIntegrationTest {
         try {
             SessionStatusResponse statusResponse = ksefClient.getSessionStatus(sessionReferenceNumber, accessToken);
             return statusResponse != null &&
-                   statusResponse.getSuccessfulInvoiceCount() != null &&
-                   statusResponse.getSuccessfulInvoiceCount() == expectedInvoice;
+                    statusResponse.getSuccessfulInvoiceCount() != null &&
+                    statusResponse.getSuccessfulInvoiceCount() == expectedInvoice;
         } catch (Exception e) {
             Assertions.fail(e.getMessage());
         }
@@ -315,13 +317,15 @@ class IncrementalInvoiceRetrieveIntegrationTest extends BaseIntegrationTest {
 
         ksefClient.closeBatchSession(openBatchSessionResponse.getReferenceNumber(), accessToken);
 
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isInvoicesInSessionProcessed(openBatchSessionResponse.getReferenceNumber(), accessToken, DEFAULT_INVOICES_COUNT));
 
         //check if all invoices have been stored permanently
         AtomicReference<List<String>> ksefNumberList = new AtomicReference<>();
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> {
                     List<String> ksefNumbers =

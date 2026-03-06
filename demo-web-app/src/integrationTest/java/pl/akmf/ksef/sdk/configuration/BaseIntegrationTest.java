@@ -33,6 +33,7 @@ import pl.akmf.ksef.sdk.util.ExampleApiProperties;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
@@ -134,7 +135,8 @@ public abstract class BaseIntegrationTest {
         SignatureResponse submitAuthTokenResponse = ksefClient.submitAuthTokenRequest(signedXml, false);
 
         //Czekanie na zakończenie procesu
-        await().atMost(14, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(14, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isAuthProcessReady(submitAuthTokenResponse.getReferenceNumber(), submitAuthTokenResponse.getAuthenticationToken().getToken()));
 
@@ -161,7 +163,8 @@ public abstract class BaseIntegrationTest {
         SignatureResponse submitAuthTokenResponse = ksefClient.submitAuthTokenRequest(signedXml, false);
 
         //Czekanie na zakończenie procesu
-        await().atMost(14, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(14, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isAuthProcessReady(submitAuthTokenResponse.getReferenceNumber(), submitAuthTokenResponse.getAuthenticationToken().getToken()));
 
@@ -189,7 +192,8 @@ public abstract class BaseIntegrationTest {
         SignatureResponse submitAuthTokenResponse = ksefClient.submitAuthTokenRequest(signedXml, false);
 
         //Czekanie na zakończenie procesu
-        await().atMost(14, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(14, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isAuthProcessReady(submitAuthTokenResponse.getReferenceNumber(), submitAuthTokenResponse.getAuthenticationToken().getToken()));
 
@@ -217,7 +221,8 @@ public abstract class BaseIntegrationTest {
         SignatureResponse submitAuthTokenResponse = ksefClient.submitAuthTokenRequest(signedXml, false);
 
         //Czekanie na zakończenie procesu
-        await().atMost(14, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(14, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isAuthProcessReady(submitAuthTokenResponse.getReferenceNumber(), submitAuthTokenResponse.getAuthenticationToken().getToken()));
 

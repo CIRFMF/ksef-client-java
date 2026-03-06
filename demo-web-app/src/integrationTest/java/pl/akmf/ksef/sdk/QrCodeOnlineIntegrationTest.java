@@ -27,6 +27,7 @@ import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.UUID;
@@ -83,14 +84,16 @@ class QrCodeOnlineIntegrationTest extends BaseIntegrationTest {
         closeOnlineSession(sessionReferenceNumber, accessToken);
 
         //Sprawdzenie statusu sesji, oczekiwanie na zakończenie przetwarzania faktur
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> checkOnlineSessionStatus(sessionReferenceNumber, SESSION_SUCCESSFUL_STATUS_CODE, accessToken));
 
         Assertions.assertNotEquals(SESSION_FAILED_STATUS_CODE, (int) getSessionStatusResponse(sessionReferenceNumber, accessToken).getStatus().getCode());
 
         //Sprawdzenie statusu faktury
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> {
                     SessionInvoiceStatusResponse invoiceStatus = getSessionInvoiceStatus(sessionReferenceNumber, invoiceReferenceNumber, accessToken);

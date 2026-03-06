@@ -33,6 +33,7 @@ import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Base64;
@@ -62,11 +63,13 @@ class SearchInvoiceForSubject3IntegrationTest extends BaseIntegrationTest {
                 encryptionData, "/xml/invoices/sample/invoice-template-fa-3-with-custom-subject_3.xml", companyAccessToken);
 
         //check if invoice has been processed correctly
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, companyAccessToken));
 
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> waitForStoringInvoice(sessionReferenceNumber, invoiceReferenceNumber, companyAccessToken));
 
@@ -95,8 +98,8 @@ class SearchInvoiceForSubject3IntegrationTest extends BaseIntegrationTest {
         try {
             SessionStatusResponse statusResponse = ksefClient.getSessionStatus(sessionReferenceNumber, accessToken);
             return statusResponse != null &&
-                   statusResponse.getSuccessfulInvoiceCount() != null &&
-                   statusResponse.getSuccessfulInvoiceCount() > 0;
+                    statusResponse.getSuccessfulInvoiceCount() != null &&
+                    statusResponse.getSuccessfulInvoiceCount() > 0;
         } catch (Exception e) {
             Assertions.fail(e.getMessage());
         }
