@@ -66,6 +66,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -132,7 +133,8 @@ class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
         String referenceNumber = sendEnrollment(csr.csr(), CertificateType.OFFLINE, accessToken);
 
         //Sprawdzenie statusu żądania, oczekiwanie na zakończenie przetwarzania CSR
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> isEnrolmentStatusReady(referenceNumber, accessToken));
 
@@ -218,7 +220,8 @@ class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
 
         String referenceNumber = sendEnrollment(csr, CertificateType.OFFLINE, accessToken);
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> isEnrolmentStatusReady(referenceNumber, accessToken));
 
@@ -450,7 +453,8 @@ class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
         Assertions.assertNotNull(sendInvoiceResponse);
         Assertions.assertNotNull(sendInvoiceResponse.getReferenceNumber());
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessToken));
     }

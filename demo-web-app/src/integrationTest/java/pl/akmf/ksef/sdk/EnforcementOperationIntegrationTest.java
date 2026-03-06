@@ -26,6 +26,7 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -47,7 +48,8 @@ class EnforcementOperationIntegrationTest extends BaseIntegrationTest {
         //Nadawanie uprawnienia EnforcementOperations dla osoby uwierzytelniającej się nipem `authorizedNip`
         String operationNumber = grantPermission(authorizedNip, accessToken);
 
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isPermissionStatusReady(operationNumber, accessToken));
 
@@ -61,7 +63,8 @@ class EnforcementOperationIntegrationTest extends BaseIntegrationTest {
         // Wycofanie wszystkich znalezionych uprawnień
         String revokeOperationNumber = revokePermission(grantedPermission.getId(), accessToken);
 
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isPermissionStatusReady(revokeOperationNumber, accessToken));
 
@@ -87,7 +90,8 @@ class EnforcementOperationIntegrationTest extends BaseIntegrationTest {
         //Nadawanie uprawnienia EnforcementOperations dla osoby uwierzytelniającej się nipem `authorizedNip`
         String operationNumber = grantPermission(authorizedNip, accessToken);
 
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isPermissionStatusReady(operationNumber, accessToken));
 
@@ -101,7 +105,8 @@ class EnforcementOperationIntegrationTest extends BaseIntegrationTest {
         // Wycofanie wszystkich znalezionych uprawnień
         String revokeOperationNumber = revokePermission(grantedPermission.getId(), accessToken);
 
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isPermissionStatusReady(revokeOperationNumber, accessToken));
 

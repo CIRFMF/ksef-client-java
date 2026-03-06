@@ -30,6 +30,7 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -89,7 +90,8 @@ class EuEntityRepresentativePermissionIntegrationTest extends BaseIntegrationTes
                         .withSubjectType(SubjectIdentifierTypeEnum.CERTIFICATE_SUBJECT),
                 ownerCertificate);
         String grantEuEntityPermissionOperationReferenceNumber = grantEuEntityPermission(ownerNipVatEu, euEntityPersonalCertificateFingerprint, ownerAuthInfo.accessToken());
-        await().atMost(15, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(grantEuEntityPermissionOperationReferenceNumber, ownerAuthInfo.accessToken()));
         searchPermissionOperationIds(euEntityPersonalCertificateFingerprint, 4, ownerAuthInfo.accessToken());
@@ -101,7 +103,8 @@ class EuEntityRepresentativePermissionIntegrationTest extends BaseIntegrationTes
                 euEntityPersonalCertificate // certyfikat jednostki eu
         );
         String grantEuEntityRepresentativePermissionOperationReferenceNumber = grantEuEntityRepresentativePermission(euRepresentativeEntityCertificateFingerprint, euAuthInfo.accessToken());
-        await().atMost(15, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(grantEuEntityRepresentativePermissionOperationReferenceNumber, euAuthInfo.accessToken()));
         // pobierz listę uprawnień reprezentanta
@@ -111,7 +114,8 @@ class EuEntityRepresentativePermissionIntegrationTest extends BaseIntegrationTes
         grantedRepresentativePermission.forEach(e -> {
             String revokeReferenceNumber = revokePermission(e, euAuthInfo.accessToken());
 
-            await().atMost(30, SECONDS)
+            await().pollDelay(Duration.ZERO)
+                    .atMost(30, SECONDS)
                     .pollInterval(2, SECONDS)
                     .until(() -> isOperationFinish(revokeReferenceNumber, euAuthInfo.accessToken()));
         });

@@ -46,6 +46,7 @@ public enum Url {
     PERMISSION_SEARCH_PERSONAL_GRANTS("permissions/query/personal/grants", "apiV2PermissionsQueryPersonalGrants"),
     PERMISSION_SEARCH_AUTHORIZATIONS_GRANT("permissions/query/authorizations/grants", "apiV2PermissionsQueryAuthorizationsGrantsPost"),
     PERMISSION_SEARCH_ENTITY_ROLES("permissions/query/entities/roles", "apiV2PermissionsQueryEntitiesRolesGet"),
+    PERMISSION_SEARCH_ENTITIES_GRANTS("permissions/query/entities/grants", "apiV2PermissionsQueryEntitiesGrantsGet"),
     PERMISSION_SEARCH_EU_ENTITY_GRANT("permissions/query/eu-entities/grants", "apiV2PermissionsQueryEuEntitiesGrantsPost"),
     PERMISSION_SEARCH_PERSON_PERMISSION("permissions/query/persons/grants", "apiV2PermissionsQueryPersonsGrantsPost"),
     PERMISSION_SEARCH_SUBORDINATE_PERMISSION("permissions/query/subordinate-entities/roles", "apiV2PermissionsQuerySubordinateEntitiesRolesPost"),

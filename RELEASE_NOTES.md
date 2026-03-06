@@ -1917,3 +1917,37 @@
 | 🔧 zmienione | 4             |
 | ➖ usunięte  | 0             |
 
+
+# Changelog zmian - `## 3.0.19 (2026-03-06)`- `API: 2.2.0`
+
+## 1. ksef-client
+
+### 1.1 api
+- **Url.java**: 🔧 dodanie enuma `PERMISSION_SEARCH_ENTITIES_GRANTS("permissions/query/entities/grants", "apiV2PermissionsQueryEntitiesGrantsGet")`
+- **DefaultKsefClient.java**: 🔧 dodano metodę `QueryEntityPermissionsResponse searchEntityInvoiceContext(EntityPermissionsQueryRequest request, int pageOffset, int pageSize, String accessToken)` umożliwiającą pobranie listy uprawnień do obsługi faktur w bieżącym kontekście logowania.
+
+### 1.3 client.interfaces
+- **KsefClient.java**: 🔧 dodanie metod zgodnie z implementacją w `DefaultKsefClient.java`
+
+### 1.3 client.model
+- **auth/AuthenticationChallengeResponse.java**: 🔧 dodano pole `String clientIp`
+- **permission/search/EntityPermissionItem.java**: ➕ dodano klasę
+- **permission/search/EntityPermissionItemScope.java**: ➕ dodano enuma
+- **permission/search/EntityPermissionsQueryRequest.java**: ➕ dodano klasę
+- **permission/search/QueryEntityPermissionsResponse.java**: ➕ dodano klasę
+
+## 2. demo-web-app
+
+### 2.1 integrationTest
+- **SearchEntityPermissionsIntegrationTest.java**: ➕ dodano scenariusz testowy dla pobrania listy uprawnień do obsługi faktur w bieżącym kontekście logowania
+- **@.java**: 🔧 refactor - w scenariuszach testowych do `Awaitility.await()` dodano `pollDelay(Duration.ZERO)`
+
+---
+## 3. Podsumowanie
+
+| Typ zmiany  | Liczba plików |
+|-------------|---------------|
+| ➕ dodane    | 5             |
+| 🔧 zmienione | 32            |
+| ➖ usunięte  | 0             |
+

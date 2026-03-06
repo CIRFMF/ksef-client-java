@@ -23,6 +23,7 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -41,7 +42,8 @@ class PersonalPermissionAuthorizedPeselInNipContext extends BaseIntegrationTest 
         // GRANT (publiczne API): nadajemy InvoiceRead + InvoiceWrite dla osoby identyfikowanej PESEL
         String operationNumber = grantPermission(authorizedPesel, ownerToken);
 
-        await().atMost(15, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(operationNumber, ownerToken));
 
@@ -62,7 +64,8 @@ class PersonalPermissionAuthorizedPeselInNipContext extends BaseIntegrationTest 
         grantedPermission.forEach(permission -> {
             String revokeOperationNumber = revokePermission(permission.getId(), ownerToken);
 
-            await().atMost(15, SECONDS)
+            await().pollDelay(Duration.ZERO)
+                    .atMost(15, SECONDS)
                     .pollInterval(1, SECONDS)
                     .until(() -> isOperationFinish(revokeOperationNumber, ownerToken));
         });

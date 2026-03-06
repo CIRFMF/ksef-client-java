@@ -19,6 +19,7 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -34,7 +35,8 @@ class ProxyPermissionIntegrationTest extends BaseIntegrationTest {
 
         String grantReferenceNumber = grantPermission(subjectNip, accessToken);
 
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isPermissionStatusReady(grantReferenceNumber, accessToken));
 
@@ -43,7 +45,8 @@ class ProxyPermissionIntegrationTest extends BaseIntegrationTest {
         permission.forEach(e -> {
             String revokeReferenceNumber = revokePermission(e, accessToken);
 
-            await().atMost(30, SECONDS)
+            await().pollDelay(Duration.ZERO)
+                    .atMost(30, SECONDS)
                     .pollInterval(2, SECONDS)
                     .until(() -> isPermissionStatusReady(revokeReferenceNumber, accessToken));
         });

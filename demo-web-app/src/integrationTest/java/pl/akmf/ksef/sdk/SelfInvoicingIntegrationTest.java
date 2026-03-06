@@ -38,6 +38,7 @@ import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Base64;
@@ -73,7 +74,8 @@ class SelfInvoicingIntegrationTest extends BaseIntegrationTest {
         sendInvoiceOnlineSession(contextNip, sefInvoicingNip, sessionReferenceNumber, encryptionData, selfInvoicingAccessToken);
 
         //check if invoice has been processed
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, selfInvoicingAccessToken));
 
@@ -93,8 +95,8 @@ class SelfInvoicingIntegrationTest extends BaseIntegrationTest {
         try {
             SessionStatusResponse statusResponse = ksefClient.getSessionStatus(sessionReferenceNumber, accessToken);
             return statusResponse != null &&
-                   statusResponse.getSuccessfulInvoiceCount() != null &&
-                   statusResponse.getSuccessfulInvoiceCount() > 0;
+                    statusResponse.getSuccessfulInvoiceCount() != null &&
+                    statusResponse.getSuccessfulInvoiceCount() > 0;
         } catch (Exception e) {
             Assertions.fail(e.getMessage());
         }
@@ -147,7 +149,8 @@ class SelfInvoicingIntegrationTest extends BaseIntegrationTest {
 
         OperationResponse response = ksefClient.grantsPermissionsProxyEntity(request, accessToken);
 
-        await().atMost(15, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(response.getReferenceNumber(), accessToken));
     }

@@ -37,6 +37,7 @@ import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -193,7 +194,8 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
     }
 
     private void checkSessionStatus(String sessionReferenceNumber, String accessToken, int expectedStatus, Integer expectedSuccessfulInvoice, Integer expectedFailedInvoice) {
-        await().atMost(40, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(40, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> {
                     SessionStatusResponse statusResponse = ksefClient.getSessionStatus(sessionReferenceNumber, accessToken);
@@ -246,7 +248,8 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
     private List<SessionInvoiceStatusResponse> getFailedInvoicesList(String sessionRef, String accessToken) {
         List<SessionInvoiceStatusResponse> failedInvoicesList = new ArrayList<>();
 
-        await().atMost(120, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(120, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> {
                     SessionInvoicesResponse failedInvoices = ksefClient.getSessionFailedInvoices(sessionRef, null, 10, accessToken);

@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 
@@ -45,7 +46,8 @@ class EuEntityPermissionIntegrationTest extends BaseIntegrationTest {
         // Nadaj uprawnienia jednostce EU
         String grantReferenceNumber = grantEuEntityPermission(euEntity, nipVatUe, accessToken);
 
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(10, SECONDS)
                 .until(() -> isOperationFinish(grantReferenceNumber, accessToken));
 
@@ -57,7 +59,8 @@ class EuEntityPermissionIntegrationTest extends BaseIntegrationTest {
                 .orElseThrow();
         String revokeReferenceNumber = revokePermission(invoiceWritePermission.getId(), accessToken);
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> isOperationFinish(revokeReferenceNumber, accessToken));
 

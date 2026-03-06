@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -525,7 +526,8 @@ class BatchIntegrationTest extends BaseIntegrationTest {
     private SessionStatusResponse getBatchSessionStatus(String referenceNumber, String accessToken, int expectedStatusCode,
                                                         Integer expectedInvoiceCount, Integer expectedSuccessfulInvoiceCount,
                                                         Integer expectedFailedInvoicesCount) throws ApiException {
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> {
                     SessionStatusResponse response = ksefClient.getSessionStatus(referenceNumber, accessToken);

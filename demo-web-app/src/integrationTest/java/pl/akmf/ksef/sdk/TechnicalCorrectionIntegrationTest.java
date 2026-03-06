@@ -25,6 +25,7 @@ import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.UUID;
@@ -69,7 +70,8 @@ class TechnicalCorrectionIntegrationTest extends BaseIntegrationTest {
 
         // Weryfikacja odrzucenia z błędem semantycznym (kod 450)
         Integer invoiceSemanticValidationErrorStatusCode = 450;
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> checkInvoiceStatus(sessionReferenceNumber, incorrectInvoiceReferenceNumber, invoiceSemanticValidationErrorStatusCode, accessToken));
         SessionInvoiceStatusResponse incorrectInvoiceStatusResponse = ksefClient.getSessionInvoiceStatus(sessionReferenceNumber, incorrectInvoiceReferenceNumber, accessToken);
@@ -80,7 +82,8 @@ class TechnicalCorrectionIntegrationTest extends BaseIntegrationTest {
 
         // Weryfikacja pomyślnego przyjęcia korekty technicznej
         Integer invoiceSuccessStatusCode = 200;
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> checkInvoiceStatus(sessionReferenceNumber, technicalCorrectionInvoiceReferenceNumber, invoiceSuccessStatusCode, accessToken));
 
@@ -113,7 +116,8 @@ class TechnicalCorrectionIntegrationTest extends BaseIntegrationTest {
 
         // Weryfikacja odrzucenia z błędem semantycznym (kod 450)
         Integer invoiceSemanticValidationErrorStatusCode = 450;
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> checkInvoiceStatus(sessionReferenceNumber, incorrectInvoiceReferenceNumber, invoiceSemanticValidationErrorStatusCode, accessToken));
         SessionInvoiceStatusResponse incorrectInvoiceStatusResponse = ksefClient.getSessionInvoiceStatus(sessionReferenceNumber, incorrectInvoiceReferenceNumber, accessToken);
@@ -132,7 +136,8 @@ class TechnicalCorrectionIntegrationTest extends BaseIntegrationTest {
 
         // Weryfikacja pomyślnego przyjęcia korekty technicznej
         Integer invoiceSuccessStatusCode = 200;
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> checkInvoiceStatus(sessionReferenceNumberSecondSession, technicalCorrectionInvoiceReferenceNumber, invoiceSuccessStatusCode, accessTokenSecondSession));
 

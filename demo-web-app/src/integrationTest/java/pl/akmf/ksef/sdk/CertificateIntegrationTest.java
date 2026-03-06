@@ -35,6 +35,7 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -57,7 +58,8 @@ class CertificateIntegrationTest extends BaseIntegrationTest {
         //grant credential to delegate
         String grantReferenceNumber = grantPermission(delegateNip, accessToken);
 
-        await().atMost(15, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> isOperationFinish(grantReferenceNumber, accessToken));
 
@@ -73,7 +75,8 @@ class CertificateIntegrationTest extends BaseIntegrationTest {
         //generate certificate
         String referenceNumber = sendEnrollment(enrollmentInfo, delegateAccessToken);
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> isEnrolmentStatusReady(referenceNumber, delegateAccessToken));
 

@@ -17,6 +17,7 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -39,14 +40,16 @@ class EntityPermissionAccountingIntegrationTest extends BaseIntegrationTest {
         //nadanie uprawnień biuru rachunkowego
         String brGrantInJdg = grantPermission(brNip, accessTokenJdg);
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> isOperationFinish(brGrantInJdg, accessTokenJdg));
 
         // nadanie uprawnień kancelarii doradztwa podatkowego
         String kdpGrantInJdg = grantPermission(kdpNip, accessTokenJdg);
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> isOperationFinish(kdpGrantInJdg, accessTokenJdg));
 
@@ -56,14 +59,16 @@ class EntityPermissionAccountingIntegrationTest extends BaseIntegrationTest {
         // nadanie uprawnień biuru rachunkowemu
         String brGRantInOtherJdg = grantPermission(brNip, accessTokenOtherJdg);
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> isOperationFinish(brGRantInOtherJdg, accessTokenOtherJdg));
 
         // nadanie uprawnień kancelarii doradztwa podatkowego
         String kdpGrantInOtherJdg = grantPermission(kdpNip, accessTokenOtherJdg);
 
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> isOperationFinish(kdpGrantInOtherJdg, accessTokenOtherJdg));
 

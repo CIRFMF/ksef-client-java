@@ -4,7 +4,7 @@ plugins {
 }
 
 
-val appVersion = "3.0.18"
+val appVersion = "3.0.19"
 val artifactName = "ksef-client"
 
 val githubRepositoryToken = "token"

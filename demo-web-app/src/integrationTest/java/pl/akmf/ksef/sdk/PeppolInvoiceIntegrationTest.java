@@ -36,6 +36,7 @@ import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
@@ -75,7 +76,8 @@ class PeppolInvoiceIntegrationTest extends BaseIntegrationTest {
         sendPefInvoice(sessionReferenceNumber, encryptionData, contextNip, "/xml/invoices/sample/invoice_template_pef.xml", accessTokenForPefProvider);
 
         //6: check if invoice has been proccesed
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessTokenForPefProvider));
 
@@ -115,7 +117,8 @@ class PeppolInvoiceIntegrationTest extends BaseIntegrationTest {
 
         //6: check if invoice has been proccesed
         // Wait for invoice to be processed
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessTokenForPefProvider));
 
@@ -133,7 +136,8 @@ class PeppolInvoiceIntegrationTest extends BaseIntegrationTest {
         sendPefInvoice(correctionSessionReferenceNumber, encryptionData, contextNip, "/xml/invoices/sample/invoice_template_pef_correction.xml", accessTokenForPefProvider);
 
         // Wait for invoice to be processed
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isInvoicesInSessionProcessed(correctionSessionReferenceNumber, accessTokenForPefProvider));
 
@@ -199,7 +203,8 @@ class PeppolInvoiceIntegrationTest extends BaseIntegrationTest {
         OperationResponse response = ksefClient.grantsPermissionsProxyEntity(request, accessToken);
         Assertions.assertNotNull(response);
 
-        await().atMost(10, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(10, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isPermissionStatusReady(response.getReferenceNumber(), accessToken));
     }

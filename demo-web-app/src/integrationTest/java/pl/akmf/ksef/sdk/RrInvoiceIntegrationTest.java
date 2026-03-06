@@ -41,6 +41,7 @@ import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
@@ -48,7 +49,7 @@ import java.util.UUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
-public class RrInvoiceIntegrationTest extends BaseIntegrationTest {
+class RrInvoiceIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private DefaultCryptographyService defaultCryptographyService;
@@ -110,7 +111,8 @@ public class RrInvoiceIntegrationTest extends BaseIntegrationTest {
         sendRrInvoice(sessionReferenceNumber, encryptionData, grantorNip, authorizedNip, templateFileName, authorizedAccessToken);
 
         // Weryfikacja przetworzenia faktury
-        await().atMost(30, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, authorizedAccessToken));
 
@@ -125,7 +127,8 @@ public class RrInvoiceIntegrationTest extends BaseIntegrationTest {
             String revokeReferenceNumber = revokePermission(e, grantorAccessToken);
 
             // Weryfikacja odebrania uprawnienia
-            await().atMost(30, SECONDS)
+            await().pollDelay(Duration.ZERO)
+                    .atMost(30, SECONDS)
                     .pollInterval(2, SECONDS)
                     .until(() -> isPermissionStatusReady(revokeReferenceNumber, grantorAccessToken));
         });
@@ -150,7 +153,8 @@ public class RrInvoiceIntegrationTest extends BaseIntegrationTest {
 
         OperationResponse grantOperation = ksefClient.grantsPermissionsProxyEntity(grantRequest, grantorAccessToken);
 
-        await().atMost(10, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(10, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isPermissionStatusReady(grantOperation.getReferenceNumber(), grantorAccessToken));
     }

@@ -20,6 +20,7 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -40,7 +41,8 @@ class EnforcementOperationNegativeIntegrationTest extends BaseIntegrationTest {
         String operationNumber = grantPermission(authorizedNip, accessToken);
 
         // Odczytywanie statusu operacji aż będzie różny od 200 (niepowodzenie)
-        await().atMost(50, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> isGrantProcessPermissionFinish(operationNumber, accessToken));
 

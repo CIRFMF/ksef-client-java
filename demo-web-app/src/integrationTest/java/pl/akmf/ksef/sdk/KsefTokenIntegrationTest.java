@@ -30,6 +30,7 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Stream;
@@ -65,7 +66,7 @@ class KsefTokenIntegrationTest extends BaseIntegrationTest {
         Assertions.assertNotNull(token.getReferenceNumber());
 
         // step 2: wait for token to become ACTIVE
-        Awaitility.await()
+        Awaitility.await().pollDelay(Duration.ZERO)
                 .atMost(10, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> {
@@ -88,7 +89,7 @@ class KsefTokenIntegrationTest extends BaseIntegrationTest {
         // step 4: revoke token and wait for REVOKED status
         ksefClient.revokeKsefToken(token.getReferenceNumber(), accessToken);
 
-        Awaitility.await()
+        Awaitility.await().pollDelay(Duration.ZERO)
                 .atMost(10, SECONDS)
                 .pollInterval(1, SECONDS)
                 .until(() -> {
@@ -136,7 +137,8 @@ class KsefTokenIntegrationTest extends BaseIntegrationTest {
 
         SignatureResponse response = ksefClient.authenticateByKSeFToken(authTokenRequest);
 
-        await().atMost(60, SECONDS)
+        await().pollDelay(Duration.ZERO)
+                .atMost(60, SECONDS)
                 .pollInterval(2, SECONDS)
                 .until(() -> isAuthStatusReady(response.getReferenceNumber(), response.getAuthenticationToken().getToken()));
 
