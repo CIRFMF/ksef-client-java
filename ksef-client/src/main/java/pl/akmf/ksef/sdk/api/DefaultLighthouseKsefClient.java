@@ -5,6 +5,7 @@ import pl.akmf.ksef.sdk.client.interfaces.LighthouseKsefClient;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.ApiResponse;
 import pl.akmf.ksef.sdk.client.model.ExceptionResponse;
+import pl.akmf.ksef.sdk.client.model.KsefApiException;
 import pl.akmf.ksef.sdk.client.model.lighthouse.KsefMessagesResponse;
 import pl.akmf.ksef.sdk.client.model.lighthouse.KsefStatusResponse;
 import pl.akmf.ksef.sdk.system.SystemKSeFSDKException;
@@ -17,6 +18,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static pl.akmf.ksef.sdk.api.HttpStatus.OK;
 import static pl.akmf.ksef.sdk.api.HttpUtils.formatExceptionMessage;
@@ -87,7 +89,8 @@ public class DefaultLighthouseKsefClient implements LighthouseKsefClient {
         try {
             return httpClient.send(request, bodyHandler);
         } catch (IOException | InterruptedException e) {
-            throw new SystemKSeFSDKException(e.getMessage(), e);
+            throw new SystemKSeFSDKException(request.method() + " " + request.uri() + " "
+                    + (e.getMessage() != null ? e.getMessage() : ""), e);
         }
     }
 
@@ -103,7 +106,7 @@ public class DefaultLighthouseKsefClient implements LighthouseKsefClient {
                     response.body() == null ? null : objectMapper.readValue(response.body(), classType))
                     .getData();
         } catch (IOException e) {
-            throw new ApiException(e);
+            throw new KsefApiException(e);
         }
     }
 
@@ -113,6 +116,11 @@ public class DefaultLighthouseKsefClient implements LighthouseKsefClient {
         try {
             if (!isValidResponse(response, expectedStatus)) {
                 ExceptionResponse exception = null;
+                String uri = response.uri().toString();
+                String method = Optional.of(response)
+                        .map(HttpResponse::request)
+                        .map(HttpRequest::method)
+                        .orElse("");
 
                 String contentType = response.headers()
                         .firstValue(CONTENT_TYPE)
@@ -124,10 +132,10 @@ public class DefaultLighthouseKsefClient implements LighthouseKsefClient {
                             objectMapper.readValue(response.body(), ExceptionResponse.class);
                 }
                 String message = formatExceptionMessage(operation.getOperationId(), response.statusCode(), response.body());
-                throw new ApiException(response.statusCode(), message, response.headers(), exception);
+                throw new KsefApiException(response.statusCode(), uri, method, message, response.headers(), exception);
             }
         } catch (IOException e) {
-            throw new ApiException(e);
+            throw new KsefApiException(e);
         }
     }
 }

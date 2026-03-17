@@ -7,14 +7,8 @@ import pl.akmf.ksef.sdk.client.model.session.FileMetadata;
 import pl.akmf.ksef.sdk.system.KsefIntegrationMode;
 import pl.akmf.ksef.sdk.system.SystemKSeFSDKException;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
@@ -208,8 +202,11 @@ public interface CryptographyService {
      * Możliwe jest wtedy ponowne wywyłanie usługi initCryptographyService() w celu próby inicjalizacji serwisu
      * <p>
      * Zwraca status serwisu (w razie nieudanego pobrania certyfikatów podczas inicjowania serwisu jest ustawiony na OFFLINE)
-     *
-     * @throws SystemKSeFSDKException
      */
     KsefIntegrationMode getKsefIntegrationMode();
+
+    /**
+     * Zwraca powód przejścia w tryb OFFLINE
+     */
+    Exception getOfflineModeCause();
 }

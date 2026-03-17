@@ -9,7 +9,12 @@ import pl.akmf.ksef.sdk.client.interfaces.KSeFClient;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.ApiResponse;
 import pl.akmf.ksef.sdk.client.model.ExceptionResponse;
+import pl.akmf.ksef.sdk.client.model.ForbiddenApiException;
+import pl.akmf.ksef.sdk.client.model.ForbiddenProblemDetails;
+import pl.akmf.ksef.sdk.client.model.KsefApiException;
 import pl.akmf.ksef.sdk.client.model.TooManyRequestsResponse;
+import pl.akmf.ksef.sdk.client.model.UnauthorizedApiException;
+import pl.akmf.ksef.sdk.client.model.UnauthorizedProblemDetails;
 import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.auth.AuthKsefTokenRequest;
 import pl.akmf.ksef.sdk.client.model.auth.AuthOperationStatusResponse;
@@ -114,6 +119,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import static pl.akmf.ksef.sdk.api.HttpStatus.ACCEPTED;
 import static pl.akmf.ksef.sdk.api.HttpStatus.CREATED;
@@ -203,6 +209,7 @@ import static pl.akmf.ksef.sdk.api.Url.TOKEN_REVOKE;
 import static pl.akmf.ksef.sdk.api.Url.TOKEN_STATUS;
 import static pl.akmf.ksef.sdk.client.Headers.ACCEPT;
 import static pl.akmf.ksef.sdk.client.Headers.APPLICATION_JSON;
+import static pl.akmf.ksef.sdk.client.Headers.APPLICATION_PROBLEM_JSON;
 import static pl.akmf.ksef.sdk.client.Headers.APPLICATION_XML;
 import static pl.akmf.ksef.sdk.client.Headers.AUTHORIZATION;
 import static pl.akmf.ksef.sdk.client.Headers.BEARER;
@@ -335,7 +342,7 @@ public class DefaultKsefClient implements KSeFClient {
     @Override
     public void closeBatchSession(String referenceNumber, String accessToken) throws ApiException {
         if (referenceNumber == null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'referenceNumber' when calling closeBatchSession");
+            throw new KsefApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'referenceNumber' when calling closeBatchSession");
         }
 
         String uri = buildUrlWithParams(BATCH_SESSION_CLOSE.getUrl(), new HashMap<>())
@@ -376,7 +383,7 @@ public class DefaultKsefClient implements KSeFClient {
         }
 
         if (!errors.isEmpty()) {
-            throw new ApiException("Errors when sending parts:\n" + String.join("\n", errors));
+            throw new KsefApiException("Errors when sending parts:\n" + String.join("\n", errors));
         }
     }
 
@@ -407,7 +414,7 @@ public class DefaultKsefClient implements KSeFClient {
         }
 
         if (!errors.isEmpty()) {
-            throw new ApiException("Errors when sending parts:\n" + String.join("\n", errors));
+            throw new KsefApiException("Errors when sending parts:\n" + String.join("\n", errors));
         }
     }
 
@@ -443,7 +450,7 @@ public class DefaultKsefClient implements KSeFClient {
     @Override
     public void closeOnlineSession(String referenceNumber, String accessToken) throws ApiException {
         if (referenceNumber == null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'referenceNumber' when calling apiV2SessionsOnlineReferenceNumberClosePost");
+            throw new KsefApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'referenceNumber' when calling apiV2SessionsOnlineReferenceNumberClosePost");
         }
 
         String uri = buildUrlWithParams(SESSION_CLOSE.getUrl(), new HashMap<>())
@@ -470,7 +477,7 @@ public class DefaultKsefClient implements KSeFClient {
     @Override
     public SendInvoiceResponse onlineSessionSendInvoice(String referenceNumber, SendInvoiceOnlineSessionRequest sendInvoiceOnlineSessionRequest, String accessToken) throws ApiException {
         if (referenceNumber == null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'referenceNumber' when calling apiV2SessionsOnlineReferenceNumberClosePost");
+            throw new KsefApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'referenceNumber' when calling apiV2SessionsOnlineReferenceNumberClosePost");
         }
 
         String uri = buildUrlWithParams(SESSION_INVOICE_SEND.getUrl(), new HashMap<>())
@@ -596,7 +603,7 @@ public class DefaultKsefClient implements KSeFClient {
     @Override
     public void revokeCertificate(CertificateRevokeRequest certificateRevokeRequest, String certificateSerialNumber, String accessToken) throws ApiException {
         if (certificateSerialNumber == null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'certificateSerialNumber' when calling revokeCertificate");
+            throw new KsefApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'certificateSerialNumber' when calling revokeCertificate");
         }
 
         String uri = buildUrlWithParams(CERTIFICATE_REVOKE.getUrl(), new HashMap<>())
@@ -680,7 +687,7 @@ public class DefaultKsefClient implements KSeFClient {
     @Override
     public SignatureResponse submitAuthTokenRequest(String signedXml, boolean verifyCertificateChain, boolean enforceXadesCompliance) throws ApiException {
         if (signedXml == null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'body' when calling apiV2AuthTokenSignaturePost");
+            throw new KsefApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'body' when calling apiV2AuthTokenSignaturePost");
         }
 
         HashMap<String, String> params = new HashMap<>();
@@ -728,7 +735,7 @@ public class DefaultKsefClient implements KSeFClient {
     @Override
     public AuthStatus getAuthStatus(String referenceNumber, String authenticationToken) throws ApiException {
         if (referenceNumber == null) {
-            throw new ApiException(400, "Missing the required parameter 'tokenReferenceNumber' when calling apiV2AuthTokenTokenReferenceNumberGet");
+            throw new KsefApiException(400, "Missing the required parameter 'tokenReferenceNumber' when calling apiV2AuthTokenTokenReferenceNumberGet");
         }
 
         String uri = buildUrlWithParams(AUTH_TOKEN_STATUS.getUrl(), new HashMap<>())
@@ -907,7 +914,7 @@ public class DefaultKsefClient implements KSeFClient {
     /**
      * Wyszukiwanie uprawnień do obsługi faktur w bieżącym kontekście.
      *
-     * @param request EntityPermissionsQueryRequest
+     * @param request    EntityPermissionsQueryRequest
      * @param pageOffset
      * @param pageSize
      * @return QueryEntityPermissionsResponse
@@ -1142,7 +1149,7 @@ public class DefaultKsefClient implements KSeFClient {
     @Override
     public InvoiceExportStatus checkStatusAsyncQueryInvoice(String referenceNumber, String accessToken) throws ApiException {
         if (referenceNumber == null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'operationReferenceNumber' when calling checkStatusAsyncQueryInvoice");
+            throw new KsefApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'operationReferenceNumber' when calling checkStatusAsyncQueryInvoice");
         }
 
         String uri = buildUrlWithParams(INVOICE_EXPORT_STATUS.getUrl(), new HashMap<>())
@@ -1302,10 +1309,10 @@ public class DefaultKsefClient implements KSeFClient {
                                 String upoReferenceNumber,
                                 String accessToken) throws ApiException {
         if (referenceNumber == null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'referenceNumber' when calling getSessionUpo");
+            throw new KsefApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'referenceNumber' when calling getSessionUpo");
         }
         if (upoReferenceNumber == null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'upoReferenceNumber' when calling getSessionUpo");
+            throw new KsefApiException(HttpStatus.BAD_REQUEST.getCode(), "Missing the required parameter 'upoReferenceNumber' when calling getSessionUpo");
         }
 
         String uri = buildUrlWithParams(SESSION_UPO.getUrl(), new HashMap<>())
@@ -2144,7 +2151,7 @@ public class DefaultKsefClient implements KSeFClient {
                     response.body() == null ? null : objectMapper.readValue(response.body(), new TypeReference<List<PublicKeyCertificate>>() {
                     })).getData();
         } catch (IOException e) {
-            throw new ApiException(e);
+            throw new KsefApiException(e);
         }
     }
 
@@ -2347,7 +2354,8 @@ public class DefaultKsefClient implements KSeFClient {
         try {
             return apiClient.send(request, bodyHandler);
         } catch (IOException | InterruptedException e) {
-            throw new SystemKSeFSDKException(e.getMessage(), e);
+            throw new SystemKSeFSDKException(request.method() + " " + request.uri() + " "
+                    + (e.getMessage() != null ? e.getMessage() : ""), e);
         }
     }
 
@@ -2363,7 +2371,7 @@ public class DefaultKsefClient implements KSeFClient {
                     response.body() == null ? null : objectMapper.readValue(response.body(), classType))
                     .getData();
         } catch (IOException e) {
-            throw new ApiException(e);
+            throw new KsefApiException(e);
         }
     }
 
@@ -2372,30 +2380,50 @@ public class DefaultKsefClient implements KSeFClient {
                                Url operation) throws ApiException {
         try {
             if (!isValidResponse(response, expectedStatus)) {
-                ExceptionResponse exception = null;
-
-                String contentType = response.headers()
-                        .firstValue(CONTENT_TYPE)
-                        .orElse("")
-                        .toLowerCase();
-
-                String message = formatExceptionMessage(operation.getOperationId(), response.statusCode(), response.body());
-                if (contentType.contains(APPLICATION_JSON)) {
-                    try {
-                        exception = response.body() == null ? null :
-                                objectMapper.readValue(response.body(), ExceptionResponse.class);
-                        if (HttpStatus.TOO_MANY_REQUESTS.getCode() == response.statusCode()) {
-                            setErrorDetailsFor429Status(response.headers(), exception.getStatus());
-                        }
-                    } catch (com.fasterxml.jackson.databind.DatabindException e) {
-                        throw new ApiException(response.statusCode(), message, response.headers(), exception);
-                    }
-                }
-                throw new ApiException(response.statusCode(), message, response.headers(), exception);
+                handleException(response, operation);
             }
         } catch (IOException e) {
-            throw new ApiException(e);
+            throw new KsefApiException(e);
         }
+    }
+
+    private void handleException(HttpResponse<byte[]> response, Url operation) throws IOException, ApiException {
+        ExceptionResponse exception = null;
+        String uri = response.uri().toString();
+        String method = Optional.of(response)
+                .map(HttpResponse::request)
+                .map(HttpRequest::method)
+                .orElse("");
+
+        String contentType = response.headers()
+                .firstValue(CONTENT_TYPE)
+                .orElse("")
+                .toLowerCase();
+
+        String message = formatExceptionMessage(operation.getOperationId(), response.statusCode(), response.body());
+        if (contentType.contains(APPLICATION_JSON)
+                || contentType.contains(APPLICATION_PROBLEM_JSON)) {
+            try {
+                if (HttpStatus.UNAUTHORIZED.getCode() == response.statusCode()) {
+                    UnauthorizedProblemDetails unauthorizedProblemDetails = response.body() == null ? null :
+                            objectMapper.readValue(response.body(), UnauthorizedProblemDetails.class);
+                    throw new UnauthorizedApiException(response.statusCode(), uri, method, message, response.headers(), unauthorizedProblemDetails);
+                }
+                if (HttpStatus.FORBIDDEN.getCode() == response.statusCode()) {
+                    ForbiddenProblemDetails forbiddenProblemDetails = response.body() == null ? null :
+                            objectMapper.readValue(response.body(), ForbiddenProblemDetails.class);
+                    throw new ForbiddenApiException(response.statusCode(), uri, method, message, response.headers(), forbiddenProblemDetails);
+                }
+                exception = response.body() == null ? null :
+                        objectMapper.readValue(response.body(), ExceptionResponse.class);
+                if (HttpStatus.TOO_MANY_REQUESTS.getCode() == response.statusCode()) {
+                    setErrorDetailsFor429Status(response.headers(), exception.getStatus());
+                }
+            } catch (com.fasterxml.jackson.databind.DatabindException e) {
+                throw new KsefApiException(response.statusCode(), uri, method, message, response.headers(), exception);
+            }
+        }
+        throw new KsefApiException(response.statusCode(), uri, method, message, response.headers(), exception);
     }
 
     private void setErrorDetailsFor429Status(HttpHeaders headers, TooManyRequestsResponse status) {

@@ -1951,3 +1951,53 @@
 | 🔧 zmienione | 32            |
 | ➖ usunięte  | 0             |
 
+
+# Changelog zmian - `## 3.0.20 (2026-03-17)`- `API: 2.2.1`
+
+## 1. ksef-client
+
+### 1.1 system
+- **FilesUtil.java**: 🔧 dla metody `splitAndEncryptZipStream` zmiana parametru `cryptographyService` na interfejs
+
+### 1.2 api
+- **DefaultKsefClient.java**: 🔧 do response z błędem dodano informacje z url i method, dodanie obsługi mapowań dla kodów http 401 i 403 dla formatu Problem Details `(application/problem+json)`
+- **DefaultLighthouseKsefClient.java**: 🔧 do response z błędem dodano informacje z url i method
+
+### 1.3 client
+- **Headers.java**: 🔧 dodanie pola `String APPLICATION_PROBLEM_JSON = "application/problem+json"`
+
+### 1.4 api.services
+- **DefaultCryptographyService.java**: 🔧 dodanie metody `Exception getOfflineModeCause()` dającej informacje o powodzie przejścia w tryb offline
+
+### 1.5 api.client.interfaces
+- **CryptographyService.java**: 🔧 zmiany zgodnie z implementacja w `DefaultCryptographyService.java`
+
+### 1.6 api.client.model
+- **ApiException.java**: 🔧 dodanie pól `String url` i `String method`, zmiana na klasę abstrakcyjną
+- **model/session/SchemaVersion.java**: 🔧 dodanie enuma `VERSION_1_1E("1-1E")`
+- **UnauthorizedProblemDetails.java**: ➕ dodanie klasy
+- **ForbiddenProblemDetails.java**: ➕ dodanie klasy
+- **UnauthorizedApiException.java**: ➕ dodanie klasy, rozszerzającej `ApiException`
+- **ForbiddenApiException.java**: ➕ dodanie klasy, rozszerzającej `ApiException`
+- **KsefApiException.java**: ➕ dodanie klasy, rozszerzającej `ApiException`
+
+## 2. demo-web-app
+
+### 2.1 integrationTest
+- **QrCodeOnlineIntegrationTest.java.java**: 🔧 drobne zmiany w asercji
+- **RrInvoiceIntegrationTest.java.java**: 🔧 użycie nowej wersji schemy RR `SchemaVersion.VERSION_1_1E`
+- **KsefTokenIntegrationTest.java.java**: 🔧 zmiany kosmetyczne w assercji
+- **ExceptionsApiIntegrationTest.java.java**: ➕ dodanie scenariusza do obsługi kodów http 401 i 403 z API
+
+### 2.1.1 integrationTest.resources
+- **invoice-template-fa-rr-1.xml**: 🔧 aktualizacja pod nową wersję schemy RR
+
+---
+## 3. Podsumowanie
+
+| Typ zmiany  | Liczba plików |
+|-------------|---------------|
+| ➕ dodane    | 6             |
+| 🔧 zmienione | 12            |
+| ➖ usunięte  | 0             |
+
