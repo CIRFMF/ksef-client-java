@@ -78,7 +78,7 @@ class QrCodeOnlineIntegrationTest extends BaseIntegrationTest {
                 .pollInterval(2, SECONDS)
                 .until(() -> isInvoicesInSessionAdded(sessionReferenceNumber, accessToken));
 
-        checkOnlineSessionStatus(sessionReferenceNumber, 100, accessToken);
+        Assertions.assertTrue(checkOnlineSessionStatus(sessionReferenceNumber, 100, accessToken));
 
         //Zamknięcie sesji online
         closeOnlineSession(sessionReferenceNumber, accessToken);
@@ -186,8 +186,7 @@ class QrCodeOnlineIntegrationTest extends BaseIntegrationTest {
     private boolean checkOnlineSessionStatus(String sessionReferenceNumber, int expectedSessionStatus, String accessToken) throws ApiException {
         SessionStatusResponse statusResponse = getSessionStatusResponse(sessionReferenceNumber, accessToken);
         Assertions.assertNotNull(statusResponse);
-        Assertions.assertEquals(expectedSessionStatus, (int) statusResponse.getStatus().getCode());
-        return true;
+        return expectedSessionStatus == statusResponse.getStatus().getCode();
     }
 
     private SessionStatusResponse getSessionStatusResponse(String sessionReferenceNumber, String accessToken) throws ApiException {

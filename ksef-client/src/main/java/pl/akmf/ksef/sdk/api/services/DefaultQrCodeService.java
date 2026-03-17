@@ -7,6 +7,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import pl.akmf.ksef.sdk.client.interfaces.QrCodeService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
+import pl.akmf.ksef.sdk.client.model.KsefApiException;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -76,7 +77,7 @@ public class DefaultQrCodeService implements QrCodeService {
         try {
             return ImageIO.read(is);
         } catch (IOException e) {
-            throw new ApiException(e.getMessage());
+            throw new KsefApiException(e.getMessage());
         }
     }
 
@@ -111,7 +112,7 @@ public class DefaultQrCodeService implements QrCodeService {
         try {
             return qrCodeWriter.encode(payloadUrl, BarcodeFormat.QR_CODE, 0, 0, hints);
         } catch (WriterException e) {
-            throw new ApiException(e.getMessage());
+            throw new KsefApiException(e.getMessage());
         }
     }
 
@@ -130,7 +131,7 @@ public class DefaultQrCodeService implements QrCodeService {
             ImageIO.write(image, "png", baos);
             return baos.toByteArray();
         } catch (IOException e) {
-            throw new ApiException(e.getMessage());
+            throw new KsefApiException(e.getMessage());
         }
     }
 }

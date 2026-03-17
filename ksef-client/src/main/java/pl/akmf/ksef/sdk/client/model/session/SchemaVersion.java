@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum SchemaVersion {
     VERSION_1_0E("1-0E"),
+    VERSION_1_1E("1-1E"),
     VERSION_2_1("2-1");
 
     private final String value;

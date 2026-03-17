@@ -1,7 +1,7 @@
 package pl.akmf.ksef.sdk.system;
 
 import org.apache.commons.lang3.function.TriFunction;
-import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
+import pl.akmf.ksef.sdk.client.interfaces.CryptographyService;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoicePackagePart;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
 import pl.akmf.ksef.sdk.client.model.session.FileMetadata;
@@ -48,7 +48,7 @@ public class FilesUtil {
             int zipLength,
             byte[] cipherKey,
             byte[] cipherIv,
-            DefaultCryptographyService cryptographyService) throws IOException {
+            CryptographyService cryptographyService) throws IOException {
         List<BatchPartStreamSendingInfo> encryptedStreamParts = new ArrayList<>();
 
         // Split ZIP into ${invoicesPartCount} parts

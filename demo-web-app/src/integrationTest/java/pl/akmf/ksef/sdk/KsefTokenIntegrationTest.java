@@ -65,14 +65,13 @@ class KsefTokenIntegrationTest extends BaseIntegrationTest {
         Assertions.assertNotNull(token.getToken());
         Assertions.assertNotNull(token.getReferenceNumber());
 
-        // step 2: wait for token to become ACTIVE
+        // step 2: wait for tokens to become ACTIVE
         Awaitility.await().pollDelay(Duration.ZERO)
                 .atMost(10, SECONDS)
                 .pollInterval(1, SECONDS)
-                .until(() -> {
-                    AuthenticationToken ksefToken = ksefClient.getKsefToken(token.getReferenceNumber(), accessToken);
-                    return ksefToken != null && ksefToken.getStatus() == AuthenticationTokenStatus.ACTIVE;
-                });
+                .until(() -> isActiveToken(token, accessToken)
+                        && isActiveToken(token2, accessToken)
+                        && isActiveToken(token3, accessToken));
 
         AuthenticationToken ksefToken = ksefClient.getKsefToken(token.getReferenceNumber(), accessToken);
         Assertions.assertNotNull(ksefToken);
@@ -149,5 +148,10 @@ class KsefTokenIntegrationTest extends BaseIntegrationTest {
     private Boolean isAuthStatusReady(String referenceNumber, String tempToken) throws ApiException {
         AuthStatus authStatus = ksefClient.getAuthStatus(referenceNumber, tempToken);
         return authStatus != null && authStatus.getStatus().getCode() == 200;
+    }
+
+    private Boolean isActiveToken(GenerateTokenResponse token, String accessToken) throws ApiException {
+        AuthenticationToken ksefToken = ksefClient.getKsefToken(token.getReferenceNumber(), accessToken);
+        return ksefToken != null && ksefToken.getStatus() == AuthenticationTokenStatus.ACTIVE;
     }
 }

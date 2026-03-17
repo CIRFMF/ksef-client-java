@@ -103,6 +103,7 @@ public class DefaultCryptographyService implements CryptographyService {
     private final KSeFClient ksefClient;
     private String secureRandomAlgorithm = null;
     private KsefIntegrationMode ksefIntegrationMode = KsefIntegrationMode.OFFLINE;
+    private Exception offlineModeCause = null;
 
     public DefaultCryptographyService(KSeFClient ksefClient) throws SystemKSeFSDKException {
         this.ksefClient = ksefClient;
@@ -465,8 +466,10 @@ public class DefaultCryptographyService implements CryptographyService {
                     .map(c -> BEGIN_CERTIFICATE + c + END_CERTIFICATE)
                     .orElse(null);
             ksefIntegrationMode = KsefIntegrationMode.ONLINE;
+            offlineModeCause = null;
         } catch (ApiException | SystemKSeFSDKException e) {
             ksefIntegrationMode = KsefIntegrationMode.OFFLINE;
+            offlineModeCause = e;
             log.error("Error with connection to KseF Api: {}", e.getMessage() + ". Library works in offline mode");
         }
     }
@@ -474,6 +477,11 @@ public class DefaultCryptographyService implements CryptographyService {
     @Override
     public KsefIntegrationMode getKsefIntegrationMode() {
         return ksefIntegrationMode;
+    }
+
+    @Override
+    public Exception getOfflineModeCause() {
+        return offlineModeCause;
     }
 
     private byte[] encryptWithRSAUsingPublicKey(byte[] content, PublicKey publicKey) throws SystemKSeFSDKException {
