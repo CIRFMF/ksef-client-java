@@ -2001,3 +2001,25 @@
 | 🔧 zmienione | 12            |
 | ➖ usunięte  | 0             |
 
+
+# Changelog zmian - `## 3.0.21 (2026-03-23)`- `API: 2.3.0`
+
+## 1. ksef-client
+
+### 1.1 api.client.model
+- **model/invoice/InvoiceExportRequest.java**: 🔧 dodanie pola `boolean onlyMetadata = false` umożliwiającego eksport paczki zawierającej wyłącznie plik `_metadata.json` bez plików faktur.
+
+## 2. demo-web-app
+
+### 2.1 integrationTest
+- **QueryInvoiceIntegrationTest.java.java**: 🔧 dodanie testu z użyciem `onlyMetadata = true` w `InvoiceExportRequest`
+
+---
+## 3. Podsumowanie
+
+| Typ zmiany  | Liczba plików |
+|-------------|--------------|
+| ➕ dodane    | 0            |
+| 🔧 zmienione | 2            |
+| ➖ usunięte  | 0            |
+

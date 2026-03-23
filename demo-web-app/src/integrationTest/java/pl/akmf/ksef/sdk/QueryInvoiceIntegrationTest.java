@@ -102,10 +102,49 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
 
         getInvoiceMetadata(accessToken);
 
-        InvoiceExportStatus invoiceExportStatus = fetchAsyncInvoiceExportStatus(accessToken, encryptionData);
+        InvoiceExportStatus invoiceExportStatus = initExportAndFetchAsyncInvoiceExportStatus(accessToken, encryptionData);
 
         DownloadResults downloadResults = downloadAndProcessPackageAsync(invoiceExportStatus, encryptionData);
         Assertions.assertTrue(downloadResults.invoicesXml.getFirst().contains(downloadResults.invoicePackageMetadata.getInvoices().getFirst().getKsefNumber()));
+    }
+
+    @Test
+    void queryInvoiceExportOnlyMetadata() throws JAXBException, IOException, ApiException {
+        String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
+        String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
+
+        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+
+        String sessionReferenceNumber = openOnlineSession(encryptionData, SystemCode.FA_3, SchemaVersion.VERSION_1_0E, SessionValue.FA, accessToken);
+
+        String invoiceReferenceNumber = sendInvoiceOnlineSession(contextNip, sessionReferenceNumber, encryptionData, "/xml/invoices/sample/invoice-template_v3.xml", accessToken);
+
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
+                .pollInterval(5, SECONDS)
+                .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessToken));
+
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
+                .pollInterval(5, SECONDS)
+                .until(() -> waitForStoringInvoice(sessionReferenceNumber, invoiceReferenceNumber, accessToken));
+
+        getInvoiceMetadata(accessToken);
+
+        InvoiceExportStatus invoiceExportStatus = initExportAndFetchAsyncInvoiceExportStatus(accessToken, null, true, encryptionData);
+
+        Map<String, String> downloadedFiles = downloadPackage(invoiceExportStatus, encryptionData);
+
+        String metadataJson = downloadedFiles.keySet()
+                .stream()
+                .filter(fileName -> fileName.endsWith(".json"))
+                .findFirst()
+                .map(downloadedFiles::get)
+                .orElse(null);
+        InvoicePackageMetadata invoicePackageMetadata = objectMapper.readValue(metadataJson, InvoicePackageMetadata.class);
+
+        Assertions.assertEquals(1, downloadedFiles.size());
+        Assertions.assertEquals(1, invoicePackageMetadata.getInvoices().size());
     }
 
     static Stream<Arguments> inputTestParameters() {
@@ -175,7 +214,7 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
             Assertions.assertTrue(invoiceMetadata.getInvoices().stream().anyMatch(e -> !e.getHasAttachment()));
         }
 
-        InvoiceExportStatus invoiceExportStatus = fetchAsyncInvoiceExportStatus(accessToken, filterWithHasAttachment, encryptionData);
+        InvoiceExportStatus invoiceExportStatus = initExportAndFetchAsyncInvoiceExportStatus(accessToken, filterWithHasAttachment, encryptionData);
         DownloadResults downloadResults = downloadAndProcessPackageAsync(invoiceExportStatus, expectedInvoiceSize, encryptionData);
         if (expectedInvoiceSize == 1) {
             Assertions.assertEquals(filterWithHasAttachment, downloadResults.invoicePackageMetadata.getInvoices().getFirst().getHasAttachment());
@@ -294,11 +333,15 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
         return sendInvoiceResponse.getReferenceNumber();
     }
 
-    private InvoiceExportStatus fetchAsyncInvoiceExportStatus(String accessToken, EncryptionData encryptionData) throws ApiException {
-        return fetchAsyncInvoiceExportStatus(accessToken, null, encryptionData);
+    private InvoiceExportStatus initExportAndFetchAsyncInvoiceExportStatus(String accessToken, EncryptionData encryptionData) throws ApiException {
+        return initExportAndFetchAsyncInvoiceExportStatus(accessToken, null, encryptionData);
     }
 
-    private InvoiceExportStatus fetchAsyncInvoiceExportStatus(String accessToken, Boolean hasAttachment, EncryptionData encryptionData) throws ApiException {
+    private InvoiceExportStatus initExportAndFetchAsyncInvoiceExportStatus(String accessToken, Boolean hasAttachment, EncryptionData encryptionData) throws ApiException {
+        return initExportAndFetchAsyncInvoiceExportStatus(accessToken, hasAttachment, false, encryptionData);
+    }
+
+    private InvoiceExportStatus initExportAndFetchAsyncInvoiceExportStatus(String accessToken, Boolean hasAttachment, boolean onlyMetadata, EncryptionData encryptionData) throws ApiException {
         InvoiceExportFilters filters = new InvoicesAsyncQueryFiltersBuilder()
                 .withSubjectType(InvoiceQuerySubjectType.SUBJECT1)
                 .withDateRange(
@@ -308,7 +351,7 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
 
         InvoiceExportRequest request = new InvoiceExportRequest(
                 new EncryptionInfo(encryptionData.encryptionInfo().getEncryptedSymmetricKey(),
-                        encryptionData.encryptionInfo().getInitializationVector()), filters);
+                        encryptionData.encryptionInfo().getInitializationVector()), filters, onlyMetadata);
 
         InitAsyncInvoicesQueryResponse response = ksefClient.initAsyncQueryInvoice(request, accessToken);
 
@@ -332,14 +375,7 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
     }
 
     private DownloadResults downloadAndProcessPackageAsync(InvoiceExportStatus invoiceExportStatus, int expectedInvoiceSize, EncryptionData encryptionData) throws IOException {
-        List<InvoicePackagePart> parts = invoiceExportStatus.getPackageParts().getParts();
-        byte[] mergedZip = FilesUtil.mergeZipParts(
-                encryptionData,
-                parts,
-                part -> ksefClient.downloadPackagePart(part),
-                (encryptedPackagePart, key, iv) -> defaultCryptographyService.decryptBytesWithAes256(encryptedPackagePart, key, iv)
-        );
-        Map<String, String> downloadedFiles = FilesUtil.unzip(mergedZip);
+        Map<String, String> downloadedFiles = downloadPackage(invoiceExportStatus, encryptionData);
 
         String metadataJson = downloadedFiles.keySet()
                 .stream()
@@ -358,6 +394,17 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
         Assertions.assertEquals(expectedInvoiceSize, invoicePackageMetadata.getInvoices().size());
 
         return new DownloadResults(invoicePackageMetadata, invoices);
+    }
+
+    private Map<String, String> downloadPackage(InvoiceExportStatus invoiceExportStatus, EncryptionData encryptionData) throws IOException {
+        List<InvoicePackagePart> parts = invoiceExportStatus.getPackageParts().getParts();
+        byte[] mergedZip = FilesUtil.mergeZipParts(
+                encryptionData,
+                parts,
+                part -> ksefClient.downloadPackagePart(part),
+                (encryptedPackagePart, key, iv) -> defaultCryptographyService.decryptBytesWithAes256(encryptedPackagePart, key, iv)
+        );
+        return FilesUtil.unzip(mergedZip);
     }
 
     private void checkPeppolProviderList(String peppolProvider) throws ApiException {

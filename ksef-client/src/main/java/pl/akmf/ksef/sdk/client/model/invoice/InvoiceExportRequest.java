@@ -5,6 +5,8 @@ import pl.akmf.ksef.sdk.client.model.session.EncryptionInfo;
 public class InvoiceExportRequest {
     private EncryptionInfo encryption;
     private InvoiceExportFilters filters;
+    // Określa, czy zwrócić tylko metadane faktur (plik _metadata.json bez faktur).
+    private boolean onlyMetadata = false;
 
     public InvoiceExportRequest() {
 
@@ -13,6 +15,12 @@ public class InvoiceExportRequest {
     public InvoiceExportRequest(EncryptionInfo encryption, InvoiceExportFilters filters) {
         this.encryption = encryption;
         this.filters = filters;
+    }
+
+    public InvoiceExportRequest(EncryptionInfo encryption, InvoiceExportFilters filters, boolean onlyMetadata) {
+        this.encryption = encryption;
+        this.filters = filters;
+        this.onlyMetadata = onlyMetadata;
     }
 
     public EncryptionInfo getEncryption() {
@@ -29,5 +37,13 @@ public class InvoiceExportRequest {
 
     public void setFilters(InvoiceExportFilters filters) {
         this.filters = filters;
+    }
+
+    public boolean isOnlyMetadata() {
+        return onlyMetadata;
+    }
+
+    public void setOnlyMetadata(boolean onlyMetadata) {
+        this.onlyMetadata = onlyMetadata;
     }
 }
