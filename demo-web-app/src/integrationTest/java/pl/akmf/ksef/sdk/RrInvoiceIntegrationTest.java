@@ -105,7 +105,7 @@ class RrInvoiceIntegrationTest extends BaseIntegrationTest {
         encryptionData = defaultCryptographyService.getEncryptionData();
 
         // Otwarcie sesji online z kodem systemu FA_RR
-        String sessionReferenceNumber = openOnlineSession(encryptionData, SystemCode.FA_RR, SchemaVersion.VERSION_1_1E, SessionValue.RR, authorizedAccessToken);
+        String sessionReferenceNumber = openOnlineSession(encryptionData, SystemCode.FA_RR, SchemaVersion.VERSION_1_1E, SessionValue.FA_RR, authorizedAccessToken);
 
         // Wysłanie faktury FA-RR
         sendRrInvoice(sessionReferenceNumber, encryptionData, grantorNip, authorizedNip, templateFileName, authorizedAccessToken);
