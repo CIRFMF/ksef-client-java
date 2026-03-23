@@ -1903,7 +1903,7 @@
 ## 2. demo-web-app
 
 ### 2.1 integrationTest
-- **RrInvoiceIntegrationTest.java.java**: ➕ dodano scenariusz testowy dla faktury VAT RR
+- **RrInvoiceIntegrationTest.java**: ➕ dodano scenariusz testowy dla faktury VAT RR
 
 ### 2.1.1 integrationTest.resources
 - **invoice-template-fa-rr-1.xml**: ➕ dodano plik zawierający przykładową fakturę VAT RR
@@ -1984,10 +1984,10 @@
 ## 2. demo-web-app
 
 ### 2.1 integrationTest
-- **QrCodeOnlineIntegrationTest.java.java**: 🔧 drobne zmiany w asercji
-- **RrInvoiceIntegrationTest.java.java**: 🔧 użycie nowej wersji schemy RR `SchemaVersion.VERSION_1_1E`
-- **KsefTokenIntegrationTest.java.java**: 🔧 zmiany kosmetyczne w assercji
-- **ExceptionsApiIntegrationTest.java.java**: ➕ dodanie scenariusza do obsługi kodów http 401 i 403 z API
+- **QrCodeOnlineIntegrationTest.java**: 🔧 drobne zmiany w asercji
+- **RrInvoiceIntegrationTest.java**: 🔧 użycie nowej wersji schemy RR `SchemaVersion.VERSION_1_1E`
+- **KsefTokenIntegrationTest.java**: 🔧 zmiany kosmetyczne w assercji
+- **ExceptionsApiIntegrationTest.java**: ➕ dodanie scenariusza do obsługi kodów http 401 i 403 z API
 
 ### 2.1.1 integrationTest.resources
 - **invoice-template-fa-rr-1.xml**: 🔧 aktualizacja pod nową wersję schemy RR
@@ -2022,4 +2022,26 @@
 | ➕ dodane    | 0            |
 | 🔧 zmienione | 2            |
 | ➖ usunięte  | 0            |
+
+
+# Changelog zmian - `## 3.0.22 (2026-03-23)`- `API: 2.3.0`
+
+## 1. ksef-client
+
+### 1.1 api.client.model
+- **model/session/SessionValue.java**: 🔧 dodanie enuma `FA_RR("FA_RR")`
+
+## 2. demo-web-app
+
+### 2.1 integrationTest
+- **RrInvoiceIntegrationTest.java**: 🔧 użycie enuma z `FA_RR`
+
+---
+## 3. Podsumowanie
+
+| Typ zmiany  | Liczba plików |
+|-------------|---------------|
+| ➕ dodane    | 0             |
+| 🔧 zmienione | 2             |
+| ➖ usunięte  | 0             |
 
