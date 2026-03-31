@@ -59,7 +59,7 @@ class SearchInvoiceForSubject3IntegrationTest extends BaseIntegrationTest {
         //open Session as company && send invoice
         String sessionReferenceNumber = openOnlineSession(encryptionData, SystemCode.FA_3, SchemaVersion.VERSION_1_0E, SessionValue.FA, companyAccessToken);
 
-        String invoiceReferenceNumber = sendInvoiceOnlineSession(contextNip, recipientNip, sessionReferenceNumber,
+        String invoiceReferenceNumber = sendInvoiceOnlineSession(contextNip, recipientNip, recipientNip, sessionReferenceNumber,
                 encryptionData, "/xml/invoices/sample/invoice-template-fa-3-with-custom-subject_3.xml", companyAccessToken);
 
         //check if invoice has been processed correctly
@@ -131,11 +131,12 @@ class SearchInvoiceForSubject3IntegrationTest extends BaseIntegrationTest {
         return openOnlineSessionResponse.getReferenceNumber();
     }
 
-    private String sendInvoiceOnlineSession(String nip, String recipientNip, String sessionReferenceNumber,
+    private String sendInvoiceOnlineSession(String nip, String recipientNip, String thirdSubject, String sessionReferenceNumber,
                                             EncryptionData encryptionData, String path, String accessToken) throws IOException, ApiException {
         String invoiceTemplate = new String(readBytesFromPath(path), StandardCharsets.UTF_8)
                 .replace("#nip#", nip)
-                .replace("#subject3nip#", recipientNip)
+                .replace("#subject2nip#", recipientNip)
+                .replace("#subject3IdentifierValue#", thirdSubject.length() == 10 ? (("<NIP>" + thirdSubject + "</NIP>")) : ("<IDWew>" + thirdSubject + "</IDWew>"))
                 .replace("#invoicing_date#",
                         LocalDate.of(2025, 9, 15).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                 .replace("#invoice_number#", UUID.randomUUID().toString());

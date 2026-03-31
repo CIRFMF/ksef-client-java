@@ -2012,7 +2012,7 @@
 ## 2. demo-web-app
 
 ### 2.1 integrationTest
-- **QueryInvoiceIntegrationTest.java.java**: 🔧 dodanie testu z użyciem `onlyMetadata = true` w `InvoiceExportRequest`
+- **QueryInvoiceIntegrationTest.java**: 🔧 dodanie testu z użyciem `onlyMetadata = true` w `InvoiceExportRequest`
 
 ---
 ## 3. Podsumowanie
@@ -2045,3 +2045,30 @@
 | 🔧 zmienione | 2             |
 | ➖ usunięte  | 0             |
 
+
+# Changelog zmian - `## 3.0.23 (2026-03-31)`- `API: 2.3.0`
+
+## 1. ksef-client
+
+### 1.1 api.client.model
+- **permission/search/QueryPersonalGrantContextIdentifier.java**: 🔧 dodanie enuma `INTERNAL_ID("InternalId")`
+
+## 2. demo-web-app
+
+### 2.1 integrationTest
+- **BaseIntegrationTest.java**: 🔧 poprawka w `authAsInternalId` przy generowaniu certyfikatu dla nipu i/lub peselu
+- **PersonPermissionIntegrationTest.java**: 🔧 dodanie testu z filtrowaniem po InternalId
+- **SearchInvoiceForSubject3IntegrationTest.java**: 🔧 aktualizacja po zmianie szablonu xml faktury `invoice-template-fa-3-with-custom-subject_3.xml`
+- **SubUnitPermissionIntegrationTest.java**: 🔧 aktualizacja po zmianie szablonu xml faktury `invoice-template-fa-3-with-custom-subject_3.xml`
+
+### 2.1.1 integrationTest.resources
+- **xml/invoices/sample/invoice-template-fa-3-with-custom-subject_3.xml**: 🔧 dodanie placeholderów dla podmiotu 2 i podmiotu 3
+
+---
+## 3. Podsumowanie
+
+| Typ zmiany  | Liczba plików |
+|-------------|---------------|
+| ➕ dodane    | 0             |
+| 🔧 zmienione | 6             |
+| ➖ usunięte  | 0             |

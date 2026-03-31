@@ -33,7 +33,8 @@ public class QueryPersonalGrantContextIdentifier {
 
     public enum IdentifierType {
 
-        NIP("Nip");
+        NIP("Nip"),
+        INTERNAL_ID("InternalId");
 
         private final String value;
 

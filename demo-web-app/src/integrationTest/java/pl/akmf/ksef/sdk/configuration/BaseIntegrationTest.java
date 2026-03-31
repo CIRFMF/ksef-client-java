@@ -202,7 +202,7 @@ public abstract class BaseIntegrationTest {
         return new AuthTokensPair(tokenResponse.getAccessToken().getToken(), tokenResponse.getRefreshToken().getToken());
     }
 
-    protected AuthTokensPair authAsInternalId(String internalId, String pesel) throws ApiException, JAXBException,
+    protected AuthTokensPair authAsInternalId(String internalId, String identifierValue) throws ApiException, JAXBException,
             IOException {
         AuthenticationChallengeResponse challenge = ksefClient.getAuthChallenge();
 
@@ -214,7 +214,7 @@ public abstract class BaseIntegrationTest {
 
         String xml = AuthTokenRequestSerializer.authTokenRequestSerializer(authTokenRequest);
 
-        SelfSignedCertificate cert = certificateService.getPersonalCertificate("A", "R", "TINPL", pesel, "A R");
+        SelfSignedCertificate cert = certificateService.getPersonalCertificate("A", "R",  identifierValue.length() == 11 ? "PNOPL" : "TINPL", identifierValue, "A R");
 
         String signedXml = signatureService.sign(xml.getBytes(), cert.certificate(), cert.getPrivateKey());
 
