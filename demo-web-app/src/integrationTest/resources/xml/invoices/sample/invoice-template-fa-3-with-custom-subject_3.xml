@@ -24,7 +24,7 @@
     </Podmiot1>
     <Podmiot2>
         <DaneIdentyfikacyjne>
-            <NIP>9795075130</NIP>
+            <NIP>#subject2nip#</NIP>
             <Nazwa>Szkoła Testowa</Nazwa>
         </DaneIdentyfikacyjne>
         <Adres>
@@ -42,7 +42,7 @@
     </Podmiot2>
     <Podmiot3>
         <DaneIdentyfikacyjne>
-            <NIP>#subject3nip#</NIP>
+            #subject3IdentifierValue#
             <Nazwa>Szkoła Podstawowa w Bzdziszewie</Nazwa>
         </DaneIdentyfikacyjne>
         <Adres>

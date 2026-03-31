@@ -145,8 +145,9 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
         // --- Etap 1: Wystawienie faktury przez wykonawcę dla przedszkola (jednostki podrzędnej) ---
         String invoiceCreatorAuthToken = authWithCustomNip(invoiceCreatorNip, invoiceCreatorNip).accessToken();
         String invoiceCreatorSessionReferenceNumber = openOnlineSession(encryptionData, invoiceCreatorAuthToken);
-        String invoiceReferenceNumber = sendInvoiceOnlineSession(invoiceCreatorNip, municipalOfficeNip, invoiceCreatorSessionReferenceNumber,
-                encryptionData, "/xml/invoices/sample/invoice-template-fa-3-with-custom-subject_2.xml", invoiceCreatorAuthToken);
+        String invoiceReferenceNumber = sendInvoiceOnlineSession(invoiceCreatorNip, municipalOfficeNip, kindergartenId, invoiceCreatorSessionReferenceNumber,
+                encryptionData, "/xml/invoices/sample/invoice-template-fa-3-with-custom-subject_3.xml", invoiceCreatorAuthToken);
+
         await().pollDelay(Duration.ZERO)
                 .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
@@ -207,7 +208,7 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
                 ));
 
         //Sprawdzanie dostępu z poziomu gminy
-        invoiceMetadata = getInvoiceMetadata(InvoiceQuerySubjectType.SUBJECT2, refreshedAccessTokenResponse);
+        invoiceMetadata = getInvoiceMetadata(InvoiceQuerySubjectType.SUBJECT2, municipalOfficeAuthToken);
         Assertions.assertTrue(invoiceMetadata.stream()
                 .anyMatch(invoice -> municipalOfficeNip.equals(invoice.getBuyer().getIdentifier().getValue()))
         );
@@ -345,10 +346,10 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
         return response.getReferenceNumber();
     }
 
-    private String grantPermissionSubunit(String subjectNip, String contextNip, String accessToken) throws ApiException {
+    private String grantPermissionSubunit(String subjectNip, String contextIdentifierValue, String accessToken) throws ApiException {
         SubunitPermissionsGrantRequest request = new SubunitPermissionsGrantRequestBuilder()
                 .withSubjectIdentifier(new SubjectIdentifier(SubjectIdentifier.IdentifierType.NIP, subjectNip))
-                .withContextIdentifier(new ContextIdentifier(ContextIdentifier.IdentifierType.INTERNALID, contextNip))
+                .withContextIdentifier(new ContextIdentifier(ContextIdentifier.IdentifierType.INTERNALID, contextIdentifierValue))
                 .withDescription("E2E - nadanie uprawnień administratora w kontekście jednostki podrzędnej")
                 .withSubunitName("E2E VATGroup Jednostka podrzędna")
                 .withSubjectDetails(
@@ -390,11 +391,12 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
         return openOnlineSessionResponse.getReferenceNumber();
     }
 
-    private String sendInvoiceOnlineSession(String nip, String recipientNip, String sessionReferenceNumber,
+    private String sendInvoiceOnlineSession(String nip, String recipientNip, String thirdSubject, String sessionReferenceNumber,
                                             EncryptionData encryptionData, String path, String accessToken) throws IOException, ApiException {
         String invoiceTemplate = new String(readBytesFromPath(path), StandardCharsets.UTF_8)
                 .replace("#nip#", nip)
                 .replace("#subject2nip#", recipientNip)
+                .replace("#subject3IdentifierValue#", thirdSubject.length() == 10 ? (("<NIP>" + thirdSubject + "</NIP>")) : ("<IDWew>" + thirdSubject + "</IDWew>"))
                 .replace("#invoicing_date#",
                         LocalDate.of(2025, 9, 15).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                 .replace("#invoice_number#", UUID.randomUUID().toString());
@@ -453,7 +455,7 @@ class SubUnitPermissionIntegrationTest extends BaseIntegrationTest {
         InvoiceQueryFilters request = new InvoiceQueryFiltersBuilder()
                 .withSubjectType(subjectType)
                 .withDateRange(
-                        new InvoiceQueryDateRange(InvoiceQueryDateType.INVOICING,
+                        new InvoiceQueryDateRange(InvoiceQueryDateType.PERMANENTSTORAGE,
                                 OffsetDateTime.now().minusMonths(2),
                                 OffsetDateTime.now().plusDays(1)))
                 .build();

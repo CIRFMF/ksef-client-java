@@ -6,13 +6,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import pl.akmf.ksef.sdk.api.builders.permission.entity.GrantEntityPermissionsRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.permission.person.GrantPersonPermissionsRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.permission.person.PersonPermissionsQueryRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.permission.proxy.GrantAuthorizationPermissionsRequestBuilder;
+import pl.akmf.ksef.sdk.api.builders.permission.subunit.SubunitPermissionsGrantRequestBuilder;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.certificate.SelfSignedCertificate;
 import pl.akmf.ksef.sdk.client.model.permission.OperationResponse;
 import pl.akmf.ksef.sdk.client.model.permission.PermissionStatusInfo;
+import pl.akmf.ksef.sdk.client.model.permission.entity.EntityPermission;
+import pl.akmf.ksef.sdk.client.model.permission.entity.EntityPermissionType;
+import pl.akmf.ksef.sdk.client.model.permission.entity.GrantEntityPermissionsRequest;
 import pl.akmf.ksef.sdk.client.model.permission.person.GrantPersonPermissionsRequest;
 import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionPersonByFingerprintWithId;
 import pl.akmf.ksef.sdk.client.model.permission.person.PersonPermissionPersonById;
@@ -35,9 +40,17 @@ import pl.akmf.ksef.sdk.client.model.permission.search.QueryPersonalGrantContext
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryPersonalGrantRequest;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryPersonalGrantResponse;
 import pl.akmf.ksef.sdk.client.model.permission.search.QueryPersonalGrantTargetIdentifier;
+import pl.akmf.ksef.sdk.client.model.permission.search.QueryPersonalPermissionTypes;
+import pl.akmf.ksef.sdk.client.model.permission.subunit.ContextIdentifier;
+import pl.akmf.ksef.sdk.client.model.permission.subunit.PermissionsSubunitPersonByIdentifier;
+import pl.akmf.ksef.sdk.client.model.permission.subunit.PermissionsSubunitSubjectDetailsType;
+import pl.akmf.ksef.sdk.client.model.permission.subunit.SubunitPermissionsGrantRequest;
+import pl.akmf.ksef.sdk.client.model.permission.subunit.SubunitSubjectDetails;
 import pl.akmf.ksef.sdk.client.model.testdata.SubjectTypeTestData;
+import pl.akmf.ksef.sdk.client.model.testdata.Subunit;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataPersonCreateRequest;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataSubjectCreateRequest;
+import pl.akmf.ksef.sdk.client.model.testdata.TestDataSubjectRemoveRequest;
 import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
@@ -420,6 +433,107 @@ class PersonPermissionIntegrationTest extends BaseIntegrationTest {
                 );
     }
 
+
+    // Scenariusz E2E weryfikujący:
+    // - poprawkę w API zwracającą w liście uprawnień (POST /v2/permissions/query/personal/grants)
+    //   również uprawnienia podmiotowe InvoiceRead/InvoiceWrite nadane z canDelegate=false,
+    // - filtrowanie wyników po InternalId,
+    // - dopuszczalną długość identyfikatora InternalId (16 znaków).
+    //
+    // Kroki:
+    // 1. Utworzenie podmiotu głównego (VatGroup) z jednostką podrzędną
+    // 2. Nadanie dyrektorowi (PESEL) uprawnień administracyjnych do jednostki podrzędnej w kontekście InternalId
+    // 3. Uwierzytelnienie dyrektora w kontekście InternalId
+    // 4. Nadanie dyrektorowi uprawnień osobistych InvoiceRead/InvoiceWrite w kontekście InternalId
+    // 5. Nadanie w tym samym kontekście uprawnień podmiotowych InvoiceRead/InvoiceWrite z canDelegate=false
+    // 6. Weryfikacja listy uprawnień bez filtra (powinny zawierać InvoiceRead/InvoiceWrite z CanDelegate=false)
+    // 7. Weryfikacja listy uprawnień z filtrem InternalId (powinny zawierać InvoiceRead/InvoiceWrite z CanDelegate=false)
+    // 8. Sprzątanie danych testowych
+    @Test
+    void personalPermissionsWithInternalIdFilterShouldReturnPermissions() throws ApiException, JAXBException, IOException {
+        // Przygotowanie danych
+        String municipalOfficeNip = IdentifierGeneratorUtils.generateRandomNIP();
+        String subunitNip = IdentifierGeneratorUtils.generateRandomNIP();
+        String kindergartenId = IdentifierGeneratorUtils.generateInternalIdentifier(municipalOfficeNip);
+        String directorPesel = IdentifierGeneratorUtils.getRandomPesel();
+
+        // Weryfikacja kontraktu: InternalId ma długość 16
+        Assertions.assertEquals(16, kindergartenId.length());
+
+        // Utworzenie podmiotu głównego z jednostką podrzędną
+        createVatGroupWithSubunit(municipalOfficeNip, subunitNip, "Przedszkole testowe", "Gmina testowa");
+
+        // 1) Uwierzytelnienie jako podmiot główny (właściciel kontekstu)
+        String municipalOfficeAuthToken = authWithCustomNip(municipalOfficeNip, municipalOfficeNip).accessToken();
+
+        // 2) Nadanie dyrektorowi uprawnień administracyjnych do jednostki podrzędnej w kontekście InternalId
+        String operationGrantNumber = grantPermissionSubunit(directorPesel, kindergartenId, "Przedszkole Testowe", "Sub-unit permission grant", municipalOfficeAuthToken);
+
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
+                .pollInterval(1, SECONDS)
+                .until(() -> isOperationFinish(operationGrantNumber, municipalOfficeAuthToken));
+
+        // 3) Uwierzytelnienie dyrektora w kontekście InternalId
+        String kindergartenAuthToken = authAsInternalId(kindergartenId, directorPesel).accessToken();
+
+        // 4) Nadanie uprawnień osobistych InvoiceRead/InvoiceWrite w kontekście InternalId
+        String grantPersonReferenceNumber = grantPersonPermission(directorPesel, "Nadanie InvoiceRead i InvoiceWrite dyrektorowi w kontekście InternalId", kindergartenAuthToken);
+
+        await().pollDelay(Duration.ZERO)
+                .atMost(15, SECONDS)
+                .pollInterval(1, SECONDS)
+                .until(() -> isOperationFinish(grantPersonReferenceNumber, kindergartenAuthToken));
+
+        // 5) Nadanie uprawnień podmiotowych (entity) InvoiceRead/InvoiceWrite z canDelegate=false
+        String grantEntityReferenceNumber = grantPermissionEntity(municipalOfficeNip,
+                "Uprawnienia podmiotowe InvoiceRead/InvoiceWrite bez delegowania",
+                "Podmiot " + municipalOfficeNip,
+                kindergartenAuthToken);
+
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
+                .pollInterval(2, SECONDS)
+                .until(() -> isOperationFinish(grantEntityReferenceNumber, kindergartenAuthToken));
+
+        // 6) Weryfikacja listy uprawnień bez filtra
+        QueryPersonalGrantRequest queryWithoutFilter = new QueryPersonalGrantRequest();
+        QueryPersonalGrantResponse personalPermissions = ksefClient.searchPersonalGrantPermission(queryWithoutFilter, 0, 50, kindergartenAuthToken);
+
+        // Uprawnienia InvoiceRead/InvoiceWrite powinny być zwrócone również wtedy, gdy canDelegate=false
+        Assertions.assertTrue(personalPermissions.getPermissions().stream()
+                .anyMatch(p -> QueryPersonalPermissionTypes.INVOICE_READ.equals(p.getPermissionScope()) && p.getCanDelegate() == false)
+        );
+        Assertions.assertTrue(personalPermissions.getPermissions().stream()
+                .anyMatch(p -> QueryPersonalPermissionTypes.INVOICE_WRITE.equals(p.getPermissionScope()) && p.getCanDelegate() == false)
+        );
+
+        // 7) Weryfikacja listy uprawnień z filtrem ContextIdentifier=InternalId
+        QueryPersonalGrantRequest request = new QueryPersonalGrantRequest();
+        request.setContextIdentifier(new QueryPersonalGrantContextIdentifier(QueryPersonalGrantContextIdentifier.IdentifierType.INTERNAL_ID, kindergartenId));
+        QueryPersonalGrantResponse permissionsWithInternalIdFilter = ksefClient.searchPersonalGrantPermission(request, 0, 50, kindergartenAuthToken);
+
+        Assertions.assertTrue(permissionsWithInternalIdFilter.getPermissions().stream()
+                .anyMatch(p -> QueryPersonalPermissionTypes.INVOICE_READ.equals(p.getPermissionScope()) && p.getCanDelegate() == false)
+        );
+        Assertions.assertTrue(permissionsWithInternalIdFilter.getPermissions().stream()
+                .anyMatch(p -> QueryPersonalPermissionTypes.INVOICE_WRITE.equals(p.getPermissionScope()) && p.getCanDelegate() == false)
+        );
+
+        // 8) Sprzątanie danych testowych
+        ksefClient.removeTestSubject(new TestDataSubjectRemoveRequest(municipalOfficeNip));
+    }
+
+    private void createVatGroupWithSubunit(String vatGroupNip, String subunitNip, String subunitDescription, String description) throws ApiException {
+        TestDataSubjectCreateRequest request = new TestDataSubjectCreateRequest();
+        request.setSubjectNip(vatGroupNip);
+        request.setSubjectType(SubjectTypeTestData.VAT_GROUP);
+        request.setSubunits(List.of(new Subunit(subunitNip, subunitDescription)));
+        request.setDescription(description);
+
+        ksefClient.createTestSubject(request);
+    }
+
     private void createEnforcementSubject(String nip, String description) throws ApiException {
         TestDataSubjectCreateRequest request = new TestDataSubjectCreateRequest();
         request.setSubjectNip(nip);
@@ -536,5 +650,47 @@ class PersonPermissionIntegrationTest extends BaseIntegrationTest {
     private Boolean isOperationFinish(String referenceNumber, String accessToken) throws ApiException {
         PermissionStatusInfo operations = ksefClient.permissionOperationStatus(referenceNumber, accessToken);
         return operations != null && operations.getStatus().getCode() == 200;
+    }
+
+    private String grantPermissionSubunit(String pesel, String contextIdentifierValue, String subunitName, String subunitDescription, String accessToken) throws ApiException {
+        SubunitPermissionsGrantRequest request = new SubunitPermissionsGrantRequestBuilder()
+                .withSubjectIdentifier(new pl.akmf.ksef.sdk.client.model.permission.subunit.SubjectIdentifier(pl.akmf.ksef.sdk.client.model.permission.subunit.SubjectIdentifier.IdentifierType.PESEL, pesel))
+                .withContextIdentifier(new ContextIdentifier(ContextIdentifier.IdentifierType.INTERNALID, contextIdentifierValue))
+                .withDescription(subunitDescription)
+                .withSubunitName(subunitName)
+                .withSubjectDetails(
+                        new SubunitSubjectDetails(PermissionsSubunitSubjectDetailsType.PersonByIdentifier,
+                                new PermissionsSubunitPersonByIdentifier("Jan", "Kowalski"),
+                                null,
+                                null
+                        )
+                )
+                .build();
+
+        return grantPermissionSubunit(request, accessToken);
+    }
+
+    private String grantPermissionSubunit(SubunitPermissionsGrantRequest request, String accessToken) throws ApiException {
+        OperationResponse response = ksefClient.grantsPermissionSubUnit(request, accessToken);
+        Assertions.assertNotNull(response);
+        return response.getReferenceNumber();
+    }
+
+    private String grantPermissionEntity(String targetNip, String description, String subjectDetailsFullName, String accessToken) throws ApiException {
+        GrantEntityPermissionsRequest request = new GrantEntityPermissionsRequestBuilder()
+                .withPermissions(List.of(
+                        new EntityPermission(EntityPermissionType.INVOICE_READ, false),
+                        new EntityPermission(EntityPermissionType.INVOICE_WRITE, false)))
+                .withDescription(description)
+                .withSubjectIdentifier(new pl.akmf.ksef.sdk.client.model.permission.entity.SubjectIdentifier(pl.akmf.ksef.sdk.client.model.permission.entity.SubjectIdentifier.IdentifierType.NIP, targetNip))
+                .withSubjectDetails(
+                        new GrantEntityPermissionsRequest.PermissionsEntitySubjectDetails(subjectDetailsFullName)
+                )
+                .build();
+
+        OperationResponse response = ksefClient.grantsPermissionEntity(request, accessToken);
+        Assertions.assertNotNull(response);
+
+        return response.getReferenceNumber();
     }
 }
