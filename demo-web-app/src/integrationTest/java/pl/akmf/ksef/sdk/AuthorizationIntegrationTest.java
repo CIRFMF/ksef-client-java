@@ -1,5 +1,12 @@
 package pl.akmf.ksef.sdk;
 
+import eu.europa.esig.dss.detailedreport.DetailedReport;
+import eu.europa.esig.dss.model.DSSDocument;
+import eu.europa.esig.dss.model.InMemoryDocument;
+import eu.europa.esig.dss.simplereport.SimpleReport;
+import eu.europa.esig.dss.spi.validation.CommonCertificateVerifier;
+import eu.europa.esig.dss.validation.SignedDocumentValidator;
+import eu.europa.esig.dss.validation.reports.Reports;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -29,7 +36,10 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
 import java.security.PrivateKey;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -112,6 +122,54 @@ class AuthorizationIntegrationTest extends BaseIntegrationTest {
 
         AuthOperationStatusResponse tokenResponse = ksefClient.redeemToken(submitAuthTokenResponse.getAuthenticationToken().getToken());
         Assertions.assertNotNull(tokenResponse);
+    }
+
+//    @Test
+    void signExportableKeysTest() throws Exception {
+        String alias = "ec-key-alias"; // your alias
+
+        String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
+        AuthenticationChallengeResponse challenge = ksefClient.getAuthChallenge();
+        AuthTokenRequest authTokenRequest = new AuthTokenRequestBuilder()
+                .withChallenge(challenge.getChallenge())
+                .withContextNip(contextNip)
+                .withSubjectType(SubjectIdentifierTypeEnum.CERTIFICATE_SUBJECT)
+                .build();
+
+        String xml = AuthTokenRequestSerializer.authTokenRequestSerializer(authTokenRequest);
+
+        KeyStore ks = KeyStore.getInstance("Windows-MY");
+        ks.load(null, null);
+
+        if (ks.containsAlias(alias)) {
+            PrivateKey privateKey = (PrivateKey) ks.getKey(alias, null);
+            Certificate cert = ks.getCertificate(alias);
+
+            String signedXml = signatureService.sign(xml.getBytes(), (X509Certificate) cert, privateKey);
+            System.out.println("----");
+            System.out.println("signedXml: " + signedXml);
+            System.out.println("----");
+
+            byte[] bytes = signedXml.getBytes(StandardCharsets.UTF_8);
+            DSSDocument document = new InMemoryDocument(bytes);
+            SignedDocumentValidator validator = SignedDocumentValidator.fromDocument(document);
+            validator.setCertificateVerifier(new CommonCertificateVerifier());
+            Reports reports = validator.validateDocument();
+            SimpleReport simpleReport = reports.getSimpleReport();
+            List<String> simpleSignatureIds = simpleReport.getSignatureIdList();
+
+            for (String id : simpleSignatureIds) {
+                boolean valid = simpleReport.isValid(id);
+                System.out.println("Simple signature " + id + " - valid: " + valid);
+            }
+
+            DetailedReport detailedReport = reports.getDetailedReport();
+            boolean valid = detailedReport.isCertificateValidation();
+            System.out.println("Detailed report - valid: " + valid);
+
+        } else {
+            Assertions.fail("Could not find alias: " + alias + "in KeyStore.");
+        }
     }
 
     @Test

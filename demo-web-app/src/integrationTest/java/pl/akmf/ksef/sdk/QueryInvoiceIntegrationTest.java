@@ -13,10 +13,11 @@ import pl.akmf.ksef.sdk.api.builders.permission.proxy.GrantAuthorizationPermissi
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
-import pl.akmf.ksef.sdk.client.ExceptionDetails;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.ExceptionResponse;
 import pl.akmf.ksef.sdk.client.model.UpoVersion;
+import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiError;
+import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiException;
+import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestProblemDetails;
 import pl.akmf.ksef.sdk.client.model.invoice.InitAsyncInvoicesQueryResponse;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportFilters;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportRequest;
@@ -256,12 +257,13 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
                 ksefClient.queryInvoiceMetadata(0, 5, SortOrder.ASC, request, accessToken)
         );
         Assertions.assertEquals(400, apiException.getCode());
-        ExceptionResponse exceptionResponse = apiException.getExceptionResponse();
-        Assertions.assertFalse(exceptionResponse.getException().getExceptionDetailList().isEmpty());
-        ExceptionDetails details = exceptionResponse.getException().getExceptionDetailList().getFirst();
-        Assertions.assertEquals(21405, details.getExceptionCode());
-        Assertions.assertEquals("Błąd walidacji danych wejściowych.", details.getExceptionDescription());
-        Assertions.assertEquals("'pageSize' must be between 10 and 250. You entered 5.", details.getDetails().getFirst());
+        BadRequestApiException badRequestApiException = (BadRequestApiException) apiException;
+        BadRequestProblemDetails exceptionResponse = badRequestApiException.getBadRequestProblemDetails();
+        Assertions.assertFalse(exceptionResponse.getErrors().isEmpty());
+        BadRequestApiError error = exceptionResponse.getErrors().getFirst();
+        Assertions.assertEquals(21405, error.getCode());
+        Assertions.assertEquals("Błąd walidacji danych wejściowych.", error.getDescription());
+        Assertions.assertEquals("'pageSize' must be between 10 and 250. You entered 5.", error.getDetails().getFirst());
     }
 
     private boolean isInvoicesInSessionProcessed(String sessionReferenceNumber, String accessToken) {

@@ -7,6 +7,7 @@ public class UnauthorizedProblemDetails {
     private String detail;
     private String instance;
     private String traceId;
+    private String timestamp;
 
     public UnauthorizedProblemDetails() {
     }
@@ -17,6 +18,15 @@ public class UnauthorizedProblemDetails {
         this.detail = detail;
         this.instance = instance;
         this.traceId = traceId;
+    }
+
+    public UnauthorizedProblemDetails(String title, int status, String detail, String instance, String traceId, String timestamp) {
+        this.title = title;
+        this.status = status;
+        this.detail = detail;
+        this.instance = instance;
+        this.traceId = traceId;
+        this.timestamp = timestamp;
     }
 
     public String getTitle() {
@@ -59,13 +69,22 @@ public class UnauthorizedProblemDetails {
         this.traceId = traceId;
     }
 
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
+    }
+
     @Override
     public String toString() {
         return "{title=" + title +
                 ", status=" + status +
                 ", detail=" + detail +
                 ", instance=" + instance +
-                ", traceId=" + traceId
+                ", traceId=" + traceId +
+                ", timestamp=" + timestamp
                 + "}";
     }
 }

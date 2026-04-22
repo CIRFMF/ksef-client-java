@@ -3,6 +3,7 @@ package pl.akmf.ksef.sdk.api.services;
 import eu.europa.esig.dss.enumerations.DigestAlgorithm;
 import eu.europa.esig.dss.enumerations.EncryptionAlgorithm;
 import eu.europa.esig.dss.enumerations.MimeTypeEnum;
+import eu.europa.esig.dss.enumerations.SignatureAlgorithm;
 import eu.europa.esig.dss.enumerations.SignatureLevel;
 import eu.europa.esig.dss.enumerations.SignaturePackaging;
 import eu.europa.esig.dss.model.DSSDocument;
@@ -39,7 +40,17 @@ public class DefaultSignatureService implements SignatureService {
 
         XAdESSignatureParameters parameters = prepareParameters(signatureCertificate, privateKey);
         ToBeSigned dataToSign = service.getDataToSign(toSignDocument, parameters);
-        SignatureValue signatureValue = signContextProvider.createSignatureValue(dataToSign, signatureCertificate, privateKey);
+
+        SignatureValue signatureValue;
+
+        boolean exportable = privateKey.getFormat() != null && privateKey.getEncoded() != null;
+
+        SignatureAlgorithm signatureAlgorithm = resolveSignatureAlgorithm(signatureCertificate, privateKey);
+        if (exportable) {
+            signatureValue = signContextProvider.createSignatureValue(dataToSign, signatureAlgorithm, signatureCertificate, privateKey);
+        } else {
+            signatureValue = signContextProvider.createSignatureValue(dataToSign, signatureAlgorithm, privateKey);
+        }
 
         DSSDocument signedDocument = service.signDocument(toSignDocument, parameters, signatureValue);
         try (ByteArrayInputStream byteArrayInputStream = (ByteArrayInputStream) signedDocument.openStream()) {
@@ -83,5 +94,28 @@ public class DefaultSignatureService implements SignatureService {
         parameters.setSigningCertificate(new CertificateToken(x509Certificate));
 
         return parameters;
+    }
+
+    private SignatureAlgorithm resolveSignatureAlgorithm(X509Certificate signatureCertificate, PrivateKey privateKey) {
+        SignatureAlgorithm signatureAlgorithm;
+        if (isMatchingRsaPair(signatureCertificate, privateKey)) {
+            signatureAlgorithm = SignatureAlgorithm.RSA_SHA256;
+        } else if (isMatchingEcdsaPair(signatureCertificate, privateKey)) {
+            ECPublicKey ecPublicKey = (ECPublicKey) signatureCertificate.getPublicKey();
+            int keySize = ecPublicKey.getParams().getCurve().getField().getFieldSize();
+
+            if (keySize <= 256) {
+                signatureAlgorithm = SignatureAlgorithm.ECDSA_SHA256;
+            } else if (keySize <= 384) {
+                signatureAlgorithm = SignatureAlgorithm.ECDSA_SHA384;
+            } else {
+                signatureAlgorithm = SignatureAlgorithm.ECDSA_SHA512;
+            }
+        } else {
+            throw new IllegalArgumentException("Encoding data are incorrect: \nCertificate signatureAlg: " + signatureCertificate.getSigAlgName()
+                    + "\nPublicKey signatureAlg: " + signatureCertificate.getPublicKey().getAlgorithm()
+                    + "\nPrivateKEy signatureAlg: " + privateKey.getAlgorithm());
+        }
+        return signatureAlgorithm;
     }
 }

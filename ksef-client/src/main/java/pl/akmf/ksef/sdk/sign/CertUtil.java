@@ -17,19 +17,25 @@ public class CertUtil {
         if (cert == null || privateKey == null) {
             return false;
         }
-        if (!(cert.getPublicKey() instanceof ECPublicKey)) {
-            return false;
+
+        if ((cert.getPublicKey() instanceof ECPublicKey) && (privateKey instanceof ECPrivateKey)) {
+            return true;
         }
-        return privateKey instanceof ECPrivateKey;
+
+        return "EC".equalsIgnoreCase(cert.getPublicKey().getAlgorithm())
+                && "EC".equalsIgnoreCase(privateKey.getAlgorithm());
     }
 
     public static boolean isMatchingRsaPair(X509Certificate cert, PrivateKey privateKey) {
         if (cert == null || privateKey == null) {
             return false;
         }
-        if (!(cert.getPublicKey() instanceof RSAPublicKey)) {
-            return false;
+
+        if ((cert.getPublicKey() instanceof RSAPublicKey) && (privateKey instanceof RSAPrivateKey)) {
+            return true;
         }
-        return privateKey instanceof RSAPrivateKey;
+
+        return "RSA".equalsIgnoreCase(cert.getPublicKey().getAlgorithm())
+                && "RSA".equalsIgnoreCase(privateKey.getAlgorithm());
     }
 }

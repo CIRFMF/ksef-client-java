@@ -2072,3 +2072,66 @@
 | ➕ dodane    | 0             |
 | 🔧 zmienione | 6             |
 | ➖ usunięte  | 0             |
+
+
+# Changelog zmian - `## 3.0.24 (2026-04-22)`- `API: 2.4.0`
+
+## 1. ksef-client
+
+### 1.1 api.client.model
+- **exceptions/TooManyRequestsApiException.java**: ➕ dodanie klasy
+- **exceptions/TooManyRequestsProblemDetails.java**: ➕ dodanie klasy
+- **exceptions/BadRequestApiError.java**: ➕ dodanie klasy
+- **exceptions/BadRequestApiException.java**: ➕ dodanie klasy
+- **exceptions/BadRequestProblemDetails.java**: ➕ dodanie klasy
+- **exceptions/GoneApiException.java**: ➕ dodanie klasy
+- **exceptions/GoneProblemDetails.java**: ➕ dodanie klasy
+- **exceptions/UnauthorizedProblemDetails.java**: 🔧 dodanie pola `String timestamp`
+- **exceptions/ForbiddenProblemDetails.java**: 🔧 dodanie pola `String timestamp`
+- **exceptions/GetRateLimitIntegrationTest.java**: 🔧 aktualizacja testu
+- **HttpStatus.java**: 🔧 dodanie enuma `GONE(410)`
+
+### 1.2 client
+- **Headers.java**: 🔧 dodanie pól `X_ERROR_FORMAT = "X-Error-Format"` i `X_ERROR_FORMAT_PROBLEM_DETAILS = "problem-details"`
+
+### 1.3 system
+- **ExceptionHandler.java**: ➕ dodanie klasy odpowiedzialnej za parsowanie błedów odpowiedzi http, dodano obsługę dla http 400, 410, 429 zgodnie z propozycją API KSeF ([#764](https://github.com/CIRFMF/ksef-docs/issues/764)) - najpierw próba zdekodowania odpowiedzi w nowym modelu, a następnie cofa się do dotychczasowego formatu.
+
+### 1.4 api
+- **DefaultKsefClient.java**: 🔧 parsowanie błedów odpowiedzi http przeniesiono do `ExceptionHandler`
+
+### 1.5 api.services
+- **DefaultSignatureService.java**: 🔧 - dodano obsługę podpisywania dokumentów dla kluczy eksportowalnych
+
+### 1.6 sign
+- **CertUtil.java**: 🔧 rozbudowa metod o sprawdzanie algorytmów kluczy
+- **LocalSigningContext.java**: 🔧 dodano przeciążone metody `SignatureValue createSignatureValue` pod podpisywanie dla kluczy eksportowalnych, jedna oznaczona jako Deprecated
+- **SignContextProvider.java**: 🔧 zgodnie z `LocalSigningContext`
+
+## 2. demo-web-app
+
+### 2.1 integrationTest
+- **AuthorizationIntegrationTest.java**: 🔧 dodano test pod podpisywanie dla kluczy eksportowalnych
+- **BatchIntegrationTest.java**: 🔧 aktualizacja testów po przejściu na nowy model dla błedów http (nagłówek `X-Error-Format: "problem-details"`)
+- **QueryInvoiceIntegrationTest.java**: 🔧 aktualizacja testów po przejściu na nowy model dla błedów http (nagłówek `X-Error-Format: "problem-details"`)
+- **SessionIntegrationTest.java**: 🔧 aktualizacja testów po przejściu na nowy model dla błedów http (nagłówek `X-Error-Format: "problem-details"`)
+- **PeppolInvoiceIntegrationTest.java**: 🔧 zmiany związane z dodaniem placeholderów w `invoice_template_pef_correction.xml`
+- **ExceptionsApiIntegrationTest.java**: 🔧 dodanie testów o obsługę kolejnych typów błedów http zwracanych z API
+
+### 2.2 integrationTest.resources
+- **xml/invoices/sample/invoice_template_pef_correction.xml**: 🔧 dodanie placeholderów dla numeru KSeF i daty faktury korygowanej
+
+### 2.3 resources
+- **application.yaml**: 🔧 dodanie domyślnie nagłówka `X-Error-Format: "problem-details"`
+- **application-demo.yaml**: 🔧 dodanie domyślnie nagłówka `X-Error-Format: "problem-details"`
+- **application-prod.yaml**: 🔧 dodanie domyślnie nagłówka `X-Error-Format: "problem-details"`
+
+---
+## 3. Podsumowanie
+
+| Typ zmiany  | Liczba plików |
+|-------------|---------------|
+| ➕ dodane    | 8             |
+| 🔧 zmienione | 20            |
+| ➖ usunięte  | 0             |
+

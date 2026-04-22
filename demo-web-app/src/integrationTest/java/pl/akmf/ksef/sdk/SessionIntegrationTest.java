@@ -7,10 +7,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
-import pl.akmf.ksef.sdk.client.ExceptionDetails;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.ExceptionResponse;
 import pl.akmf.ksef.sdk.client.model.UpoVersion;
+import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiError;
+import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiException;
+import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestProblemDetails;
 import pl.akmf.ksef.sdk.client.model.session.AuthenticationListItem;
 import pl.akmf.ksef.sdk.client.model.session.AuthenticationListResponse;
 import pl.akmf.ksef.sdk.client.model.session.CommonSessionStatus;
@@ -70,12 +71,13 @@ class SessionIntegrationTest extends BaseIntegrationTest {
 
         // Step 5: refresh token should throw: 21304: Brak uwierzytelnienia. - Nieprawidłowy token.
         ApiException apiException = assertThrows(ApiException.class, () -> ksefClient.refreshAccessToken(accessTokensPair.refreshToken()));
-        ExceptionResponse exceptionResponse = apiException.getExceptionResponse();
-        Assertions.assertFalse(exceptionResponse.getException().getExceptionDetailList().isEmpty());
-        ExceptionDetails details = exceptionResponse.getException().getExceptionDetailList().getFirst();
-        Assertions.assertEquals(21301, details.getExceptionCode());
-        Assertions.assertEquals("Brak autoryzacji.", details.getExceptionDescription());
-        Assertions.assertEquals("Status uwierzytelnienia (425) nie pozwala na odświeżenie tokenu dostępowego.", details.getDetails().getFirst());
+        BadRequestApiException badRequestApiException = (BadRequestApiException) apiException;
+        BadRequestProblemDetails exceptionResponse = badRequestApiException.getBadRequestProblemDetails();
+        Assertions.assertFalse(exceptionResponse.getErrors().isEmpty());
+        BadRequestApiError error = exceptionResponse.getErrors().getFirst();
+        Assertions.assertEquals(21301, error.getCode());
+        Assertions.assertEquals("Brak autoryzacji.", error.getDescription());
+        Assertions.assertEquals("Status uwierzytelnienia (425) nie pozwala na odświeżenie tokenu dostępowego.", error.getDetails().getFirst());
     }
 
     @Test

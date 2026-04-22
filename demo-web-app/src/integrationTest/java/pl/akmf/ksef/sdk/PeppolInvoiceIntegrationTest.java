@@ -133,7 +133,7 @@ class PeppolInvoiceIntegrationTest extends BaseIntegrationTest {
         String correctionSessionReferenceNumber = openOnlineSession(encryptionData, SystemCode.KOR_PEF_3, SchemaVersion.VERSION_2_1, SessionValue.FA_PEF, accessTokenForPefProvider);
 
         //10: Send pef correction
-        sendPefInvoice(correctionSessionReferenceNumber, encryptionData, contextNip, "/xml/invoices/sample/invoice_template_pef_correction.xml", accessTokenForPefProvider);
+        sendPefInvoice(correctionSessionReferenceNumber, encryptionData, contextNip, "/xml/invoices/sample/invoice_template_pef_correction.xml", sessionInvoice.getKsefNumber(), accessTokenForPefProvider);
 
         // Wait for invoice to be processed
         await().pollDelay(Duration.ZERO)
@@ -240,6 +240,11 @@ class PeppolInvoiceIntegrationTest extends BaseIntegrationTest {
 
     private String sendPefInvoice(String sessionReferenceNumber, EncryptionData encryptionData,
                                   String contextNip, String path, String accessToken) throws IOException, ApiException {
+        return sendPefInvoice(sessionReferenceNumber, encryptionData, contextNip, path, null, accessToken);
+    }
+
+    private String sendPefInvoice(String sessionReferenceNumber, EncryptionData encryptionData,
+                                  String contextNip, String path, String ksefNumber, String accessToken) throws IOException, ApiException {
         String buyerNip = IdentifierGeneratorUtils.generateRandomNIP();
         String iban = IdentifierGeneratorUtils.generateIban();
         String invoiceTemplate = new String(readBytesFromPath(path), StandardCharsets.UTF_8)
@@ -252,6 +257,9 @@ class PeppolInvoiceIntegrationTest extends BaseIntegrationTest {
                 .replace("#issue_date#", LocalDate.of(2025, 9, 15).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")))
                 .replace("#due_date#", LocalDate.of(2025, 9, 15).format(java.time.format.DateTimeFormatter.ofPattern(
                         "yyyy-MM-dd")));
+        if (ksefNumber != null) {
+            invoiceTemplate = invoiceTemplate.replace("#ksef_number#", ksefNumber);
+        }
 
         byte[] invoice = invoiceTemplate.getBytes(StandardCharsets.UTF_8);
 
