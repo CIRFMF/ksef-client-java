@@ -10,6 +10,7 @@ public class ForbiddenProblemDetails {
     private String reasonCode;
     private Map<String, Object> security;
     private String traceId;
+    private String timestamp;
 
     public ForbiddenProblemDetails() {
     }
@@ -22,6 +23,17 @@ public class ForbiddenProblemDetails {
         this.reasonCode = reasonCode;
         this.security = security;
         this.traceId = traceId;
+    }
+
+    public ForbiddenProblemDetails(String title, int status, String detail, String instance, String reasonCode, Map<String, Object> security, String traceId, String timestamp) {
+        this.title = title;
+        this.status = status;
+        this.detail = detail;
+        this.instance = instance;
+        this.reasonCode = reasonCode;
+        this.security = security;
+        this.traceId = traceId;
+        this.timestamp = timestamp;
     }
 
     public String getTitle() {
@@ -80,6 +92,14 @@ public class ForbiddenProblemDetails {
         this.traceId = traceId;
     }
 
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
+    }
+
     @Override
     public String toString() {
         return "title=" + title +
@@ -88,6 +108,7 @@ public class ForbiddenProblemDetails {
                 ", instance=" + instance +
                 ", reasonCode=" + reasonCode +
                 ", security=" + security +
+                ", timestamp=" + timestamp +
                 ", traceId=" + traceId;
     }
 }

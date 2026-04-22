@@ -8,6 +8,9 @@ sdk:
     qr-uri: "https://qr-test.ksef.mf.gov.pl"
     request-timeout: 100
     lighthouse-base-uri: "https://api-latarnia-test.ksef.mf.gov.pl/"
+    default-headers:
+      # Wymuszenie formatu Problem Details dla odpowiedzi błędów 400 i 429
+      X-Error-Format: "problem-details"
 
 spring:
   profiles:

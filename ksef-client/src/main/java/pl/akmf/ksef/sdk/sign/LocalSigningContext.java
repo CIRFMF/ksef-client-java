@@ -9,10 +9,13 @@ import eu.europa.esig.dss.token.Pkcs12SignatureToken;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
@@ -27,6 +30,7 @@ public class LocalSigningContext implements SignContextProvider {
     public static final String CUSTOM_KEYSTORE_ALIAS = "alias";
 
     @Override
+    @Deprecated
     public SignatureValue createSignatureValue(ToBeSigned toBeSigned, X509Certificate signatureCertificate, PrivateKey privateKey) {
         try {
             KeyStore keystore = KeyStore.getInstance(PKCS_12);
@@ -72,6 +76,54 @@ public class LocalSigningContext implements SignContextProvider {
             }
         } catch (UnrecoverableEntryException | CertificateException | IOException | NoSuchAlgorithmException |
                  KeyStoreException e) {
+            throw new SignSignatureException("Failed to create signature value", e);
+        }
+    }
+
+    @Override
+    public SignatureValue createSignatureValue(ToBeSigned toBeSigned, SignatureAlgorithm signatureAlgorithm, X509Certificate signatureCertificate, PrivateKey privateKey) {
+        try {
+            KeyStore keystore = KeyStore.getInstance(PKCS_12);
+            keystore.load(null, null);
+            Certificate[] chain = new Certificate[]{signatureCertificate};
+
+            keystore.setKeyEntry(
+                    CUSTOM_KEYSTORE_ALIAS,
+                    privateKey,
+                    null,
+                    chain
+            );
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            keystore.store(baos, null);
+            byte[] keystoreBytes = baos.toByteArray();
+
+            DSSPrivateKeyEntry dssPrivateKeyEntry = getPrivateKeyEntry(keystore);
+
+            try (Pkcs12SignatureToken token = createPkcs12Token(keystoreBytes)) {
+                return token.sign(toBeSigned, signatureAlgorithm, dssPrivateKeyEntry);
+            }
+        } catch (UnrecoverableEntryException | CertificateException | IOException | NoSuchAlgorithmException |
+                 KeyStoreException e) {
+            throw new SignSignatureException("Failed to create signature value", e);
+        }
+    }
+
+    @Override
+    public SignatureValue createSignatureValue(ToBeSigned toBeSigned, SignatureAlgorithm signatureAlgorithm, PrivateKey privateKey) {
+        try {
+            Signature signature = Signature.getInstance(signatureAlgorithm.getJCEId());
+            signature.initSign(privateKey);
+            signature.update(toBeSigned.getBytes());
+
+            byte[] sigBytes = signature.sign(); // moment podpisu (e.w podanie pinu)
+
+            SignatureValue signatureValue = new SignatureValue();
+            signatureValue.setAlgorithm(signatureAlgorithm);
+            signatureValue.setValue(sigBytes);
+
+            return signatureValue;
+        } catch (SignatureException | InvalidKeyException | NoSuchAlgorithmException e) {
             throw new SignSignatureException("Failed to create signature value", e);
         }
     }

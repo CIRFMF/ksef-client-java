@@ -6,10 +6,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.batch.OpenBatchSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
-import pl.akmf.ksef.sdk.client.ExceptionDetails;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.ExceptionResponse;
 import pl.akmf.ksef.sdk.client.model.UpoVersion;
+import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiError;
+import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiException;
+import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestProblemDetails;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionInfo;
 import pl.akmf.ksef.sdk.client.model.session.FileMetadata;
@@ -187,12 +188,13 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         // API KSeF powinno odrzucić żądanie ze względu na przekroczony limit fileSize
         ApiException apiException = assertThrows(ApiException.class, () ->
                 ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken));
-        ExceptionResponse exceptionResponse = apiException.getExceptionResponse();
-        Assertions.assertFalse(exceptionResponse.getException().getExceptionDetailList().isEmpty());
-        ExceptionDetails details = exceptionResponse.getException().getExceptionDetailList().getFirst();
-        Assertions.assertEquals(21405, details.getExceptionCode());
-        Assertions.assertEquals("Błąd walidacji danych wejściowych.", details.getExceptionDescription());
-        Assertions.assertEquals("'fileSize' must be less than or equal to '5000000000'.", details.getDetails().getFirst());
+        BadRequestApiException badRequestApiException = (BadRequestApiException) apiException;
+        BadRequestProblemDetails exceptionResponse = badRequestApiException.getBadRequestProblemDetails();
+        Assertions.assertFalse(exceptionResponse.getErrors().isEmpty());
+        BadRequestApiError error = exceptionResponse.getErrors().getFirst();
+        Assertions.assertEquals(21405, error.getCode());
+        Assertions.assertEquals("Błąd walidacji danych wejściowych.", error.getDescription());
+        Assertions.assertEquals("'fileSize' must be less than or equal to '5000000000'.", error.getDetails().getFirst());
     }
 
     // Weryfikuje odrzucenie paczki przekraczającej limit rozmiaru 100 MiB (przed szyfrowaniem).
@@ -287,12 +289,13 @@ class BatchIntegrationTest extends BaseIntegrationTest {
 
         ApiException apiException = assertThrows(ApiException.class, () ->
                 closeSession(sessionReferenceNumber, accessToken));
-        ExceptionResponse exceptionResponse = apiException.getExceptionResponse();
-        Assertions.assertFalse(exceptionResponse.getException().getExceptionDetailList().isEmpty());
-        ExceptionDetails details = exceptionResponse.getException().getExceptionDetailList().getFirst();
-        Assertions.assertEquals(21205, details.getExceptionCode());
-        Assertions.assertEquals("Pakiet nie może być pusty.", details.getExceptionDescription());
-        Assertions.assertEquals("Nie przesłano zadeklarowanej '2' części pliku.", details.getDetails().getFirst());
+        BadRequestApiException badRequestApiException = (BadRequestApiException) apiException;
+        BadRequestProblemDetails exceptionResponse = badRequestApiException.getBadRequestProblemDetails();
+        Assertions.assertFalse(exceptionResponse.getErrors().isEmpty());
+        BadRequestApiError error = exceptionResponse.getErrors().getFirst();
+        Assertions.assertEquals(21205, error.getCode());
+        Assertions.assertEquals("Pakiet nie może być pusty.", error.getDescription());
+        Assertions.assertEquals("Nie przesłano zadeklarowanej '2' części pliku.", error.getDetails().getFirst());
     }
 
     // Weryfikuje odrzucenie paczki z liczbą części przekraczającą maksymalny limit 50.
@@ -325,12 +328,13 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         // API KSeF odrzuca żądanie z przekroczoną liczbą części
         ApiException apiException = assertThrows(ApiException.class, () ->
                 ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken));
-        ExceptionResponse exceptionResponse = apiException.getExceptionResponse();
-        Assertions.assertFalse(exceptionResponse.getException().getExceptionDetailList().isEmpty());
-        ExceptionDetails details = exceptionResponse.getException().getExceptionDetailList().getFirst();
-        Assertions.assertEquals(21161, details.getExceptionCode());
-        Assertions.assertEquals("Przekroczono dozwoloną liczbę części pakietów.", details.getExceptionDescription());
-        Assertions.assertEquals("Liczba części pliku musi być mniejsza lub równa niż 50.", details.getDetails().getFirst());
+        BadRequestApiException badRequestApiException = (BadRequestApiException) apiException;
+        BadRequestProblemDetails exceptionResponse = badRequestApiException.getBadRequestProblemDetails();
+        Assertions.assertFalse(exceptionResponse.getErrors().isEmpty());
+        BadRequestApiError error = exceptionResponse.getErrors().getFirst();
+        Assertions.assertEquals(21161, error.getCode());
+        Assertions.assertEquals("Przekroczono dozwoloną liczbę części pakietów.", error.getDescription());
+        Assertions.assertEquals("Liczba części pliku musi być mniejsza lub równa niż 50.", error.getDetails().getFirst());
     }
 
     // Weryfikuje wykrycie nieprawidłowo zaszyfrowanego klucza symetrycznego.

@@ -3,9 +3,10 @@ package pl.akmf.ksef.sdk;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import pl.akmf.ksef.sdk.client.ExceptionDetails;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.ExceptionResponse;
+import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiError;
+import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiException;
+import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestProblemDetails;
 import pl.akmf.ksef.sdk.client.model.limit.BatchSessionLimit;
 import pl.akmf.ksef.sdk.client.model.limit.BatchSessionRateLimit;
 import pl.akmf.ksef.sdk.client.model.limit.CertificateLimit;
@@ -32,6 +33,9 @@ import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
 import pl.akmf.ksef.sdk.util.IdentifierGeneratorUtils;
 
 import java.io.IOException;
+import java.time.Duration;
+
+import static org.awaitility.Awaitility.await;
 
 class GetRateLimitIntegrationTest extends BaseIntegrationTest {
 
@@ -153,7 +157,7 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
     RateMax sessionInvoiceListMax = new RateMax(10, 20, 200);
     RateMax sessionMiscMax = new RateMax(10, 120, 720);
     RateMax invoiceMetadataMax = new RateMax(8, 16, 20);
-    RateMax invoiceExportMax = new RateMax(4, 8, 20);
+    RateMax invoiceExportMax = new RateMax(8, 16, 20);
     RateMax invoiceDownloadMax = new RateMax(8, 16, 64);
     RateMax otherMax = new RateMax(10, 30, 120);
     int minApiRateLimit = 1;
@@ -183,6 +187,11 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
         // Act: Ustawienie nowych limitów
         ksefClient.setRateLimits(setRequest, accessToken);
 
+        await().pollDelay(Duration.ZERO)
+                .atMost(Duration.ofSeconds(3))
+                .pollInterval(Duration.ofSeconds(2))
+                .until(() -> true);
+
         // Act: Ponowne pobranie limitów po zmianie
         EffectiveApiRateLimits currentLimits = convert(ksefClient.getRateLimit(accessToken));
 
@@ -191,6 +200,11 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
 
         // Act: Przywrócenie wartości domyślnych
         ksefClient.restoreRateLimits(accessToken);
+
+        await().pollDelay(Duration.ZERO)
+                .atMost(Duration.ofSeconds(6))
+                .pollInterval(Duration.ofSeconds(5))
+                .until(() -> true);
 
         // Act: Ponowne pobranie po przywróceniu
         EffectiveApiRateLimits restoredLimits = convert(ksefClient.getRateLimit(accessToken));
@@ -235,11 +249,12 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
 
         ApiException apiException = Assertions.assertThrows(ApiException.class, () ->
                 ksefClient.setRateLimits(request, accessToken));
-        ExceptionResponse exceptionResponse = apiException.getExceptionResponse();
-        Assertions.assertFalse(exceptionResponse.getException().getExceptionDetailList().isEmpty());
-        ExceptionDetails details = exceptionResponse.getException().getExceptionDetailList().getFirst();
-        Assertions.assertEquals(21405, details.getExceptionCode());
-        Assertions.assertEquals("Błąd walidacji danych wejściowych.", details.getExceptionDescription());
+        BadRequestApiException badRequestApiException = (BadRequestApiException) apiException;
+        BadRequestProblemDetails exceptionResponse = badRequestApiException.getBadRequestProblemDetails();
+        Assertions.assertFalse(exceptionResponse.getErrors().isEmpty());
+        BadRequestApiError error = exceptionResponse.getErrors().getFirst();
+        Assertions.assertEquals(21405, error.getCode());
+        Assertions.assertEquals("Błąd walidacji danych wejściowych.", error.getDescription());
     }
 
     // Tworzy kopię przekazanych limitów i modyfikuje je w oparciu o delta, nie przekraczając granic (min=1, max wg kategorii).

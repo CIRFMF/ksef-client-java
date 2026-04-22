@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "pl.akmf.ksef"
-version = "3.0.23"
+version = "3.0.24"
 
 java {
     toolchain {
@@ -44,6 +44,7 @@ val testcontainersVersion = "1.21.3"
 val awaitilityVersion = "4.2.0"
 val googleZxing = "3.5.3"
 val reflectionsVersion = "0.10.2"
+val xadesVersion = "6.3"
 
 dependencies {
     implementation(project(":ksef-client"))
@@ -79,6 +80,10 @@ dependencies {
     implementation("org.awaitility:awaitility:${awaitilityVersion}")
 
     testImplementation("org.reflections:reflections:${reflectionsVersion}")
+
+    // weryfikacje podpisu
+    integrationTestImplementation("eu.europa.ec.joinup.sd-dss:dss-validation:${xadesVersion}")
+    integrationTestImplementation("eu.europa.ec.joinup.sd-dss:dss-policy-jaxb:${xadesVersion}")
 }
 
 sourceSets {
