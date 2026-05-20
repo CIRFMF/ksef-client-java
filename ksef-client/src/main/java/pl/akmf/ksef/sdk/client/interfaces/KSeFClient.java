@@ -90,8 +90,31 @@ import pl.akmf.ksef.sdk.client.model.util.SortOrder;
 import pl.akmf.ksef.sdk.client.peppol.PeppolProvidersListResponse;
 
 import java.util.List;
+import java.util.Map;
 
 public interface KSeFClient {
+
+    /**
+     * Pobranie kopii domyślnych nagłówków (defaultHeaders możemy zdefiniować w application.yaml w sdk->config->default-headers)
+     *
+     * @return Map<String, String>
+     */
+    Map<String, String> getDefaultHeaders();
+
+    /**
+     * Usunięcie domyślnego nagłówka po kluczu (defaultHeaders możemy zdefiniować w application.yaml w sdk->config->default-headers)
+     *
+     * @param key
+     */
+    void removeDefaultHeader(String key);
+
+    /**
+     * Dodanie domyślnego nagłówka (defaultHeaders możemy zdefiniować w application.yaml w sdk->config->default-headers)
+     *
+     * @param key
+     * @param value
+     */
+    void addDefaultHeader(String key, String value);
 
     /**
      * Otwarcie sesji wsadowej
@@ -390,7 +413,7 @@ public interface KSeFClient {
     /**
      * Wyszukiwanie uprawnień do obsługi faktur w bieżącym kontekście.
      *
-     * @param request EntityPermissionsQueryRequest
+     * @param request    EntityPermissionsQueryRequest
      * @param pageOffset
      * @param pageSize
      * @return QueryEntityPermissionsResponse

@@ -4,7 +4,7 @@ plugins {
 }
 
 
-val appVersion = "3.0.25"
+val appVersion = "3.0.26"
 val artifactName = "ksef-client"
 
 val githubRepositoryToken = "token"
@@ -45,6 +45,7 @@ val xjc by configurations.creating
 val xadesVersion = "6.3"
 val googleZxing = "3.5.3"
 val commonsLangsVersion = "3.18.0"
+val commonsCompressVersion = "1.26.1"
 
 dependencies {
     // Validation
@@ -58,6 +59,9 @@ dependencies {
 
     testImplementation("junit:junit:$junitVersion")
     testRuntimeOnly("org.junit.vintage:junit-vintage-engine:$junitEngineVersion")
+
+    // tar gz
+    implementation("org.apache.commons:commons-compress:${commonsCompressVersion}")
 
     //xsd
     xjc("org.jvnet.jaxb2_commons:jaxb2-fluent-api:$jaxbFluentApiVersion")

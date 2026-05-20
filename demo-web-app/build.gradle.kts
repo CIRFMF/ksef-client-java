@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "pl.akmf.ksef"
-version = "3.0.25"
+version = "3.0.26"
 
 java {
     toolchain {
@@ -37,6 +37,7 @@ val jakartaVersion = "4.0.4"
 val jakartaValidationApiVersion = "3.0.2"
 val jakartaAnnotationApiVersion = "3.0.0"
 val commonsCollectionsVersion = "4.5.0"
+val commonsCompressVersion = "1.26.1"
 val commonsLangsVersion = "3.18.0"
 val jsr310Version = "2.17.1"
 val wiremockStandaloneVersion = "3.9.1"
@@ -58,6 +59,8 @@ dependencies {
     //
     implementation("org.apache.commons:commons-lang3:$commonsLangsVersion")
     implementation("org.apache.commons:commons-collections4:$commonsCollectionsVersion")
+    // tar gz
+    implementation("org.apache.commons:commons-compress:$commonsCompressVersion")
 
     //qr code
     implementation("com.google.zxing:core:$googleZxing")

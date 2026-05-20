@@ -33,7 +33,6 @@ import pl.akmf.ksef.sdk.client.model.certificate.CertificateRevokeRequest;
 import pl.akmf.ksef.sdk.client.model.certificate.QueryCertificatesRequest;
 import pl.akmf.ksef.sdk.client.model.certificate.SendCertificateEnrollmentRequest;
 import pl.akmf.ksef.sdk.client.model.certificate.publickey.PublicKeyCertificate;
-import pl.akmf.ksef.sdk.system.ExceptionHandler;
 import pl.akmf.ksef.sdk.client.model.invoice.InitAsyncInvoicesQueryResponse;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportRequest;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportStatus;
@@ -97,7 +96,11 @@ import pl.akmf.ksef.sdk.client.model.testdata.TestDataSubjectCreateRequest;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataSubjectRemoveRequest;
 import pl.akmf.ksef.sdk.client.model.util.SortOrder;
 import pl.akmf.ksef.sdk.client.peppol.PeppolProvidersListResponse;
+import pl.akmf.ksef.sdk.system.ExceptionHandler;
 import pl.akmf.ksef.sdk.system.SystemKSeFSDKException;
+import pl.akmf.ksef.sdk.system.circuitbreaker.KsefCircuitBreakerHandler;
+import pl.akmf.ksef.sdk.system.circuitbreaker.KsefCircuitBreakerOptions;
+import pl.akmf.ksef.sdk.system.circuitbreaker.KsefCircuitBreakerProperties;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -244,6 +247,7 @@ public class DefaultKsefClient implements KSeFClient {
     private final Duration timeout;
     private final Map<String, String> defaultHeaders;
     private final ExceptionHandler exceptionHandler;
+    private final KsefCircuitBreakerHandler circuitBreakerHandler;
 
     public DefaultKsefClient(HttpClient apiClient,
                              KsefApiProperties ksefApiProperties,
@@ -255,6 +259,44 @@ public class DefaultKsefClient implements KSeFClient {
         this.suffixURl = ksefApiProperties.getSuffixUri();
         this.objectMapper = objectMapper;
         this.exceptionHandler = new ExceptionHandler(objectMapper);
+        // domyślna implementacja z włączonym circuit breakerem
+        this.circuitBreakerHandler = new KsefCircuitBreakerHandler(this.apiClient, new KsefCircuitBreakerOptions());
+    }
+
+    public DefaultKsefClient(HttpClient apiClient,
+                             KsefApiProperties ksefApiProperties,
+                             KsefCircuitBreakerProperties circuitBreakerProperties,
+                             ObjectMapper objectMapper) {
+        this.apiClient = apiClient;
+        this.defaultHeaders = ksefApiProperties.getDefaultHeaders();
+        this.timeout = ksefApiProperties.getRequestTimeout();
+        this.baseURl = ksefApiProperties.getBaseUri();
+        this.suffixURl = ksefApiProperties.getSuffixUri();
+        this.objectMapper = objectMapper;
+        this.exceptionHandler = new ExceptionHandler(objectMapper);
+        if (circuitBreakerProperties != null && circuitBreakerProperties.getCircuitBreakerOptions() != null) {
+            this.circuitBreakerHandler = (circuitBreakerProperties.getCircuitBreakerOptions().isEnabled()) ?
+                    new KsefCircuitBreakerHandler(this.apiClient, circuitBreakerProperties.getCircuitBreakerOptions()) :
+                    null;
+        } else {
+            // domyślna implementacja z włączonym circuit breakerem
+            this.circuitBreakerHandler = new KsefCircuitBreakerHandler(this.apiClient, new KsefCircuitBreakerOptions());
+        }
+    }
+
+    @Override
+    public Map<String, String> getDefaultHeaders() {
+        return new HashMap<>(defaultHeaders);
+    }
+
+    @Override
+    public void removeDefaultHeader(String key) {
+        defaultHeaders.remove(key);
+    }
+
+    @Override
+    public void addDefaultHeader(String key, String value) {
+        defaultHeaders.put(key, value);
     }
 
     /**
@@ -2341,7 +2383,11 @@ public class DefaultKsefClient implements KSeFClient {
 
     protected HttpResponse<byte[]> sendHttpRequest(HttpRequest request, HttpResponse.BodyHandler<byte[]> bodyHandler) {
         try {
-            return apiClient.send(request, bodyHandler);
+            if (circuitBreakerHandler != null) {
+                return circuitBreakerHandler.send(request, bodyHandler);
+            } else {
+                return apiClient.send(request, bodyHandler);
+            }
         } catch (IOException | InterruptedException e) {
             throw new SystemKSeFSDKException(request.method() + " " + request.uri() + " "
                     + (e.getMessage() != null ? e.getMessage() : ""), e);

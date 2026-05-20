@@ -74,16 +74,25 @@ public class ExceptionHandler {
                 } else if (HttpStatus.GONE.getCode() == response.statusCode()) {
                     tryParseException(() -> {
                         GoneProblemDetails goneProblemDetails = objectMapper.readValue(response.body(), GoneProblemDetails.class);
+                        if (goneProblemDetails.getStatus() == 0 || goneProblemDetails.getTitle() == null) {
+                            throw new IOException("fallback");
+                        }
                         throw new GoneApiException(response.statusCode(), uri, method, message, response.headers(), goneProblemDetails);
                     });
                 } else if (HttpStatus.TOO_MANY_REQUESTS.getCode() == response.statusCode()) {
                     tryParseException(() -> {
                         TooManyRequestsProblemDetails tooManyRequestsProblemDetails = objectMapper.readValue(response.body(), TooManyRequestsProblemDetails.class);
+                        if (tooManyRequestsProblemDetails.getStatus() == 0 || tooManyRequestsProblemDetails.getTitle() == null) {
+                            throw new IOException("fallback");
+                        }
                         throw new TooManyRequestsApiException(response.statusCode(), uri, method, message, response.headers(), tooManyRequestsProblemDetails);
                     });
                 } else {
                     tryParseException(() -> {
                         BadRequestProblemDetails badRequestProblemDetails = objectMapper.readValue(response.body(), BadRequestProblemDetails.class);
+                        if (badRequestProblemDetails.getStatus() == 0 || badRequestProblemDetails.getTitle() == null) {
+                            throw new IOException("fallback");
+                        }
                         throw new BadRequestApiException(response.statusCode(), uri, method, message, response.headers(), badRequestProblemDetails);
                     });
                 }

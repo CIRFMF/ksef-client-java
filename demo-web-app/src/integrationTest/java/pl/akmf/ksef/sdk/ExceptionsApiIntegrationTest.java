@@ -9,9 +9,13 @@ import pl.akmf.ksef.sdk.api.builders.permission.entity.GrantEntityPermissionsReq
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
+import pl.akmf.ksef.sdk.client.ExceptionDetails;
 import pl.akmf.ksef.sdk.client.model.ApiException;
+import pl.akmf.ksef.sdk.client.model.ExceptionObject;
 import pl.akmf.ksef.sdk.client.model.ForbiddenApiException;
 import pl.akmf.ksef.sdk.client.model.ForbiddenProblemDetails;
+import pl.akmf.ksef.sdk.client.model.KsefApiException;
+import pl.akmf.ksef.sdk.client.model.TooManyRequestsResponse;
 import pl.akmf.ksef.sdk.client.model.UnauthorizedApiException;
 import pl.akmf.ksef.sdk.client.model.UnauthorizedProblemDetails;
 import pl.akmf.ksef.sdk.client.model.UpoVersion;
@@ -65,6 +69,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static pl.akmf.ksef.sdk.api.Url.GRANT_INVOICE_SUBJECT_PERMISSION;
+import static pl.akmf.ksef.sdk.client.Headers.X_ERROR_FORMAT;
+import static pl.akmf.ksef.sdk.client.Headers.X_ERROR_FORMAT_PROBLEM_DETAILS;
 
 class ExceptionsApiIntegrationTest extends BaseIntegrationTest {
 
@@ -137,7 +143,7 @@ class ExceptionsApiIntegrationTest extends BaseIntegrationTest {
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
 
         EffectiveApiRateLimits invalidLimits = new EffectiveApiRateLimits(
-                new OnlineSessionRateLimit(1, 1, 11111111),
+                new OnlineSessionRateLimit(1, 1, 11_111_111),
                 null, null, null, null, null, null, null, null, null, null, null
         );
 
@@ -187,7 +193,7 @@ class ExceptionsApiIntegrationTest extends BaseIntegrationTest {
                 .pollInterval(5, SECONDS)
                 .until(() -> waitForStoringInvoice(sessionReferenceNumber, invoiceReferenceNumber, accessToken));
 
-        for (int i = 0; i < 160; i++) {
+        for (int i = 0; i < 8; i++) {
             getInvoiceMetadata(accessToken);
         }
         ApiException apiException = Assertions.assertThrows(ApiException.class, () ->
@@ -199,10 +205,152 @@ class ExceptionsApiIntegrationTest extends BaseIntegrationTest {
         Assertions.assertNotNull(tooManyRequestsProblemDetails);
         Assertions.assertEquals("Too Many Requests", tooManyRequestsProblemDetails.getTitle());
         Assertions.assertEquals(429, tooManyRequestsProblemDetails.getStatus());
-        Assertions.assertTrue(tooManyRequestsProblemDetails.getDetail().contains("Przekroczono limit 160 żądań na minutę. Spróbuj ponownie po"));
+        Assertions.assertTrue(tooManyRequestsProblemDetails.getDetail().contains("Przekroczono limit 8 żądań na sekundę. Spróbuj ponownie po"));
         Assertions.assertNotNull(tooManyRequestsProblemDetails.getInstance());
         Assertions.assertNotNull(tooManyRequestsProblemDetails.getTraceId());
         Assertions.assertNotNull(tooManyRequestsProblemDetails.getTimestamp());
+    }
+
+    @Test
+    void forbiddenTestOldWay() throws JAXBException, IOException, ApiException {
+        ksefClient.removeDefaultHeader(X_ERROR_FORMAT);
+        String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
+        String subjectNip = IdentifierGeneratorUtils.generateRandomNIP();
+        String thirdNip = IdentifierGeneratorUtils.generateRandomNIP();
+        String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
+
+        String grantReferenceNumber = grantPermission(subjectNip, accessToken);
+
+        await().pollDelay(Duration.ZERO)
+                .atMost(30, SECONDS)
+                .pollInterval(2, SECONDS)
+                .until(() -> isOperationFinish(grantReferenceNumber, accessToken));
+
+        String accessTokenSubject = authWithCustomNip(contextNip, subjectNip).accessToken();
+
+        ApiException apiException = assertThrows(ApiException.class, () ->
+                grantPermission(thirdNip, accessTokenSubject));
+        Assertions.assertEquals(403, apiException.getCode());
+        Assertions.assertEquals("POST", apiException.getMethod());
+        Assertions.assertTrue(apiException.getUrl().contains(GRANT_INVOICE_SUBJECT_PERMISSION.getUrl()));
+        ForbiddenApiException forbiddenApiException = (ForbiddenApiException) apiException;
+        // od `## 3.0.20 (2026-03-17)`- `API: 2.2.1` ten wyjatek funkcjonuje i API zwraca w tej postaci odpowiedź dla zarówno nagłówka X-Error-Format: "problem-details" jak i bez tego nagłówka
+        Assertions.assertNotNull(forbiddenApiException);
+        ForbiddenProblemDetails forbiddenProblemDetails = forbiddenApiException.getForbiddenProblemDetails();
+        Assertions.assertNotNull(forbiddenProblemDetails);
+        Assertions.assertEquals("Forbidden", forbiddenProblemDetails.getTitle());
+        Assertions.assertEquals(403, forbiddenProblemDetails.getStatus());
+        Assertions.assertEquals("missing-permissions", forbiddenProblemDetails.getReasonCode());
+        Assertions.assertEquals("Brak wymaganych uprawnień do wykonania operacji w bieżącym kontekście.", forbiddenProblemDetails.getDetail());
+        Assertions.assertNotNull(forbiddenProblemDetails.getInstance());
+        Assertions.assertNotNull(forbiddenProblemDetails.getTraceId());
+        Assertions.assertNotNull(forbiddenProblemDetails.getTimestamp());
+        Map<String, Object> security = forbiddenProblemDetails.getSecurity();
+        Assertions.assertNotNull(security);
+        Assertions.assertTrue(security.get("requiredAnyOfPermissions").toString().contains("CredentialsManage"));
+        Assertions.assertTrue(security.get("presentPermissions").toString().contains("InvoiceRead"));
+        Assertions.assertTrue(security.get("presentPermissions").toString().contains("InvoiceWrite"));
+        ksefClient.addDefaultHeader(X_ERROR_FORMAT, X_ERROR_FORMAT_PROBLEM_DETAILS);
+    }
+
+    @Test
+    void unauthorizedTestOldWay() {
+        ksefClient.removeDefaultHeader(X_ERROR_FORMAT);
+        String subjectNip = IdentifierGeneratorUtils.generateRandomNIP();
+
+        ApiException apiException = assertThrows(ApiException.class, () ->
+                grantPermission(subjectNip, "invalidToken"));
+        Assertions.assertEquals(401, apiException.getCode());
+        Assertions.assertEquals("POST", apiException.getMethod());
+        Assertions.assertTrue(apiException.getUrl().contains(GRANT_INVOICE_SUBJECT_PERMISSION.getUrl()));
+        UnauthorizedApiException unauthorizedApiException = (UnauthorizedApiException) apiException;
+        Assertions.assertNotNull(unauthorizedApiException);
+        // od `## 3.0.20 (2026-03-17)`- `API: 2.2.1` ten wyjatek funkcjonuje i API zwraca w tej postaci odpowiedź zarówno dla nagłówka X-Error-Format: "problem-details" jak i bez tego nagłówka
+        UnauthorizedProblemDetails unauthorizedProblemDetails = unauthorizedApiException.getUnauthorizedProblemDetails();
+        Assertions.assertNotNull(unauthorizedProblemDetails);
+        Assertions.assertEquals("Unauthorized", unauthorizedProblemDetails.getTitle());
+        Assertions.assertEquals(401, unauthorizedProblemDetails.getStatus());
+        Assertions.assertEquals("Wymagane jest uwierzytelnienie.", unauthorizedProblemDetails.getDetail());
+        Assertions.assertNotNull(unauthorizedProblemDetails.getInstance());
+        Assertions.assertNotNull(unauthorizedProblemDetails.getTraceId());
+        Assertions.assertNotNull(unauthorizedProblemDetails.getTimestamp());
+        ksefClient.addDefaultHeader(X_ERROR_FORMAT, X_ERROR_FORMAT_PROBLEM_DETAILS);
+    }
+
+    @Test
+    void badRequestTestOldWay() throws JAXBException, IOException, ApiException {
+        ksefClient.removeDefaultHeader(X_ERROR_FORMAT);
+        String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
+        String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
+
+        EffectiveApiRateLimits invalidLimits = new EffectiveApiRateLimits(
+                new OnlineSessionRateLimit(1, 1, 11_111_111),
+                null, null, null, null, null, null, null, null, null, null, null
+        );
+
+        SetRateLimitsRequest badRequest = new SetRateLimitsRequest(invalidLimits);
+
+        ApiException apiException = Assertions.assertThrows(ApiException.class, () ->
+                ksefClient.setRateLimits(badRequest, accessToken));
+
+        KsefApiException ksefApiException = (KsefApiException) apiException;
+        Assertions.assertNotNull(ksefApiException);
+        Assertions.assertEquals(400, ksefApiException.getCode());
+        Assertions.assertNotNull(ksefApiException.getExceptionResponse());
+        ExceptionObject exceptionObject = ksefApiException.getExceptionResponse().getException();
+        Assertions.assertNotNull(exceptionObject);
+        Assertions.assertNotNull(exceptionObject.getTimestamp());
+        Assertions.assertNotNull(exceptionObject.getServiceCode());
+        List<ExceptionDetails> exceptionDetails = exceptionObject.getExceptionDetailList();
+        Assertions.assertEquals(1, exceptionDetails.size());
+        Assertions.assertEquals("Błąd walidacji danych wejściowych.", exceptionDetails.get(0).getExceptionDescription());
+        Assertions.assertEquals(21405, exceptionDetails.get(0).getExceptionCode());
+        List<String> details = exceptionDetails.get(0).getDetails();
+        Assertions.assertEquals(11, details.size());
+        Assertions.assertTrue(details.stream()
+                .anyMatch(s -> s.contains("'rateLimits.onlineSession.perHour' must be between 1 and 1200. You entered 11111111.")));
+        ksefClient.addDefaultHeader(X_ERROR_FORMAT, X_ERROR_FORMAT_PROBLEM_DETAILS);
+    }
+
+    @Test
+    void tooManyRequestTestOldWay() throws JAXBException, IOException, ApiException {
+        ksefClient.removeDefaultHeader(X_ERROR_FORMAT);
+        String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
+        String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
+
+        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+
+        String sessionReferenceNumber = openOnlineSession(encryptionData, SystemCode.FA_3, SchemaVersion.VERSION_1_0E, SessionValue.FA, accessToken);
+
+        String invoiceReferenceNumber = sendInvoiceOnlineSession(contextNip, sessionReferenceNumber, encryptionData, "/xml/invoices/sample/invoice-template_v3.xml", accessToken);
+
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
+                .pollInterval(5, SECONDS)
+                .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessToken));
+
+        await().pollDelay(Duration.ZERO)
+                .atMost(50, SECONDS)
+                .pollInterval(5, SECONDS)
+                .until(() -> waitForStoringInvoice(sessionReferenceNumber, invoiceReferenceNumber, accessToken));
+
+        for (int i = 0; i < 8; i++) {
+            getInvoiceMetadata(accessToken);
+        }
+        ApiException apiException = Assertions.assertThrows(ApiException.class, () ->
+                getInvoiceMetadata(accessToken));
+
+        KsefApiException ksefApiException = (KsefApiException) apiException;
+        Assertions.assertNotNull(ksefApiException);
+        Assertions.assertNotNull(ksefApiException.getExceptionResponse());
+        TooManyRequestsResponse tooManyRequestsResponse = ksefApiException.getExceptionResponse().getStatus();
+        Assertions.assertNotNull(tooManyRequestsResponse);
+        Assertions.assertEquals("Too Many Requests", tooManyRequestsResponse.getDescription());
+        Assertions.assertEquals(429, tooManyRequestsResponse.getCode());
+        Assertions.assertTrue(tooManyRequestsResponse.getDetails().get(0).contains("Przekroczono limit 8 żądań na sekundę. Spróbuj ponownie po"));
+        Assertions.assertNotNull(tooManyRequestsResponse.getRetryAfterSeconds());
+        Assertions.assertNotNull(tooManyRequestsResponse.getRecommendedDelay());
+        ksefClient.addDefaultHeader(X_ERROR_FORMAT, X_ERROR_FORMAT_PROBLEM_DETAILS);
     }
 
     private Boolean isOperationFinish(String referenceNumber, String accessToken) throws ApiException {
