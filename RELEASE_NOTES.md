@@ -2175,3 +2175,64 @@
 | 🔧 zmienione | 13            |
 | ➖ usunięte  | 0             |
 
+
+# Changelog zmian - `## 3.0.26 (2026-05-20)`- `API: 2.6.0`
+
+## 1. ksef-client
+
+### 1.1 api
+- **DefaultKsefClient.java**: 🔧 dodanie metod do obsługi defaultHeaders i obsługi circuit breakera
+
+### 1.2 api.client.interfaces
+- **KsefClient.java**: 🔧 dodanie metod zgodnie z implementacją w `DefaultKsefClient.java`
+
+### 1.3 api.client.model
+- **HttpStatus.java**: 🔧 dodanie enuma `REQUEST_TIMEOUT(408)`
+- **TarInputStreamWithSize.java**: ➕ dodanie nowego modelu
+- **BatchFileInfo.java**: 🔧 dodanie pola `CompressionType compressionType`
+- **CompressionType.java**: ➕ dodanie nowego modelu
+- **InvoiceExportRequest.java**: 🔧 dodanie pola `CompressionType compressionType`
+
+### 1.4 api.builders
+- **auth/OpenBatchSessionRequestBuilder.java**: 🔧 dodanie pola `CompressionType compressionType`
+
+### 1.5 system
+- **ExceptionHandler.java**: 🔧 dodanie fallbacku do starej wersji przy ustawionym property fail_on_unknown_properties=false
+- **circiutbreaker/KsefCircuitBreakerHandler.java**: ➕ dodano klasę do obsługi circuit breakera
+- **circiutbreaker/KsefCircuitBreakerOpenException.java**: ➕ dodano klasę do obsługi circuit breakera - klasa wyjątku dla otwartego circuit breakera
+- **circiutbreaker/KsefCircuitBreakerOptions.java**: ➕ dodano klasę do obsługi circuit breakera - klasa konfiguracyjna
+- **circiutbreaker/KsefCircuitBreakerProperties.java**: ➕ dodano klasę do obsługi circuit breakera - klasa konfiguracyjna
+- **FilesUtil.java**: 🔧 dodanie obsługi tworzenia i rozpakowywania archiwum Tar Gz 
+
+### 1.6 test
+- **KsefCircuitBreakerHandlerTests.java**: ➕ testy circuit breakera
+- **FakeHttpClient.java**: ➕ klasa pomocnicza to testów circuit breakera
+- **FakeHttpClientSequence.java**: ➕ klasa pomocnicza to testów circuit breakera
+- **FakeResponse.java**: ➕ klasa pomocnicza to testów circuit breakera
+
+## 2. demo-web-app
+
+### 2.1 integrationTest
+- **ExceptionsApiIntegrationTest.java**: 🔧 dodanie testów dla fallbacku do starej wersji obsługi błedów
+- **BatchIntegrationTest.java**: 🔧 dodanie testów dla typu komprezji Tar Gz
+- **QueryInvoiceIntegrationTest.java**: 🔧 dodanie testów dla typu komprezji Tar Gz
+
+### 2.2 api
+- **ExampleCircuitBreakerProperties.java**: ➕ dodano klasę z konfiguracją circuit breakera (patrz application.yaml)
+- **KsefClientConfig.java**: 🔧 obsługa circuitBreakerProperties
+
+### 2.3 resources
+- **application.yaml**: 🔧 dodanie property `circuit-breaker-options` z konfiguracją circuit breakera
+
+---
+## 3. Podsumowanie
+- Dodanie możliwości wskazania typu kompresji plików przy wysyłce wsadowej i ekporcie paczek (domyślnie null - zip)
+- Dodanie obsługi CircuitBreaker (resilience) - domyślnie jest włączony i zaleca się jego pozostawienie włączonego
+- Poprawka mechanizmu obsługi błędów (ExceptionHandler.java) w przypadku fallbacku do starej wersji i ustawionym property fail_on_unknown_properties=false
+
+| Typ zmiany  | Liczba plików |
+|-------------|---------------|
+| ➕ dodane    | 11            |
+| 🔧 zmienione | 13            |
+| ➖ usunięte  | 0             |
+

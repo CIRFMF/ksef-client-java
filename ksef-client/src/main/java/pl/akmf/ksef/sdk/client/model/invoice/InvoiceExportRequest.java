@@ -1,12 +1,15 @@
 package pl.akmf.ksef.sdk.client.model.invoice;
 
 import pl.akmf.ksef.sdk.client.model.session.EncryptionInfo;
+import pl.akmf.ksef.sdk.client.model.session.batch.CompressionType;
 
 public class InvoiceExportRequest {
     private EncryptionInfo encryption;
     private InvoiceExportFilters filters;
     // Określa, czy zwrócić tylko metadane faktur (plik _metadata.json bez faktur).
     private boolean onlyMetadata = false;
+    // Typ kompresji paczki eksportu faktur. Domyslnie API zachowuje kompatybilnosc i uzywa ZIP.
+    private CompressionType compressionType;
 
     public InvoiceExportRequest() {
 
@@ -45,5 +48,13 @@ public class InvoiceExportRequest {
 
     public void setOnlyMetadata(boolean onlyMetadata) {
         this.onlyMetadata = onlyMetadata;
+    }
+
+    public CompressionType getCompressionType() {
+        return compressionType;
+    }
+
+    public void setCompressionType(CompressionType compressionType) {
+        this.compressionType = compressionType;
     }
 }

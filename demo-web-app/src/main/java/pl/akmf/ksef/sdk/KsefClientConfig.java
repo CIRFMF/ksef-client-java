@@ -21,6 +21,7 @@ import pl.akmf.ksef.sdk.client.interfaces.QrCodeService;
 import pl.akmf.ksef.sdk.client.interfaces.SignatureService;
 import pl.akmf.ksef.sdk.client.interfaces.VerificationLinkService;
 import pl.akmf.ksef.sdk.util.ExampleApiProperties;
+import pl.akmf.ksef.sdk.util.ExampleCircuitBreakerProperties;
 import pl.akmf.ksef.sdk.util.HttpClientBuilder;
 import pl.akmf.ksef.sdk.util.HttpClientConfig;
 
@@ -30,6 +31,7 @@ import java.net.http.HttpClient;
 @RequiredArgsConstructor
 public class KsefClientConfig {
 
+    private final ExampleCircuitBreakerProperties circuitBreakerProperties;
     private final ExampleApiProperties apiProperties;
 
     @Bean
@@ -63,6 +65,7 @@ public class KsefClientConfig {
         return new DefaultKsefClient(
                 apiClient,
                 apiProperties,
+                circuitBreakerProperties,
                 objectMapper);
     }
 

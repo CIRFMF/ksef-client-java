@@ -5,6 +5,7 @@ import pl.akmf.ksef.sdk.client.model.session.FormCode;
 import pl.akmf.ksef.sdk.client.model.session.SchemaVersion;
 import pl.akmf.ksef.sdk.client.model.session.SessionValue;
 import pl.akmf.ksef.sdk.client.model.session.SystemCode;
+import pl.akmf.ksef.sdk.client.model.session.batch.CompressionType;
 import pl.akmf.ksef.sdk.client.model.session.batch.BatchFileInfo;
 import pl.akmf.ksef.sdk.client.model.session.batch.BatchFilePartInfo;
 import pl.akmf.ksef.sdk.client.model.session.batch.OpenBatchSessionRequest;
@@ -21,6 +22,7 @@ public class OpenBatchSessionRequestBuilder {
     private String batchFileHash = "";
     private final EncryptionInfo encryption = new EncryptionInfo();
     private boolean offlineMode = false;
+    private CompressionType compressionType;
 
     private OpenBatchSessionRequestBuilder() {
     }
@@ -48,6 +50,21 @@ public class OpenBatchSessionRequestBuilder {
 
         this.batchFileSize = fileSize;
         this.batchFileHash = fileHash;
+        this.compressionType = null;
+        return this;
+    }
+
+    /**
+     * Ustawia podstawowe informacje o pliku wsadowym wraz z typem kompresji.
+     *
+     * @param fileSize    Rozmiar pliku wsadowego w bajtach.
+     * @param fileHash    Skrót kryptograficzny całego pliku wsadowego.
+     * @param compressionType Typ kompresji pliku wsadowego (np. Zip lub TarGz).
+     * @return Interfejs do dodawania części pliku wsadowego.
+     */
+    public OpenBatchSessionRequestBuilder withBatchFile(long fileSize, String fileHash, CompressionType compressionType) {
+        withBatchFile(fileSize, fileHash);
+        this.compressionType = compressionType;
         return this;
     }
 
@@ -103,6 +120,7 @@ public class OpenBatchSessionRequestBuilder {
         batchFile.setFileSize(batchFileSize);
         batchFile.setFileHash(batchFileHash);
         batchFile.setFileParts(parts);
+        batchFile.setCompressionType(compressionType);
         OpenBatchSessionRequest openBatchSessionRequest = new OpenBatchSessionRequest();
         openBatchSessionRequest.setFormCode(formCode);
         openBatchSessionRequest.setBatchFile(batchFile);

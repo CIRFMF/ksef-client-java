@@ -22,6 +22,7 @@ import pl.akmf.ksef.sdk.client.model.session.SessionValue;
 import pl.akmf.ksef.sdk.client.model.session.SystemCode;
 import pl.akmf.ksef.sdk.client.model.session.batch.BatchPartSendingInfo;
 import pl.akmf.ksef.sdk.client.model.session.batch.BatchPartStreamSendingInfo;
+import pl.akmf.ksef.sdk.client.model.session.batch.CompressionType;
 import pl.akmf.ksef.sdk.client.model.session.batch.OpenBatchSessionRequest;
 import pl.akmf.ksef.sdk.client.model.session.batch.OpenBatchSessionResponse;
 import pl.akmf.ksef.sdk.client.model.util.ZipInputStreamWithSize;
@@ -102,6 +103,26 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
 
         String sessionReferenceNumber = openBatchSessionAndSendInvoicesPartsStream(contextNip, accessToken, DEFAULT_INVOICES_COUNT, DEFAULT_NUMBER_OF_PARTS);
+
+        closeSession(sessionReferenceNumber, accessToken);
+
+        String upoReferenceNumber = getBatchSessionStatus(sessionReferenceNumber, accessToken);
+
+        List<SessionInvoiceStatusResponse> documents = getInvoice(sessionReferenceNumber, accessToken);
+
+        getBatchInvoiceAndUpo(sessionReferenceNumber, documents.getFirst().getKsefNumber(), accessToken);
+
+        getSessionUpo(sessionReferenceNumber, upoReferenceNumber, accessToken);
+    }
+
+    // Weryfikuje poprawne wysłanie dokumentów w paczce (pakowanie z tar gz) (scenariusz pozytywny).
+    // Oczekuje pomyślnego przetworzenia wszystkich faktur i możliwości pobrania UPO.
+    @Test
+    void batchSessionE2EIntegrationTestWithTarGz() throws JAXBException, IOException, ApiException {
+        String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
+        String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
+
+        String sessionReferenceNumber = openBatchSessionAndSendInvoicesParts(contextNip, accessToken, DEFAULT_INVOICES_COUNT, DEFAULT_NUMBER_OF_PARTS, CompressionType.TarGz);
 
         closeSession(sessionReferenceNumber, accessToken);
 
@@ -553,29 +574,40 @@ class BatchIntegrationTest extends BaseIntegrationTest {
     }
 
     private String openBatchSessionAndSendInvoicesParts(String context, String accessToken, int invoicesCount, int partsCount) throws IOException, ApiException {
+        return openBatchSessionAndSendInvoicesParts(context, accessToken, invoicesCount, partsCount, null);
+    }
+
+    private String openBatchSessionAndSendInvoicesParts(String context, String accessToken, int invoicesCount, int partsCount, CompressionType compressionType) throws IOException, ApiException {
         String invoice = new String(readBytesFromPath(PATH_SAMPLE_INVOICE_TEMPLATE_XML), StandardCharsets.UTF_8);
 
         EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
 
         Map<String, byte[]> invoicesInMemory = FilesUtil.generateInvoicesInMemory(invoicesCount, context, invoice);
 
-        byte[] zipBytes = FilesUtil.createZip(invoicesInMemory);
+        byte[] packedFilesBytes;
+        if (compressionType == null || compressionType == CompressionType.Zip) {
+            byte[] zipBytes = FilesUtil.createZip(invoicesInMemory);
+            packedFilesBytes = zipBytes;
+        } else {
+            byte[] tarGzBytes = FilesUtil.createTarGz(invoicesInMemory);
+            packedFilesBytes = tarGzBytes;
+        }
 
         // get ZIP metadata (before crypto)
-        FileMetadata zipMetadata = defaultCryptographyService.getMetaData(zipBytes);
+        FileMetadata packedFilesMetadata = defaultCryptographyService.getMetaData(packedFilesBytes);
 
-        List<byte[]> zipParts = FilesUtil.splitZip(partsCount, zipBytes);
+        List<byte[]> packedFilesParts = FilesUtil.splitZip(partsCount, packedFilesBytes);
 
         // Encrypt zip parts
-        List<BatchPartSendingInfo> encryptedZipParts = encryptZipParts(zipParts, encryptionData.cipherKey(), encryptionData.cipherIv());
+        List<BatchPartSendingInfo> encryptedPackedFilesParts = encryptZipParts(packedFilesParts, encryptionData.cipherKey(), encryptionData.cipherIv());
 
         // Build request
-        OpenBatchSessionRequest request = buildOpenBatchSessionRequest(zipMetadata, encryptedZipParts, encryptionData);
+        OpenBatchSessionRequest request = buildOpenBatchSessionRequest(packedFilesMetadata, encryptedPackedFilesParts, encryptionData, compressionType);
 
         OpenBatchSessionResponse response = ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken);
         Assertions.assertNotNull(response.getReferenceNumber());
 
-        ksefClient.sendBatchParts(response, encryptedZipParts);
+        ksefClient.sendBatchParts(response, encryptedPackedFilesParts);
 
         return response.getReferenceNumber();
     }
@@ -659,25 +691,29 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         return response.getReferenceNumber();
     }
 
-    private List<BatchPartSendingInfo> encryptZipParts(List<byte[]> zipParts, byte[] cipherKey, byte[] cipherIv) {
-        List<BatchPartSendingInfo> encryptedZipParts = new ArrayList<>();
-        for (int i = 0; i < zipParts.size(); i++) {
-            byte[] encryptedZipPart = defaultCryptographyService.encryptBytesWithAES256(
-                    zipParts.get(i),
+    private List<BatchPartSendingInfo> encryptZipParts(List<byte[]> packedFilesParts, byte[] cipherKey, byte[] cipherIv) {
+        List<BatchPartSendingInfo> encryptedPackedFilesParts = new ArrayList<>();
+        for (int i = 0; i < packedFilesParts.size(); i++) {
+            byte[] encryptedPackedFilesPart = defaultCryptographyService.encryptBytesWithAES256(
+                    packedFilesParts.get(i),
                     cipherKey,
                     cipherIv
             );
-            FileMetadata zipPartMetadata = defaultCryptographyService.getMetaData(encryptedZipPart);
-            encryptedZipParts.add(new BatchPartSendingInfo(encryptedZipPart, zipPartMetadata, (i + 1)));
+            FileMetadata packedFilesPartMetadata = defaultCryptographyService.getMetaData(encryptedPackedFilesPart);
+            encryptedPackedFilesParts.add(new BatchPartSendingInfo(encryptedPackedFilesPart, packedFilesPartMetadata, (i + 1)));
         }
-        return encryptedZipParts;
+        return encryptedPackedFilesParts;
     }
 
-    private OpenBatchSessionRequest buildOpenBatchSessionRequest(FileMetadata zipMetadata, List<BatchPartSendingInfo> encryptedZipParts, EncryptionData encryptionData) {
+    private OpenBatchSessionRequest buildOpenBatchSessionRequest(FileMetadata packedFilesMetadata, List<BatchPartSendingInfo> encryptedZipParts, EncryptionData encryptionData) {
+        return buildOpenBatchSessionRequest(packedFilesMetadata, encryptedZipParts, encryptionData, null);
+    }
+
+    private OpenBatchSessionRequest buildOpenBatchSessionRequest(FileMetadata packedFilesMetadata, List<BatchPartSendingInfo> encryptedZipParts, EncryptionData encryptionData, CompressionType compressionType) {
         OpenBatchSessionRequestBuilder builder = OpenBatchSessionRequestBuilder.create()
                 .withFormCode(SystemCode.FA_2, SchemaVersion.VERSION_1_0E, SessionValue.FA)
                 .withOfflineMode(false)
-                .withBatchFile(zipMetadata.getFileSize(), zipMetadata.getHashSHA());
+                .withBatchFile(packedFilesMetadata.getFileSize(), packedFilesMetadata.getHashSHA(), compressionType);
 
         for (int i = 0; i < encryptedZipParts.size(); i++) {
             BatchPartSendingInfo part = encryptedZipParts.get(i);
