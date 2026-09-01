@@ -4,9 +4,7 @@ import jakarta.xml.bind.JAXBException;
 import org.apache.logging.log4j.util.Strings;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
-import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiError;
@@ -36,16 +34,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class SessionIntegrationTest extends BaseIntegrationTest {
 
-    @Autowired
-    private DefaultCryptographyService defaultCryptographyService;
-
     @Test
     void createSessionSearchSessionAndRevokeCurrentSession() throws JAXBException, IOException, ApiException {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         AuthTokensPair accessTokensPair = authWithCustomNip(contextNip, contextNip);
         String accessToken = accessTokensPair.accessToken();
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         // Step 1: Open session and return referenceNumber
         openOnlineSession(encryptionData, accessToken);
@@ -85,7 +80,7 @@ class SessionIntegrationTest extends BaseIntegrationTest {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         AuthTokensPair firstAccessTokensPair = authWithCustomNip(contextNip, contextNip);
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         // Step 1: Open session and return referenceNumber
         openOnlineSession(encryptionData, firstAccessTokensPair.accessToken());
@@ -138,7 +133,7 @@ class SessionIntegrationTest extends BaseIntegrationTest {
     @Test
     void searchSessionsByStatuses() throws JAXBException, IOException, ApiException {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         AuthTokensPair firstAccessTokensPair = authWithCustomNip(contextNip, contextNip);
         AuthTokensPair secondAccessTokensPair = authWithCustomNip(contextNip, contextNip);
@@ -172,7 +167,7 @@ class SessionIntegrationTest extends BaseIntegrationTest {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         // Step 1: Open session and return referenceNumber
         openOnlineSession(encryptionData, accessToken);

@@ -25,6 +25,13 @@ import pl.akmf.ksef.sdk.client.model.certificate.CertificateRevokeRequest;
 import pl.akmf.ksef.sdk.client.model.certificate.QueryCertificatesRequest;
 import pl.akmf.ksef.sdk.client.model.certificate.SendCertificateEnrollmentRequest;
 import pl.akmf.ksef.sdk.client.model.certificate.publickey.PublicKeyCertificate;
+import pl.akmf.ksef.sdk.client.model.collectiveidentifiers.CollectiveIdentifierInvoicesQueryRequest;
+import pl.akmf.ksef.sdk.client.model.collectiveidentifiers.CollectiveIdentifierInvoicesQueryResponse;
+import pl.akmf.ksef.sdk.client.model.collectiveidentifiers.CollectiveIdentifiersByKsefNumberQueryResponse;
+import pl.akmf.ksef.sdk.client.model.collectiveidentifiers.CollectiveIdentifiersQueryRequest;
+import pl.akmf.ksef.sdk.client.model.collectiveidentifiers.CollectiveIdentifiersQueryResponse;
+import pl.akmf.ksef.sdk.client.model.collectiveidentifiers.GenerateCollectiveIdentifierRequest;
+import pl.akmf.ksef.sdk.client.model.collectiveidentifiers.GenerateCollectiveIdentifierResponse;
 import pl.akmf.ksef.sdk.client.model.invoice.InitAsyncInvoicesQueryResponse;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportRequest;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportStatus;
@@ -86,8 +93,10 @@ import pl.akmf.ksef.sdk.client.model.testdata.TestDataPersonCreateRequest;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataPersonRemoveRequest;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataSubjectCreateRequest;
 import pl.akmf.ksef.sdk.client.model.testdata.TestDataSubjectRemoveRequest;
+import pl.akmf.ksef.sdk.client.model.testdata.TestDataUpdateCertificateRequest;
 import pl.akmf.ksef.sdk.client.model.util.SortOrder;
 import pl.akmf.ksef.sdk.client.peppol.PeppolProvidersListResponse;
+import pl.akmf.ksef.sdk.system.headerobservation.ResponseHeaderCaptureHandler;
 
 import java.util.List;
 import java.util.Map;
@@ -115,6 +124,13 @@ public interface KSeFClient {
      * @param value
      */
     void addDefaultHeader(String key, String value);
+
+    /**
+     * Pobranie instancji handlera nagłówków,
+     * jeśli nie był wcześniej utworzony np bo w property jest wyłączony to mimo tego
+     * możemy w runtime go utworzyć wywołując tą metodę, pozostaje zasubskrybować się na nagłówek
+     */
+    ResponseHeaderCaptureHandler getResponseHeaderCaptureHandler();
 
     /**
      * Otwarcie sesji wsadowej
@@ -865,6 +881,8 @@ public interface KSeFClient {
      */
     void resetContextLimitTest(String accessToken) throws ApiException;
 
+    void updateCertificate(String serialNumber, TestDataUpdateCertificateRequest request, String accessToken) throws ApiException;
+
     /**
      * Przywraca wartości aktualnie obowiązujących limitów dla bieżącego kontekstu do wartości domyślnych. Tylko na środowiskach testowych.
      *
@@ -954,4 +972,17 @@ public interface KSeFClient {
                                                List<String> errors);
 
     byte[] downloadPackagePart(InvoicePackagePart part);
+
+    // POST /collective-identifiers — generowanie identyfikatora zbiorczego dla wskazanych faktur.
+    GenerateCollectiveIdentifierResponse generateCollectiveIdentifier(GenerateCollectiveIdentifierRequest request, String accessToken) throws ApiException;
+
+    // POST /collective-identifiers/query — pobranie listy identyfikatorów zbiorczych wygenerowanych w kontekście.
+    CollectiveIdentifiersQueryResponse queryCollectiveIdentifiers(CollectiveIdentifiersQueryRequest request, String accessToken, String continuationToken, Integer pageSize) throws ApiException;
+
+    // GET /collective-identifiers/ksef/{ksefNumber} — pobranie listy identyfikatorów zbiorczych po numerze KSeF faktury.
+    CollectiveIdentifiersByKsefNumberQueryResponse getCollectiveIdentifiersByKsefNumber(String ksefNumber, String accessToken, String continuationToken, Integer pageSize) throws ApiException;
+
+    // POST /collective-identifiers/invoices — pobranie listy faktur wchodzących w skład wskazanych identyfikatorów zbiorczych (maksymalnie 10 na żądanie).
+    CollectiveIdentifierInvoicesQueryResponse getCollectiveIdentifierInvoices(CollectiveIdentifierInvoicesQueryRequest request, String accessToken, String continuationToken, Integer pageSize) throws ApiException;
+
 }

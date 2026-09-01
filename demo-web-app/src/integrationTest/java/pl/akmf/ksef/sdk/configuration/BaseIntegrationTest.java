@@ -16,6 +16,7 @@ import pl.akmf.ksef.sdk.api.DefaultKsefClient;
 import pl.akmf.ksef.sdk.api.builders.auth.AuthTokenRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.auth.AuthTokenRequestSerializer;
 import pl.akmf.ksef.sdk.client.interfaces.CertificateService;
+import pl.akmf.ksef.sdk.client.interfaces.CryptographyService;
 import pl.akmf.ksef.sdk.client.interfaces.QrCodeService;
 import pl.akmf.ksef.sdk.client.interfaces.SignatureService;
 import pl.akmf.ksef.sdk.client.interfaces.VerificationLinkService;
@@ -50,6 +51,9 @@ public abstract class BaseIntegrationTest {
 
     @LocalServerPort
     protected int port;
+
+    @Autowired
+    protected CryptographyService cryptographyService;
 
     @Autowired
     protected WireMockServer wireMock;
@@ -89,8 +93,8 @@ public abstract class BaseIntegrationTest {
         return authWithCustomNip(context, subject, EncryptionMethod.RSA);
     }
 
-    protected AuthTokensPair authWithCustomPesel(String context, String subject) throws ApiException, JAXBException, IOException {
-        return authWithCustomPesel(context, subject, EncryptionMethod.RSA);
+    protected AuthTokensPair authWithCustomPesel(String context, String pesel) throws ApiException, JAXBException, IOException {
+        return authWithCustomPesel(context, pesel, EncryptionMethod.RSA);
     }
 
     protected AuthTokensPair authWithCustomNip(String context, String subject, EncryptionMethod encryptionMethod) throws ApiException, JAXBException, IOException {

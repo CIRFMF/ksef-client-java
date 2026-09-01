@@ -1,8 +1,11 @@
 package pl.akmf.ksef.sdk.client.model.session.batch;
 
 public class BatchFilePartInfo {
+    // Numer porządkowy części w pliku wsadowym. Minimum według OpenAPI to 1.
     private int ordinalNumber;
+    // Rozmiar części pliku w bajtach. Minimum według OpenAPI to 1.
     private long fileSize;
+    // Skrót kryptograficzny części pliku zgodny ze schematem OpenAPI
     private String fileHash;
 
     public BatchFilePartInfo() {

@@ -3,12 +3,10 @@ package pl.akmf.ksef.sdk;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.invoices.InvoiceQueryFiltersBuilder;
 import pl.akmf.ksef.sdk.api.builders.permission.entity.GrantEntityPermissionsRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
-import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.ExceptionDetails;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.ExceptionObject;
@@ -73,9 +71,6 @@ import static pl.akmf.ksef.sdk.client.Headers.X_ERROR_FORMAT;
 import static pl.akmf.ksef.sdk.client.Headers.X_ERROR_FORMAT_PROBLEM_DETAILS;
 
 class ExceptionsApiIntegrationTest extends BaseIntegrationTest {
-
-    @Autowired
-    private DefaultCryptographyService defaultCryptographyService;
 
     @Test
     void forbiddenTest() throws JAXBException, IOException, ApiException {
@@ -167,7 +162,7 @@ class ExceptionsApiIntegrationTest extends BaseIntegrationTest {
         Assertions.assertEquals("Błąd walidacji danych wejściowych.", errors.get(0).getDescription());
         Assertions.assertEquals(21405, errors.get(0).getCode());
         List<String> details = errors.get(0).getDetails();
-        Assertions.assertEquals(11, details.size());
+        Assertions.assertEquals(12, details.size());
         Assertions.assertTrue(details.stream()
                 .anyMatch(s -> s.contains("'rateLimits.onlineSession.perHour' must be between 1 and 1200. You entered 11111111.")));
     }
@@ -177,7 +172,7 @@ class ExceptionsApiIntegrationTest extends BaseIntegrationTest {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         String sessionReferenceNumber = openOnlineSession(encryptionData, SystemCode.FA_3, SchemaVersion.VERSION_1_0E, SessionValue.FA, accessToken);
 
@@ -306,7 +301,7 @@ class ExceptionsApiIntegrationTest extends BaseIntegrationTest {
         Assertions.assertEquals("Błąd walidacji danych wejściowych.", exceptionDetails.get(0).getExceptionDescription());
         Assertions.assertEquals(21405, exceptionDetails.get(0).getExceptionCode());
         List<String> details = exceptionDetails.get(0).getDetails();
-        Assertions.assertEquals(11, details.size());
+        Assertions.assertEquals(12, details.size());
         Assertions.assertTrue(details.stream()
                 .anyMatch(s -> s.contains("'rateLimits.onlineSession.perHour' must be between 1 and 1200. You entered 11111111.")));
         ksefClient.addDefaultHeader(X_ERROR_FORMAT, X_ERROR_FORMAT_PROBLEM_DETAILS);
@@ -318,7 +313,7 @@ class ExceptionsApiIntegrationTest extends BaseIntegrationTest {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         String sessionReferenceNumber = openOnlineSession(encryptionData, SystemCode.FA_3, SchemaVersion.VERSION_1_0E, SessionValue.FA, accessToken);
 
@@ -401,12 +396,12 @@ class ExceptionsApiIntegrationTest extends BaseIntegrationTest {
 
         byte[] invoice = invoiceTemplate.getBytes(StandardCharsets.UTF_8);
 
-        byte[] encryptedInvoice = defaultCryptographyService.encryptBytesWithAES256(invoice,
+        byte[] encryptedInvoice = cryptographyService.encryptBytesWithAES256(invoice,
                 encryptionData.cipherKey(),
                 encryptionData.cipherIv());
 
-        FileMetadata invoiceMetadata = defaultCryptographyService.getMetaData(invoice);
-        FileMetadata encryptedInvoiceMetadata = defaultCryptographyService.getMetaData(encryptedInvoice);
+        FileMetadata invoiceMetadata = cryptographyService.getMetaData(invoice);
+        FileMetadata encryptedInvoiceMetadata = cryptographyService.getMetaData(encryptedInvoice);
 
         SendInvoiceOnlineSessionRequest sendInvoiceOnlineSessionRequest = new SendInvoiceOnlineSessionRequestBuilder()
                 .withInvoiceHash(invoiceMetadata.getHashSHA())

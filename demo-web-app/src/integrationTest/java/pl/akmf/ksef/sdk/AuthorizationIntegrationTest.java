@@ -10,11 +10,9 @@ import eu.europa.esig.dss.validation.reports.Reports;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.auth.AuthTokenRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.auth.AuthTokenRequestSerializer;
 import pl.akmf.ksef.sdk.api.builders.certificate.SendCertificateEnrollmentRequestBuilder;
-import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.auth.AuthOperationStatusResponse;
 import pl.akmf.ksef.sdk.client.model.auth.AuthStatus;
@@ -50,9 +48,6 @@ import static org.awaitility.Awaitility.await;
 
 class AuthorizationIntegrationTest extends BaseIntegrationTest {
 
-    @Autowired
-    private DefaultCryptographyService defaultCryptographyService;
-
     @Test
     void refreshTokenE2EIntegrationTest() throws JAXBException, IOException, ApiException {
         // given
@@ -78,7 +73,7 @@ class AuthorizationIntegrationTest extends BaseIntegrationTest {
 
         //retrieve KSeF certificate && private key
         CertificateEnrollmentsInfoResponse enrollmentInfo = getEnrolmentInfo(accessToken);
-        CsrResult csr = defaultCryptographyService.generateCsrWithEcdsa(enrollmentInfo);
+        CsrResult csr = cryptographyService.generateCsrWithEcdsa(enrollmentInfo);
 
         String referenceNumber = sendEnrollment(csr, accessToken);
 
@@ -96,8 +91,8 @@ class AuthorizationIntegrationTest extends BaseIntegrationTest {
                 .findFirst()
                 .orElseThrow();
 
-        X509Certificate x509Certificate = defaultCryptographyService.parseCertificateFromBytes(certificate.getCertificate());
-        PrivateKey privateKey = defaultCryptographyService.parseEcdsaPrivateKeyFromPem(csr.privateKey());
+        X509Certificate x509Certificate = cryptographyService.parseCertificateFromBytes(certificate.getCertificate());
+        PrivateKey privateKey = cryptographyService.parseEcdsaPrivateKeyFromPem(csr.privateKey());
 
         //authorize by KSeF certificate
         AuthenticationChallengeResponse challenge = ksefClient.getAuthChallenge();
@@ -180,7 +175,7 @@ class AuthorizationIntegrationTest extends BaseIntegrationTest {
 
         //retrieve KSeF certificate && private key
         CertificateEnrollmentsInfoResponse enrollmentInfo = getEnrolmentInfo(accessToken);
-        CsrResult csr = defaultCryptographyService.generateCsrWithRsa(enrollmentInfo);
+        CsrResult csr = cryptographyService.generateCsrWithRsa(enrollmentInfo);
 
         String referenceNumber = sendEnrollment(csr, accessToken);
 
@@ -198,8 +193,8 @@ class AuthorizationIntegrationTest extends BaseIntegrationTest {
                 .findFirst()
                 .orElseThrow();
 
-        X509Certificate x509Certificate = defaultCryptographyService.parseCertificateFromBytes(certificate.getCertificate());
-        PrivateKey privateKey = defaultCryptographyService.parseRsaPrivateKeyFromPem(csr.privateKey());
+        X509Certificate x509Certificate = cryptographyService.parseCertificateFromBytes(certificate.getCertificate());
+        PrivateKey privateKey = cryptographyService.parseRsaPrivateKeyFromPem(csr.privateKey());
 
         //authorize by KSeF certificate
         AuthenticationChallengeResponse challenge = ksefClient.getAuthChallenge();

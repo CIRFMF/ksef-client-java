@@ -22,6 +22,7 @@ import pl.akmf.ksef.sdk.client.interfaces.SignatureService;
 import pl.akmf.ksef.sdk.client.interfaces.VerificationLinkService;
 import pl.akmf.ksef.sdk.util.ExampleApiProperties;
 import pl.akmf.ksef.sdk.util.ExampleCircuitBreakerProperties;
+import pl.akmf.ksef.sdk.util.ExampleResponseHeaderObservationProperties;
 import pl.akmf.ksef.sdk.util.HttpClientBuilder;
 import pl.akmf.ksef.sdk.util.HttpClientConfig;
 
@@ -32,6 +33,7 @@ import java.net.http.HttpClient;
 public class KsefClientConfig {
 
     private final ExampleCircuitBreakerProperties circuitBreakerProperties;
+    private final ExampleResponseHeaderObservationProperties responseHeaderObservationProperties;
     private final ExampleApiProperties apiProperties;
 
     @Bean
@@ -66,6 +68,7 @@ public class KsefClientConfig {
                 apiClient,
                 apiProperties,
                 circuitBreakerProperties,
+                responseHeaderObservationProperties,
                 objectMapper);
     }
 

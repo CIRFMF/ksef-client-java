@@ -68,7 +68,7 @@ public class OnlineSessionController {
      * @throws ApiException if fails to make API call
      */
     @PostMapping(value = "/send-invoice/{referenceNumber}/{contextIdentifier}")
-    public SendInvoiceResponse sendInvoiceOnlineSessionAsync(@PathVariable String referenceNumber,
+    public SendInvoiceResponse sendInvoiceOnlineSession(@PathVariable String referenceNumber,
                                                              @PathVariable String contextIdentifier,
                                                              @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException, IOException {
         //read example invoice

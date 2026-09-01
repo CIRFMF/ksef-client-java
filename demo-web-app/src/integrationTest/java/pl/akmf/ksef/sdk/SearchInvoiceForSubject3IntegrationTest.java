@@ -3,11 +3,9 @@ package pl.akmf.ksef.sdk;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.invoices.InvoiceQueryFiltersBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
-import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceQueryDateRange;
@@ -45,16 +43,13 @@ import static org.awaitility.Awaitility.await;
 
 class SearchInvoiceForSubject3IntegrationTest extends BaseIntegrationTest {
 
-    @Autowired
-    private DefaultCryptographyService defaultCryptographyService;
-
     @Test
     void queryInvoiceE2EForSubject3Test() throws JAXBException, IOException, ApiException {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         String recipientNip = IdentifierGeneratorUtils.generateRandomNIP();
         String companyAccessToken = authWithCustomNip(contextNip, contextNip).accessToken();
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         //open Session as company && send invoice
         String sessionReferenceNumber = openOnlineSession(encryptionData, SystemCode.FA_3, SchemaVersion.VERSION_1_0E, SessionValue.FA, companyAccessToken);
@@ -143,12 +138,12 @@ class SearchInvoiceForSubject3IntegrationTest extends BaseIntegrationTest {
 
         byte[] invoice = invoiceTemplate.getBytes(StandardCharsets.UTF_8);
 
-        byte[] encryptedInvoice = defaultCryptographyService.encryptBytesWithAES256(invoice,
+        byte[] encryptedInvoice = cryptographyService.encryptBytesWithAES256(invoice,
                 encryptionData.cipherKey(),
                 encryptionData.cipherIv());
 
-        FileMetadata invoiceMetadata = defaultCryptographyService.getMetaData(invoice);
-        FileMetadata encryptedInvoiceMetadata = defaultCryptographyService.getMetaData(encryptedInvoice);
+        FileMetadata invoiceMetadata = cryptographyService.getMetaData(invoice);
+        FileMetadata encryptedInvoiceMetadata = cryptographyService.getMetaData(encryptedInvoice);
 
         SendInvoiceOnlineSessionRequest sendInvoiceOnlineSessionRequest = new SendInvoiceOnlineSessionRequestBuilder()
                 .withInvoiceHash(invoiceMetadata.getHashSHA())

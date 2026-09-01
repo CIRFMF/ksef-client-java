@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.testcontainers.shaded.org.bouncycastle.asn1.ASN1Encoding;
 import org.testcontainers.shaded.org.bouncycastle.asn1.x500.X500Name;
 import org.testcontainers.shaded.org.bouncycastle.operator.ContentSigner;
@@ -20,7 +19,6 @@ import pl.akmf.ksef.sdk.api.builders.certificate.CertificateMetadataListRequestB
 import pl.akmf.ksef.sdk.api.builders.certificate.SendCertificateEnrollmentRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
-import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.auth.EncryptionMethod;
@@ -80,9 +78,6 @@ import static org.awaitility.Awaitility.await;
 
 class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
 
-    @Autowired
-    private DefaultCryptographyService defaultCryptographyService;
-
     /**
      * End-to-end test weryfikujący pełny, zakończony sukcesem przebieg wystawienia kodów QR do faktury w trybie offline (offlineMode = true).
      * Test używa faktury FA(2) oraz szyfrfowania RSA.
@@ -123,8 +118,8 @@ class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
         //Utworzenie Certificate Signing Request (csr) oraz klucz prywatny za pomocą ${encryptionMethod}
         CertificateEnrollmentsInfoResponse enrollmentInfo = getEnrolmentInfo(accessToken);
         CsrResult csr = EncryptionMethod.RSA.equals(encryptionMethod)
-                ? defaultCryptographyService.generateCsrWithRsa(enrollmentInfo)
-                : defaultCryptographyService.generateCsrWithEcdsa(enrollmentInfo);
+                ? cryptographyService.generateCsrWithRsa(enrollmentInfo)
+                : cryptographyService.generateCsrWithEcdsa(enrollmentInfo);
 
         // Zapisanie klucza prywatnego (private key) do pamięci tylko na potrzeby testu, w rzeczywistości powinno być bezpiecznie przechowywane
         byte[] privateKey = csr.privateKey();
@@ -155,7 +150,7 @@ class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
         LocalDate invoicingDate = LocalDate.of(2025, 10, 1);
         byte[] invoice = prepareInvoice(contextNip, invoicingDate, "/xml/invoices/sample/" + invoiceTemplate);
 
-        FileMetadata invoiceMetadata = defaultCryptographyService.getMetaData(invoice);
+        FileMetadata invoiceMetadata = cryptographyService.getMetaData(invoice);
         //Zapisanie skrótu faktury (hash)
         String invoiceHash = invoiceMetadata.getHashSHA();
 
@@ -183,8 +178,8 @@ class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
                 certificate.getCertificateSerialNumber(),
                 invoiceHash,
                 EncryptionMethod.RSA.equals(encryptionMethod)
-                        ? defaultCryptographyService.parseRsaPrivateKeyFromPem(privateKey)
-                        : defaultCryptographyService.parseEcdsaPrivateKeyFromPem(privateKey));
+                        ? cryptographyService.parseRsaPrivateKeyFromPem(privateKey)
+                        : cryptographyService.parseEcdsaPrivateKeyFromPem(privateKey));
         checkIssuerMetadataByVerificationUrl(url);
 
         //Utworzenie kodu QR do weryfikacji certyfikatu (KOD II) dla trybu offline
@@ -211,7 +206,7 @@ class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
         X500Name subject = new X500Name("CN=Kowalski,O=Kowalski sp. z o.o,C=PL,2.5.4.97=VATPL-7368335898");
         byte[] csr = getCsr(subject,
                 parseRsaPublicKeyFromPem(publicKey),
-                defaultCryptographyService.parseRsaPrivateKeyFromPem(privateKey)
+                cryptographyService.parseRsaPrivateKeyFromPem(privateKey)
         );
         Arrays.fill(privateKey, (byte) 0);
         Arrays.fill(publicKey, (byte) 0);
@@ -270,7 +265,7 @@ class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
         LocalDate invoicingDate = LocalDate.of(2025, 10, 1);
         byte[] invoice = prepareInvoice(contextNip, invoicingDate, "/xml/invoices/sample/" + invoiceTemplate);
 
-        FileMetadata invoiceMetadata = defaultCryptographyService.getMetaData(invoice);
+        FileMetadata invoiceMetadata = cryptographyService.getMetaData(invoice);
         //Zapisanie skrótu faktury (hash)
         String invoiceHash = invoiceMetadata.getHashSHA();
 
@@ -300,8 +295,8 @@ class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
                 certificateSerialNumber,
                 invoiceHash,
                 EncryptionMethod.RSA.equals(encryptionMethod)
-                        ? defaultCryptographyService.parseRsaPrivateKeyFromPem(privateKey)
-                        : defaultCryptographyService.parseEncryptedEcdsaPrivateKeyFromPem(privateKey, "ADadADad12!@adadad".toCharArray()) // haslo przekazac w sposob bezpieczny, np z env variable, czy secret managerem
+                        ? cryptographyService.parseRsaPrivateKeyFromPem(privateKey)
+                        : cryptographyService.parseEncryptedEcdsaPrivateKeyFromPem(privateKey, "ADadADad12!@adadad".toCharArray()) // haslo przekazac w sposob bezpieczny, np z env variable, czy secret managerem
         );
 
         checkIssuerMetadataByVerificationUrl(url);
@@ -422,7 +417,7 @@ class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
 
     private void openSessionAndSendInvoice(byte[] invoice, FileMetadata invoiceMetadata,
                                            SystemCode systemCode, String accessToken) throws ApiException {
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         OpenOnlineSessionRequest request = new OpenOnlineSessionRequestBuilder()
                 .withFormCode(new FormCode(systemCode, SchemaVersion.VERSION_1_0E, SessionValue.FA))
@@ -434,11 +429,11 @@ class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
         String sessionReferenceNumber = openOnlineSessionResponse.getReferenceNumber();
         Assertions.assertNotNull(sessionReferenceNumber);
 
-        byte[] encryptedInvoice = defaultCryptographyService.encryptBytesWithAES256(invoice,
+        byte[] encryptedInvoice = cryptographyService.encryptBytesWithAES256(invoice,
                 encryptionData.cipherKey(),
                 encryptionData.cipherIv());
 
-        FileMetadata encryptedInvoiceMetadata = defaultCryptographyService.getMetaData(encryptedInvoice);
+        FileMetadata encryptedInvoiceMetadata = cryptographyService.getMetaData(encryptedInvoice);
 
         SendInvoiceOnlineSessionRequest sendInvoiceOnlineSessionRequest = new SendInvoiceOnlineSessionRequestBuilder()
                 .withInvoiceHash(invoiceMetadata.getHashSHA())

@@ -3,9 +3,7 @@ package pl.akmf.ksef.sdk;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.batch.OpenBatchSessionRequestBuilder;
-import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiError;
@@ -14,12 +12,15 @@ import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestProblemDetails;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionInfo;
 import pl.akmf.ksef.sdk.client.model.session.FileMetadata;
+import pl.akmf.ksef.sdk.client.model.session.FormCode;
 import pl.akmf.ksef.sdk.client.model.session.SchemaVersion;
 import pl.akmf.ksef.sdk.client.model.session.SessionInvoiceStatusResponse;
 import pl.akmf.ksef.sdk.client.model.session.SessionInvoicesResponse;
 import pl.akmf.ksef.sdk.client.model.session.SessionStatusResponse;
 import pl.akmf.ksef.sdk.client.model.session.SessionValue;
 import pl.akmf.ksef.sdk.client.model.session.SystemCode;
+import pl.akmf.ksef.sdk.client.model.session.batch.BatchFileInfo;
+import pl.akmf.ksef.sdk.client.model.session.batch.BatchFilePartInfo;
 import pl.akmf.ksef.sdk.client.model.session.batch.BatchPartSendingInfo;
 import pl.akmf.ksef.sdk.client.model.session.batch.BatchPartStreamSendingInfo;
 import pl.akmf.ksef.sdk.client.model.session.batch.CompressionType;
@@ -71,9 +72,6 @@ class BatchIntegrationTest extends BaseIntegrationTest {
     private static final int STATUS_CODE_INVALID_ENCRYPTION_KEY = 415;
     private static final int STATUS_CODE_DECRYPTION_ERROR = 405;
     private static final int STATUS_CODE_INVALID_INITIALIZATION_VECTOR = 430;
-
-    @Autowired
-    private DefaultCryptographyService defaultCryptographyService;
 
     // Weryfikuje poprawne wysłanie dokumentów w paczce (scenariusz pozytywny).
     // Oczekuje pomyślnego przetworzenia wszystkich faktur i możliwości pobrania UPO.
@@ -177,7 +175,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
     }
 
     // Weryfikuje odrzucenie paczki przekraczającej maksymalny rozmiar 5 GiB.
-    // Oczekuje wyjątku podczas próby otwarcia sesji z fileSize > 5368709120 bajtów (MaxTotalPackageSizeInBytes).
+    // Oczekuje wyjątku podczas próby otwarcia sesji z fileSize > 5368709120 bajtów
     @Test
     void shouldThrowWhileSendWithExceededTotalPackageSize() throws JAXBException, IOException, ApiException {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
@@ -186,14 +184,14 @@ class BatchIntegrationTest extends BaseIntegrationTest {
 
         String invoice = new String(readBytesFromPath(PATH_SAMPLE_INVOICE_TEMPLATE_XML), StandardCharsets.UTF_8);
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         Map<String, byte[]> invoicesInMemory = FilesUtil.generateInvoicesInMemory(DEFAULT_INVOICES_COUNT, contextNip, invoice);
 
         byte[] zipBytes = FilesUtil.createZip(invoicesInMemory);
 
         // get ZIP metadata (before crypto)
-        FileMetadata zipMetadata = defaultCryptographyService.getMetaData(zipBytes);
+        FileMetadata zipMetadata = cryptographyService.getMetaData(zipBytes);
         // Modyfikacja metadaty aby symulować paczkę o rozmiarze przekraczającym 5 GiB
         zipMetadata.setFileSize(EXCEEDED_TOTAL_PACKAGE_SIZE_IN_BYTES);
 
@@ -204,7 +202,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
 
         // Build request
         // Użycie zmanipulowanych metadanych z fileSize > 5 GiB
-        OpenBatchSessionRequest request = buildOpenBatchSessionRequest(zipMetadata, encryptedZipParts, encryptionData);
+        OpenBatchSessionRequest request = newOpenBatchSessionRequest(zipMetadata, encryptedZipParts, encryptionData);
 
         // API KSeF powinno odrzucić żądanie ze względu na przekroczony limit fileSize
         ApiException apiException = assertThrows(ApiException.class, () ->
@@ -218,6 +216,40 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         Assertions.assertEquals("'fileSize' must be less than or equal to '5000000000'.", error.getDetails().getFirst());
     }
 
+    // Weryfikuje odrzucenie paczki przekraczającej maksymalny rozmiar 5 GiB.
+    // Oczekuje wyjątku podczas próby budowania requestu przez builder z fileSize > 5368709120 bajtów
+    @Test
+    void shouldThrowBeforeSendWithExceededTotalPackageSize() throws JAXBException, IOException, ApiException {
+        String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
+        String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
+        int partsCount = 1;
+
+        String invoice = new String(readBytesFromPath(PATH_SAMPLE_INVOICE_TEMPLATE_XML), StandardCharsets.UTF_8);
+
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
+
+        Map<String, byte[]> invoicesInMemory = FilesUtil.generateInvoicesInMemory(DEFAULT_INVOICES_COUNT, contextNip, invoice);
+
+        byte[] zipBytes = FilesUtil.createZip(invoicesInMemory);
+
+        // get ZIP metadata (before crypto)
+        FileMetadata zipMetadata = cryptographyService.getMetaData(zipBytes);
+        // Modyfikacja metadaty aby symulować paczkę o rozmiarze przekraczającym 5 GiB
+        zipMetadata.setFileSize(EXCEEDED_TOTAL_PACKAGE_SIZE_IN_BYTES);
+
+        List<byte[]> zipParts = FilesUtil.splitZip(partsCount, zipBytes);
+
+        // Encrypt zip parts
+        List<BatchPartSendingInfo> encryptedZipParts = encryptZipParts(zipParts, encryptionData.cipherKey(), encryptionData.cipherIv());
+
+        // Build request
+        // Użycie zmanipulowanych metadanych z fileSize > 5 GiB
+        // builder powinien rzucić wyjątek
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                buildOpenBatchSessionRequest(zipMetadata, encryptedZipParts, encryptionData));
+        Assertions.assertEquals("Incorrect BatchFile parameters. OpenAPI schema for BatchFileInfo requires the fileSize is in range 1..5000000000 bytes.", exception.getMessage());
+    }
+
     // Weryfikuje odrzucenie paczki przekraczającej limit rozmiaru 100 MiB (przed szyfrowaniem).
     // Oczekuje wyjątku podczas próby otwarcia sesji.
     @Test
@@ -228,14 +260,14 @@ class BatchIntegrationTest extends BaseIntegrationTest {
 
         String invoice = new String(readBytesFromPath(PATH_SAMPLE_INVOICE_TEMPLATE_XML), StandardCharsets.UTF_8);
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         Map<String, byte[]> invoicesInMemory = FilesUtil.generateInvoicesInMemory(DEFAULT_INVOICES_COUNT, contextNip, invoice);
 
         byte[] zipBytes = FilesUtil.createZip(invoicesInMemory);
 
         // get ZIP metadata (before crypto)
-        FileMetadata zipMetadata = defaultCryptographyService.getMetaData(zipBytes);
+        FileMetadata zipMetadata = cryptographyService.getMetaData(zipBytes);
 
         // Dodanie sztucznego wypełnienia, aby paczka przekroczyła 100 MiB
         // Limit KSeF to 100 MiB dla pojedynczej części PRZED szyfrowaniem
@@ -281,14 +313,14 @@ class BatchIntegrationTest extends BaseIntegrationTest {
 
         String invoice = new String(readBytesFromPath(PATH_SAMPLE_INVOICE_TEMPLATE_XML), StandardCharsets.UTF_8);
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         Map<String, byte[]> invoicesInMemory = FilesUtil.generateInvoicesInMemory(DEFAULT_INVOICES_COUNT, contextNip, invoice);
 
         byte[] zipBytes = FilesUtil.createZip(invoicesInMemory);
 
         // get ZIP metadata (before crypto)
-        FileMetadata zipMetadata = defaultCryptographyService.getMetaData(zipBytes);
+        FileMetadata zipMetadata = cryptographyService.getMetaData(zipBytes);
 
         List<byte[]> zipParts = FilesUtil.splitZip(DEFAULT_NUMBER_OF_PARTS, zipBytes);
 
@@ -328,14 +360,14 @@ class BatchIntegrationTest extends BaseIntegrationTest {
 
         String invoice = new String(readBytesFromPath(PATH_SAMPLE_INVOICE_TEMPLATE_XML), StandardCharsets.UTF_8);
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         Map<String, byte[]> invoicesInMemory = FilesUtil.generateInvoicesInMemory(150, contextNip, invoice);
 
         byte[] zipBytes = FilesUtil.createZip(invoicesInMemory);
 
         // get ZIP metadata (before crypto)
-        FileMetadata zipMetadata = defaultCryptographyService.getMetaData(zipBytes);
+        FileMetadata zipMetadata = cryptographyService.getMetaData(zipBytes);
 
         // Próba podziału paczki na 51 części, co przekracza limit API wynoszący 50
         List<byte[]> zipParts = FilesUtil.splitZip(EXCEEDING_PART_COUNT, zipBytes);
@@ -344,7 +376,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         List<BatchPartSendingInfo> encryptedZipParts = encryptZipParts(zipParts, encryptionData.cipherKey(), encryptionData.cipherIv());
 
         // Build request
-        OpenBatchSessionRequest request = buildOpenBatchSessionRequest(zipMetadata, encryptedZipParts, encryptionData);
+        OpenBatchSessionRequest request = newOpenBatchSessionRequest(zipMetadata, encryptedZipParts, encryptionData);
 
         // API KSeF odrzuca żądanie z przekroczoną liczbą części
         ApiException apiException = assertThrows(ApiException.class, () ->
@@ -358,6 +390,37 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         Assertions.assertEquals("Liczba części pliku musi być mniejsza lub równa niż 50.", error.getDetails().getFirst());
     }
 
+    // Weryfikuje odrzucenie paczki z liczbą części przekraczającą maksymalny limit 50.
+    // Oczekuje wyjątku podczas próby budowania requestu przez builder
+    @Test
+    void shouldThrowBeforeSendWithExceededPartCount() throws JAXBException, IOException, ApiException {
+        String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
+        String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
+
+        String invoice = new String(readBytesFromPath(PATH_SAMPLE_INVOICE_TEMPLATE_XML), StandardCharsets.UTF_8);
+
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
+
+        Map<String, byte[]> invoicesInMemory = FilesUtil.generateInvoicesInMemory(150, contextNip, invoice);
+
+        byte[] zipBytes = FilesUtil.createZip(invoicesInMemory);
+
+        // get ZIP metadata (before crypto)
+        FileMetadata zipMetadata = cryptographyService.getMetaData(zipBytes);
+
+        // Próba podziału paczki na 51 części, co przekracza limit API wynoszący 50
+        List<byte[]> zipParts = FilesUtil.splitZip(EXCEEDING_PART_COUNT, zipBytes);
+
+        // Encrypt zip parts
+        List<BatchPartSendingInfo> encryptedZipParts = encryptZipParts(zipParts, encryptionData.cipherKey(), encryptionData.cipherIv());
+
+        // Build request
+        // API KSeF odrzuca żądanie z przekroczoną liczbą części
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                buildOpenBatchSessionRequest(zipMetadata, encryptedZipParts, encryptionData));
+        Assertions.assertEquals("OpenAPI schema for BatchFileInfo allows max 50 for file part.", exception.getMessage());
+    }
+
     // Weryfikuje wykrycie nieprawidłowo zaszyfrowanego klucza symetrycznego.
     // Oczekuje błędu deszyfrowania po przetworzeniu sesji przez system KSeF.
     @Test
@@ -367,14 +430,14 @@ class BatchIntegrationTest extends BaseIntegrationTest {
 
         String invoice = new String(readBytesFromPath(PATH_SAMPLE_INVOICE_TEMPLATE_XML), StandardCharsets.UTF_8);
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         Map<String, byte[]> invoicesInMemory = FilesUtil.generateInvoicesInMemory(DEFAULT_INVOICES_COUNT, contextNip, invoice);
 
         byte[] zipBytes = FilesUtil.createZip(invoicesInMemory);
 
         // get ZIP metadata (before crypto)
-        FileMetadata zipMetadata = defaultCryptographyService.getMetaData(zipBytes);
+        FileMetadata zipMetadata = cryptographyService.getMetaData(zipBytes);
 
         List<byte[]> zipParts = FilesUtil.splitZip(DEFAULT_NUMBER_OF_PARTS, zipBytes);
 
@@ -422,14 +485,14 @@ class BatchIntegrationTest extends BaseIntegrationTest {
 
         String invoice = new String(readBytesFromPath(PATH_SAMPLE_INVOICE_TEMPLATE_XML), StandardCharsets.UTF_8);
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         Map<String, byte[]> invoicesInMemory = FilesUtil.generateInvoicesInMemory(DEFAULT_INVOICES_COUNT, contextNip, invoice);
 
         byte[] zipBytes = FilesUtil.createZip(invoicesInMemory);
 
         // get ZIP metadata (before crypto)
-        FileMetadata zipMetadata = defaultCryptographyService.getMetaData(zipBytes);
+        FileMetadata zipMetadata = cryptographyService.getMetaData(zipBytes);
 
         List<byte[]> zipParts = FilesUtil.splitZip(DEFAULT_NUMBER_OF_PARTS, zipBytes);
 
@@ -477,14 +540,14 @@ class BatchIntegrationTest extends BaseIntegrationTest {
 
         String invoice = new String(readBytesFromPath(PATH_SAMPLE_INVOICE_TEMPLATE_XML), StandardCharsets.UTF_8);
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         Map<String, byte[]> invoicesInMemory = FilesUtil.generateInvoicesInMemory(DEFAULT_INVOICES_COUNT, contextNip, invoice);
 
         byte[] zipBytes = FilesUtil.createZip(invoicesInMemory);
 
         // get ZIP metadata (before crypto)
-        FileMetadata zipMetadata = defaultCryptographyService.getMetaData(zipBytes);
+        FileMetadata zipMetadata = cryptographyService.getMetaData(zipBytes);
 
         List<byte[]> zipParts = FilesUtil.splitZip(DEFAULT_NUMBER_OF_PARTS, zipBytes);
 
@@ -580,7 +643,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
     private String openBatchSessionAndSendInvoicesParts(String context, String accessToken, int invoicesCount, int partsCount, CompressionType compressionType) throws IOException, ApiException {
         String invoice = new String(readBytesFromPath(PATH_SAMPLE_INVOICE_TEMPLATE_XML), StandardCharsets.UTF_8);
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         Map<String, byte[]> invoicesInMemory = FilesUtil.generateInvoicesInMemory(invoicesCount, context, invoice);
 
@@ -594,7 +657,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         }
 
         // get ZIP metadata (before crypto)
-        FileMetadata packedFilesMetadata = defaultCryptographyService.getMetaData(packedFilesBytes);
+        FileMetadata packedFilesMetadata = cryptographyService.getMetaData(packedFilesBytes);
 
         List<byte[]> packedFilesParts = FilesUtil.splitZip(partsCount, packedFilesBytes);
 
@@ -665,7 +728,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
     private String openBatchSessionAndSendInvoicesPartsStream(String context, String accessToken, int invoicesCount, int invoicesPartCount) throws IOException, ApiException {
         String invoice = new String(readBytesFromPath(PATH_SAMPLE_INVOICE_TEMPLATE_XML), StandardCharsets.UTF_8);
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         Map<String, byte[]> invoicesInMemory = FilesUtil.generateInvoicesInMemory(invoicesCount, context, invoice);
 
@@ -674,11 +737,11 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         int zipLength = zipInputStreamWithSize.getZipLength();
 
         // get ZIP metadata (before crypto)
-        FileMetadata zipMetadata = defaultCryptographyService.getMetaData(zipInputStream);
+        FileMetadata zipMetadata = cryptographyService.getMetaData(zipInputStream);
         zipInputStream.reset();
 
         List<BatchPartStreamSendingInfo> encryptedStreamParts = FilesUtil.splitAndEncryptZipStream(zipInputStream, invoicesPartCount, zipLength, encryptionData.cipherKey(),
-                encryptionData.cipherIv(), defaultCryptographyService);
+                encryptionData.cipherIv(), cryptographyService);
 
         // Build request
         OpenBatchSessionRequest request = buildOpenBatchSessionRequestForStream(zipMetadata, encryptedStreamParts, encryptionData);
@@ -694,12 +757,12 @@ class BatchIntegrationTest extends BaseIntegrationTest {
     private List<BatchPartSendingInfo> encryptZipParts(List<byte[]> packedFilesParts, byte[] cipherKey, byte[] cipherIv) {
         List<BatchPartSendingInfo> encryptedPackedFilesParts = new ArrayList<>();
         for (int i = 0; i < packedFilesParts.size(); i++) {
-            byte[] encryptedPackedFilesPart = defaultCryptographyService.encryptBytesWithAES256(
+            byte[] encryptedPackedFilesPart = cryptographyService.encryptBytesWithAES256(
                     packedFilesParts.get(i),
                     cipherKey,
                     cipherIv
             );
-            FileMetadata packedFilesPartMetadata = defaultCryptographyService.getMetaData(encryptedPackedFilesPart);
+            FileMetadata packedFilesPartMetadata = cryptographyService.getMetaData(encryptedPackedFilesPart);
             encryptedPackedFilesParts.add(new BatchPartSendingInfo(encryptedPackedFilesPart, packedFilesPartMetadata, (i + 1)));
         }
         return encryptedPackedFilesParts;
@@ -730,11 +793,40 @@ class BatchIntegrationTest extends BaseIntegrationTest {
                 .build();
     }
 
+    private OpenBatchSessionRequest newOpenBatchSessionRequest(FileMetadata packedFilesMetadata, List<BatchPartSendingInfo> encryptedZipParts, EncryptionData encryptionData) {
+        BatchFileInfo batchFile = new BatchFileInfo();
+        batchFile.setFileSize(packedFilesMetadata.getFileSize());
+        batchFile.setFileHash(packedFilesMetadata.getHashSHA());
+        List<BatchFilePartInfo> parts = new ArrayList<>();
+        for (int i = 0; i < encryptedZipParts.size(); i++) {
+            BatchPartSendingInfo part = encryptedZipParts.get(i);
+            BatchFilePartInfo batchFilePartInfo = new BatchFilePartInfo();
+            batchFilePartInfo.setOrdinalNumber(i + 1);
+            batchFilePartInfo.setFileSize(part.getMetadata().getFileSize());
+            batchFilePartInfo.setFileHash(part.getMetadata().getHashSHA());
+            parts.add(batchFilePartInfo);
+        }
+
+        batchFile.setFileParts(parts);
+        batchFile.setCompressionType(CompressionType.TarGz);
+        OpenBatchSessionRequest openBatchSessionRequest = new OpenBatchSessionRequest();
+        openBatchSessionRequest.setFormCode(new FormCode(SystemCode.FA_2, SchemaVersion.VERSION_1_0E, SessionValue.FA));
+        openBatchSessionRequest.setBatchFile(batchFile);
+        openBatchSessionRequest.setEncryption(new EncryptionInfo(
+                encryptionData.encryptionInfo().getEncryptedSymmetricKey(),
+                encryptionData.encryptionInfo().getInitializationVector(),
+                encryptionData.encryptionInfo().getPublicKeyId()
+        ));
+        openBatchSessionRequest.setOfflineMode(false);
+
+        return openBatchSessionRequest;
+    }
+
     private OpenBatchSessionRequest buildOpenBatchSessionRequestForStream(FileMetadata zipMetadata, List<BatchPartStreamSendingInfo> encryptedZipParts, EncryptionData encryptionData) {
         OpenBatchSessionRequestBuilder builder = OpenBatchSessionRequestBuilder.create()
                 .withFormCode(SystemCode.FA_2, SchemaVersion.VERSION_1_0E, SessionValue.FA)
                 .withOfflineMode(false)
-                .withBatchFile(zipMetadata.getFileSize(), zipMetadata.getHashSHA());
+                .withBatchFile(zipMetadata.getFileSize(), zipMetadata.getHashSHA(), CompressionType.Zip);
 
         for (int i = 0; i < encryptedZipParts.size(); i++) {
             BatchPartStreamSendingInfo part = encryptedZipParts.get(i);

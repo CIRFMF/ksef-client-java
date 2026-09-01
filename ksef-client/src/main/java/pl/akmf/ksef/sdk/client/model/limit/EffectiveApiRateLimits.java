@@ -30,6 +30,8 @@ public class EffectiveApiRateLimits {
     private InvoiceDownloadRateLimit invoiceDownload;
     // Limity pozostałych operacji API.
     private OtherRateLimit other;
+    // Limity generowania identyfikatorów zbiorczych.
+    public CollectiveIdentifierRateLimit collectiveIdentifier;
 
     public EffectiveApiRateLimits() {
     }
@@ -52,6 +54,28 @@ public class EffectiveApiRateLimits {
         this.invoiceStatusExport = invoiceStatusExport;
         this.invoiceDownload = invoiceDownload;
         this.other = other;
+    }
+
+    public EffectiveApiRateLimits(OnlineSessionRateLimit onlineSession, BatchSessionRateLimit batchSession,
+                                  InvoiceSendRateLimit invoiceSend, InvoiceStatusRateLimit invoiceStatus,
+                                  SessionListRateLimit sessionList, SessionInvoiceListRateLimit sessionInvoiceList,
+                                  SessionMiscRateLimits sessionMisc, InvoiceMetadataRateLimit invoiceMetadata,
+                                  InvoiceExportRateLimit invoiceExport, InvoiceExportStatusRateLimit invoiceStatusExport,
+                                  InvoiceDownloadRateLimit invoiceDownload, OtherRateLimit other,
+                                  CollectiveIdentifierRateLimit collectiveIdentifier) {
+        this.onlineSession = onlineSession;
+        this.batchSession = batchSession;
+        this.invoiceSend = invoiceSend;
+        this.invoiceStatus = invoiceStatus;
+        this.sessionList = sessionList;
+        this.sessionInvoiceList = sessionInvoiceList;
+        this.sessionMisc = sessionMisc;
+        this.invoiceMetadata = invoiceMetadata;
+        this.invoiceExport = invoiceExport;
+        this.invoiceStatusExport = invoiceStatusExport;
+        this.invoiceDownload = invoiceDownload;
+        this.other = other;
+        this.collectiveIdentifier = collectiveIdentifier;
     }
 
     public OnlineSessionRateLimit getOnlineSession() {
@@ -148,5 +172,13 @@ public class EffectiveApiRateLimits {
 
     public void setOther(OtherRateLimit other) {
         this.other = other;
+    }
+
+    public CollectiveIdentifierRateLimit getCollectiveIdentifier() {
+        return collectiveIdentifier;
+    }
+
+    public void setCollectiveIdentifier(CollectiveIdentifierRateLimit collectiveIdentifier) {
+        this.collectiveIdentifier = collectiveIdentifier;
     }
 }

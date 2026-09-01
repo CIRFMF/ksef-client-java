@@ -13,6 +13,12 @@ public class EncryptionInfo {
         this.initializationVector = initializationVector;
     }
 
+    public EncryptionInfo(String encryptedSymmetricKey, String initializationVector, String publicKeyId) {
+        this.encryptedSymmetricKey = encryptedSymmetricKey;
+        this.initializationVector = initializationVector;
+        this.publicKeyId = publicKeyId;
+    }
+
     public String getEncryptedSymmetricKey() {
         return encryptedSymmetricKey;
     }

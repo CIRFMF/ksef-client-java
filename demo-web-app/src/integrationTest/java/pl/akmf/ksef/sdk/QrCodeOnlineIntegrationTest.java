@@ -3,10 +3,8 @@ package pl.akmf.ksef.sdk;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
-import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
@@ -39,9 +37,6 @@ class QrCodeOnlineIntegrationTest extends BaseIntegrationTest {
     private static final int SESSION_SUCCESSFUL_STATUS_CODE = 200;
     private static final int SESSION_FAILED_STATUS_CODE = 445;
 
-    @Autowired
-    private DefaultCryptographyService defaultCryptographyService;
-
     /**
      * End-to-end test weryfikujący pełny, zakończony sukcesem przebieg wystawienia kodu QR do faktury w trybie interaktywnym (online session).
      * Test używa faktury FA(2) oraz szyfrfowania RSA.
@@ -64,7 +59,7 @@ class QrCodeOnlineIntegrationTest extends BaseIntegrationTest {
         //Autoryzacja, pozyskanie tokenu dostępu
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         //Otwarcie sesji online z szyfrowaniem RSA.
         String sessionReferenceNumber = openOnlineSession(encryptionData, SystemCode.FA_2, SchemaVersion.VERSION_1_0E, SessionValue.FA, accessToken);
@@ -153,12 +148,12 @@ class QrCodeOnlineIntegrationTest extends BaseIntegrationTest {
 
         byte[] invoice = invoiceTemplate.getBytes(StandardCharsets.UTF_8);
 
-        byte[] encryptedInvoice = defaultCryptographyService.encryptBytesWithAES256(invoice,
+        byte[] encryptedInvoice = cryptographyService.encryptBytesWithAES256(invoice,
                 encryptionData.cipherKey(),
                 encryptionData.cipherIv());
 
-        FileMetadata invoiceMetadata = defaultCryptographyService.getMetaData(invoice);
-        FileMetadata encryptedInvoiceMetadata = defaultCryptographyService.getMetaData(encryptedInvoice);
+        FileMetadata invoiceMetadata = cryptographyService.getMetaData(invoice);
+        FileMetadata encryptedInvoiceMetadata = cryptographyService.getMetaData(encryptedInvoice);
 
         SendInvoiceOnlineSessionRequest sendInvoiceOnlineSessionRequest = new SendInvoiceOnlineSessionRequestBuilder()
                 .withInvoiceHash(invoiceMetadata.getHashSHA())
