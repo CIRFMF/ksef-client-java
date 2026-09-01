@@ -8,6 +8,11 @@ sdk:
     qr-uri: "https://qr-test.ksef.mf.gov.pl"
     request-timeout: 100
     lighthouse-base-uri: "https://api-latarnia-test.ksef.mf.gov.pl/"
+    response-header-observation:
+      # mimo domyślnie wyłączonego property możemy w runtime go utworzyć wywołując getResponseHeaderCaptureHandler() i następnie zasubskrybować się na nagłówek
+      enabled: false
+      header-names:
+        - "X-System-Warning"
     circuit-breaker-options:
       enabled: true
       failure-threshold: 5

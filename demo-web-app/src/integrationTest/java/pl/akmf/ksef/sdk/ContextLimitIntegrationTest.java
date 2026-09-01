@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.limit.BatchSessionLimit;
 import pl.akmf.ksef.sdk.client.model.limit.ChangeContextLimitRequest;
+import pl.akmf.ksef.sdk.client.model.limit.CollectiveIdentifierSessionLimits;
 import pl.akmf.ksef.sdk.client.model.limit.GetContextLimitResponse;
 import pl.akmf.ksef.sdk.client.model.limit.OnlineSessionLimit;
 import pl.akmf.ksef.sdk.configuration.BaseIntegrationTest;
@@ -47,6 +48,8 @@ class ContextLimitIntegrationTest extends BaseIntegrationTest {
                 response.getOnlineSession().getMaxInvoiceSizeInMB());
         Assertions.assertEquals(expectedResponse.getOnlineSession().getMaxInvoiceWithAttachmentSizeInMB(),
                 response.getOnlineSession().getMaxInvoiceWithAttachmentSizeInMB());
+        Assertions.assertEquals(expectedResponse.getCollectiveIdentifier().getMaxInvoices(),
+                response.getCollectiveIdentifier().getMaxInvoices());
 
     }
 
@@ -60,10 +63,11 @@ class ContextLimitIntegrationTest extends BaseIntegrationTest {
         batchSessionLimit.setMaxInvoiceSizeInMB(4);
         batchSessionLimit.setMaxInvoiceWithAttachmentSizeInMB(5);
         batchSessionLimit.setMaxInvoices(6);
+        CollectiveIdentifierSessionLimits collectiveIdentifierSessionLimits = new CollectiveIdentifierSessionLimits();
+        collectiveIdentifierSessionLimits.setMaxInvoices(6);
         request.setOnlineSession(onlineSessionLimit);
         request.setBatchSession(batchSessionLimit);
-        request.setOnlineSession(onlineSessionLimit);
-        request.setBatchSession(batchSessionLimit);
+        request.setCollectiveIdentifier(collectiveIdentifierSessionLimits);
 
         ksefClient.changeContextLimitTest(request, accessToken);
     }
@@ -84,6 +88,7 @@ class ContextLimitIntegrationTest extends BaseIntegrationTest {
         batchSessionLimit.setMaxInvoices(10000);
         response.setOnlineSession(onlineSessionLimit);
         response.setBatchSession(batchSessionLimit);
+        response.setCollectiveIdentifier(new CollectiveIdentifierSessionLimits(500));
 
         return response;
     }
@@ -101,8 +106,7 @@ class ContextLimitIntegrationTest extends BaseIntegrationTest {
         response.setOnlineSession(onlineSessionLimit);
         response.setBatchSession(batchSessionLimit);
 
-        response.setOnlineSession(onlineSessionLimit);
-        response.setBatchSession(batchSessionLimit);
+        response.setCollectiveIdentifier(new CollectiveIdentifierSessionLimits(6));
 
         return response;
     }

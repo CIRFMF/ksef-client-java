@@ -4,11 +4,11 @@ import java.util.List;
 
 // Zawiera informacje o pliku wsadowym przekazywanym w żądaniu otwarcia sesji wsadowej.
 public class BatchFileInfo {
-    // Rozmiar całego pliku wsadowego w bajtach.
+    // Rozmiar całego pliku wsadowego w bajtach. Schamat dopuszcza zakres 1–5 000 000 000.
     private long fileSize;
     // Skrót kryptograficzny całego pliku wsadowego.
     private String fileHash;
-    // Lista części pliku wsadowego.
+    // Lista części pliku wsadowego. Schemat dopuszcza od 1 do 50 części.
     private List<BatchFilePartInfo> fileParts;
     // Typ kompresji pliku wsadowego.
     // Gdy wartość nie została podana, pozostaje null dla zachowania kompatybilności wstecznej.

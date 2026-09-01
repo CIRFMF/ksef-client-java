@@ -88,6 +88,8 @@ public enum Url {
     TEST_ATTACHMENT("testdata/attachment", "attachmentTestCreate"),
     TEST_ATTACHMENT_REVOKE("testdata/attachment/revoke", "attachmentTestRevoke"),
 
+    UPDATE_CERTIFICATE_DATA("testdata/certificates/{certificateSerialNumber}", "apiV2UpdateCertificateData"),
+
     PEPPOL_QUERY("peppol/query", "peppolQuery"),
 
     TOKEN_LIST("tokens", "apiV2TokensGet"),
@@ -96,7 +98,12 @@ public enum Url {
     TOKEN_STATUS("tokens/{referenceNumber}", "apiV2TokensReferenceNumberGet"),
 
     LIGHTHOUSE_STATUS("status", "apiV2LighthouseStatusGet"),
-    LIGHTHOUSE_MESSAGES("messages", "apiV2LighthouseMessagesGet");
+    LIGHTHOUSE_MESSAGES("messages", "apiV2LighthouseMessagesGet"),
+
+    COLLECTIVE_IDENTIFIERS_GENERATE("collective-identifiers", "apiV2CollectiveIdentifiersGeneratePost"),
+    COLLECTIVE_IDENTIFIERS_QUERY("collective-identifiers/query", "apiV2CollectiveIdentifiersQueryPost"),
+    COLLECTIVE_IDENTIFIERS_QUERY_BY("collective-identifiers/ksef/{ksefNumber}", "apiV2CollectiveIdentifiersQueryByGet"),
+    COLLECTIVE_IDENTIFIERS_QUERY_INVOICES("collective-identifiers/invoices", "apiV2CollectiveIdentifiersQueryInvoicesPost");
 
     private final String url;
     private final String operationId;

@@ -8,8 +8,8 @@ public class InvoiceExportRequest {
     private InvoiceExportFilters filters;
     // Określa, czy zwrócić tylko metadane faktur (plik _metadata.json bez faktur).
     private boolean onlyMetadata = false;
-    // Typ kompresji paczki eksportu faktur. Domyslnie API zachowuje kompatybilnosc i uzywa ZIP.
-    private CompressionType compressionType;
+    // Typ kompresji paczki eksportu faktur. Domyslnie API zachowuje kompatybilnosc i uzywa TAR GZ.
+    private CompressionType compressionType = CompressionType.TarGz;
 
     public InvoiceExportRequest() {
 

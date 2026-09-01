@@ -3,10 +3,8 @@ package pl.akmf.ksef.sdk;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
-import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
@@ -44,9 +42,6 @@ import static org.awaitility.Awaitility.await;
 // - Wymaga podania HashOfCorrectedInvoice z pierwotnej, odrzuconej faktury
 class TechnicalCorrectionIntegrationTest extends BaseIntegrationTest {
 
-    @Autowired
-    private DefaultCryptographyService defaultCryptographyService;
-
     // Testuje scenariusz korekty technicznej faktury w ramach tej samej sesji interaktywnej.
     // Scenariusz testu:
     // 1. Otwiera sesję interaktywną z szyfrowaniem AES-256
@@ -62,7 +57,7 @@ class TechnicalCorrectionIntegrationTest extends BaseIntegrationTest {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         String sessionReferenceNumber = openOnlineSession(encryptionData, SystemCode.FA_3, SchemaVersion.VERSION_1_0E, SessionValue.FA, accessToken);
         // Przygotowanie i wysłanie faktury z błędem semantycznym (data w przyszłości)
@@ -108,7 +103,7 @@ class TechnicalCorrectionIntegrationTest extends BaseIntegrationTest {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         String sessionReferenceNumber = openOnlineSession(encryptionData, SystemCode.FA_3, SchemaVersion.VERSION_1_0E, SessionValue.FA, accessToken);
         // Przygotowanie i wysłanie faktury z błędem semantycznym (data w przyszłości)
@@ -127,7 +122,7 @@ class TechnicalCorrectionIntegrationTest extends BaseIntegrationTest {
         ksefClient.closeOnlineSession(sessionReferenceNumber, accessToken);
 
         // Otwarcie nowej, drugiej sesji dla wysłania korekty technicznej
-        EncryptionData encryptionDataSecondSession = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionDataSecondSession = cryptographyService.getEncryptionData();
         String accessTokenSecondSession = authWithCustomNip(contextNip, contextNip).accessToken();
         String sessionReferenceNumberSecondSession = openOnlineSession(encryptionDataSecondSession, SystemCode.FA_3, SchemaVersion.VERSION_1_0E, SessionValue.FA, accessTokenSecondSession);
 
@@ -169,12 +164,12 @@ class TechnicalCorrectionIntegrationTest extends BaseIntegrationTest {
 
         byte[] invoice = invoiceTemplate.getBytes(StandardCharsets.UTF_8);
 
-        byte[] encryptedInvoice = defaultCryptographyService.encryptBytesWithAES256(invoice,
+        byte[] encryptedInvoice = cryptographyService.encryptBytesWithAES256(invoice,
                 encryptionData.cipherKey(),
                 encryptionData.cipherIv());
 
-        FileMetadata invoiceMetadata = defaultCryptographyService.getMetaData(invoice);
-        FileMetadata encryptedInvoiceMetadata = defaultCryptographyService.getMetaData(encryptedInvoice);
+        FileMetadata invoiceMetadata = cryptographyService.getMetaData(invoice);
+        FileMetadata encryptedInvoiceMetadata = cryptographyService.getMetaData(encryptedInvoice);
 
         SendInvoiceOnlineSessionRequest sendInvoiceOnlineSessionRequest = new SendInvoiceOnlineSessionRequestBuilder()
                 .withInvoiceHash(invoiceMetadata.getHashSHA())

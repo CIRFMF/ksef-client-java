@@ -3,7 +3,7 @@ package pl.akmf.ksef.sdk.client.model.testdata;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public class TestDataPermission {
+public class TestDataPermission { // TestDataPermissionsGrantRequest//Permission
     private String description;
     private PermissionType permission;
 
@@ -36,7 +36,8 @@ public class TestDataPermission {
         CREDENTIAL_READ("CredentialsRead"),
         CREDENTIAL_MANAGE("CredentialsManage"),
         ENFORCEMENT_OPERATION("EnforcementOperations"),
-        SUBUNIT_MANAGE("SubunitManage");
+        SUBUNIT_MANAGE("SubunitManage"),
+        COLLECTIVE_IDENTIFIER_MANAGE("CollectiveIdentifierManage");
 
         private final String value;
 

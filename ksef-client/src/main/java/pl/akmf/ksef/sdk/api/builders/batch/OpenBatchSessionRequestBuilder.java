@@ -5,10 +5,11 @@ import pl.akmf.ksef.sdk.client.model.session.FormCode;
 import pl.akmf.ksef.sdk.client.model.session.SchemaVersion;
 import pl.akmf.ksef.sdk.client.model.session.SessionValue;
 import pl.akmf.ksef.sdk.client.model.session.SystemCode;
-import pl.akmf.ksef.sdk.client.model.session.batch.CompressionType;
 import pl.akmf.ksef.sdk.client.model.session.batch.BatchFileInfo;
 import pl.akmf.ksef.sdk.client.model.session.batch.BatchFilePartInfo;
+import pl.akmf.ksef.sdk.client.model.session.batch.CompressionType;
 import pl.akmf.ksef.sdk.client.model.session.batch.OpenBatchSessionRequest;
+import pl.akmf.ksef.sdk.client.model.util.RegexPatterns;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,13 @@ public class OpenBatchSessionRequestBuilder {
     private final EncryptionInfo encryption = new EncryptionInfo();
     private boolean offlineMode = false;
     private CompressionType compressionType;
+
+    // Ograniczenia wynikają bezpośrednio ze schematów OpenAPI BatchFileInfo i BatchFilePartInfo.
+    private static final long openApiMinimumFileSizeInBytes = 1L;
+    private static final long openApiMaximumBatchFileSizeInBytes = 5_000_000_000L;
+    private static final int openApiMinimumBatchFilePartOrdinalNumber = 1;
+    private static final int openApiMinimumBatchFileParts = 1;
+    private static final int openApiMaximumBatchFileParts = 50;
 
     private OpenBatchSessionRequestBuilder() {
     }
@@ -44,21 +52,27 @@ public class OpenBatchSessionRequestBuilder {
     }
 
     public OpenBatchSessionRequestBuilder withBatchFile(long fileSize, String fileHash) {
-        if (fileSize < 0 || isNullOrBlank(fileHash)) {
-            throw new IllegalArgumentException("BatchFile parameters are invalid.");
+        if (fileSize < openApiMinimumFileSizeInBytes || fileSize > openApiMaximumBatchFileSizeInBytes) {
+            throw new IllegalArgumentException("Incorrect BatchFile parameters." +
+                    " OpenAPI schema for BatchFileInfo requires the fileSize is in range "
+                    + openApiMinimumFileSizeInBytes + ".." + openApiMaximumBatchFileSizeInBytes + " bytes.");
+        }
+
+        if (isNullOrBlank(fileHash) || !RegexPatterns.Sha256Base64Pattern.isMatch(fileHash)) {
+            throw new IllegalArgumentException("OpenAPI Schema for BatchFileInfo requires the fileHash is compatible with Sha256HashBase64.");
         }
 
         this.batchFileSize = fileSize;
         this.batchFileHash = fileHash;
-        this.compressionType = null;
+        this.compressionType = CompressionType.TarGz; // Domyślnie przyjmuje typ TarGz
         return this;
     }
 
     /**
      * Ustawia podstawowe informacje o pliku wsadowym wraz z typem kompresji.
      *
-     * @param fileSize    Rozmiar pliku wsadowego w bajtach.
-     * @param fileHash    Skrót kryptograficzny całego pliku wsadowego.
+     * @param fileSize        Rozmiar pliku wsadowego w bajtach.
+     * @param fileHash        Skrót kryptograficzny całego pliku wsadowego.
      * @param compressionType Typ kompresji pliku wsadowego (np. Zip lub TarGz).
      * @return Interfejs do dodawania części pliku wsadowego.
      */
@@ -74,8 +88,20 @@ public class OpenBatchSessionRequestBuilder {
     }
 
     public OpenBatchSessionRequestBuilder addBatchFilePart(int ordinalNumber, long fileSize, String fileHash) {
-        if (ordinalNumber < 0 || fileSize < 0 || isNullOrBlank(fileHash)) {
-            throw new IllegalArgumentException("BatchFilePart parameters are invalid.");
+        if (ordinalNumber < openApiMinimumBatchFilePartOrdinalNumber || fileSize < openApiMinimumFileSizeInBytes) {
+            throw new IllegalArgumentException(
+                    "Incorrect BatchFilePart parameters. OpenAPI schema for BatchFilePartInfo requires " +
+                            "ordinalNumber >= " + openApiMinimumBatchFilePartOrdinalNumber + " and " +
+                            "fileSize >= " + openApiMinimumFileSizeInBytes + ".");
+        }
+
+        if (isNullOrBlank(fileHash) || !RegexPatterns.Sha256Base64Pattern.isMatch(fileHash)) {
+            throw new IllegalArgumentException(
+                    "OpenAPI schema for BatchFilePartInfo requires the fileHash is compatible with Sha256HashBase64.");
+        }
+
+        if (this.parts.size() >= openApiMaximumBatchFileParts) {
+            throw new IllegalArgumentException("OpenAPI schema for BatchFileInfo allows max " + openApiMaximumBatchFileParts + " for file part.");
         }
 
         BatchFilePartInfo batchFilePartInfo = new BatchFilePartInfo();
@@ -114,6 +140,9 @@ public class OpenBatchSessionRequestBuilder {
         if (formCode == null) throw new IllegalStateException("FormCode is required.");
         if (isNullOrBlank(encryption.getEncryptedSymmetricKey()) || isNullOrBlank(encryption.getInitializationVector())) {
             throw new IllegalStateException("Encryption configuration is incomplete.");
+        }
+        if (this.parts.size() < openApiMinimumBatchFileParts) {
+            throw new IllegalArgumentException("OpenAPI schema BatchFileInfo requires at least " + openApiMinimumBatchFileParts + " file part.");
         }
 
         BatchFileInfo batchFile = new BatchFileInfo();

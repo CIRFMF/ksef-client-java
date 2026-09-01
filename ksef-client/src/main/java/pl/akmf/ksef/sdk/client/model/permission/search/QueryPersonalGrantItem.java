@@ -2,7 +2,7 @@ package pl.akmf.ksef.sdk.client.model.permission.search;
 
 import java.time.OffsetDateTime;
 
-public class QueryPersonalGrantItem {
+public class QueryPersonalGrantItem { // PersonalPermission
     private String id;
     private QueryPersonalGrantContextIdentifier contextIdentifier;
     private QueryPersonalGrantAuthorizedIdentifier authorizedIdentifier;

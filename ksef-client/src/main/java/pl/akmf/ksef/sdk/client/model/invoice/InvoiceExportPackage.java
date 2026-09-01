@@ -1,5 +1,7 @@
 package pl.akmf.ksef.sdk.client.model.invoice;
 
+import pl.akmf.ksef.sdk.client.model.session.batch.CompressionType;
+
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -20,6 +22,8 @@ public class InvoiceExportPackage {
     private OffsetDateTime lastPermanentStorageDate;
     // Dotyczy wyłącznie zapytań filtrowanych po typie daty PermanentStorage. Jeśli zapytanie dotyczyło najnowszego okresu, wartość ta może być wartością nieznacznie skorygowaną względem górnej granicy podanej w warunkach zapytania.
     private OffsetDateTime permanentStorageHwmDate;
+    // Typ kompresji użyty do przygotowania paczki eksportu.
+    private CompressionType compressionType;
 
     public InvoiceExportPackage() {
 
@@ -87,5 +91,13 @@ public class InvoiceExportPackage {
 
     public void setPermanentStorageHwmDate(OffsetDateTime permanentStorageHwmDate) {
         this.permanentStorageHwmDate = permanentStorageHwmDate;
+    }
+
+    public CompressionType getCompressionType() {
+        return compressionType;
+    }
+
+    public void setCompressionType(CompressionType compressionType) {
+        this.compressionType = compressionType;
     }
 }

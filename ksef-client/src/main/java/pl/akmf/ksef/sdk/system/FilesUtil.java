@@ -53,6 +53,21 @@ public class FilesUtil {
         return invoiceMap;
     }
 
+    public static Map<String, byte[]> generateInvoicesInMemory(int invoicesCount, String nip, String recipientNip, String invoiceTemplate) {
+        Map<String, byte[]> invoiceMap = new HashMap<>();
+        for (int i = 0; i < invoicesCount; i++) {
+            String invoice = invoiceTemplate
+                    .replace("#nip#", nip)
+                    .replace("#subject2nip#", recipientNip)
+                    .replace("#invoicing_date#",
+                            LocalDate.of(2025, 9, 15).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                    .replace("#invoice_number#", UUID.randomUUID().toString());
+
+            invoiceMap.put("faktura_" + (i + 1) + ".xml", invoice.getBytes(StandardCharsets.UTF_8));
+        }
+        return invoiceMap;
+    }
+
     public static List<BatchPartStreamSendingInfo> splitAndEncryptZipStream(
             InputStream zipInputStream,
             int invoicesPartCount,

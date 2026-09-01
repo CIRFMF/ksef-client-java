@@ -3,9 +3,7 @@ package pl.akmf.ksef.sdk;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.batch.OpenBatchSessionRequestBuilder;
-import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.invoice.InitAsyncInvoicesQueryResponse;
@@ -28,6 +26,7 @@ import pl.akmf.ksef.sdk.client.model.session.SessionStatusResponse;
 import pl.akmf.ksef.sdk.client.model.session.SessionValue;
 import pl.akmf.ksef.sdk.client.model.session.SystemCode;
 import pl.akmf.ksef.sdk.client.model.session.batch.BatchPartStreamSendingInfo;
+import pl.akmf.ksef.sdk.client.model.session.batch.CompressionType;
 import pl.akmf.ksef.sdk.client.model.session.batch.OpenBatchSessionRequest;
 import pl.akmf.ksef.sdk.client.model.session.batch.OpenBatchSessionResponse;
 import pl.akmf.ksef.sdk.client.model.util.ZipInputStreamWithSize;
@@ -64,9 +63,6 @@ class IncrementalInvoiceRetrieveIntegrationTest extends BaseIntegrationTest {
     private static final int DEFAULT_NUMBER_OF_PARTS = 2;
     private static final int DEFAULT_INVOICES_COUNT = 15;
     private static final String PATH_SAMPLE_INVOICE_TEMPLATE_XML = "/xml/invoices/sample/invoice-template_v3.xml";
-
-    @Autowired
-    private DefaultCryptographyService defaultCryptographyService;
 
     // Wzorcowy mechanizm przyrostowego pobierania faktur z KSeF z obsługą punktu kontynuacji (HWM shift) oraz deduplikacji.
     // Kroki:
@@ -114,9 +110,9 @@ class IncrementalInvoiceRetrieveIntegrationTest extends BaseIntegrationTest {
                 .until(() -> true);
 
         exportTasks.forEach(task -> {
-            EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+            EncryptionData encryptionData = cryptographyService.getEncryptionData();
             OffsetDateTime effectiveFrom = getEffectiveStartDate(continuationPoints, task.getSubjectType(), task.getFrom());
-            String operationReferenceNumber = initiateInvoiceExportAsync(effectiveFrom, task.getTo(), task.getSubjectType(), accessToken, encryptionData.encryptionInfo());
+            String operationReferenceNumber = initiateInvoiceExport(effectiveFrom, task.getTo(), task.getSubjectType(), accessToken, encryptionData.encryptionInfo());
 
             InvoiceExportStatus status = waitForExportCompletion(operationReferenceNumber, accessToken);
 
@@ -124,7 +120,7 @@ class IncrementalInvoiceRetrieveIntegrationTest extends BaseIntegrationTest {
                 return;
             }
             // Dodawanie unikalnych faktur - deduplikacja           `
-            PackageProcessingResult packageProcessingResult = downloadAndProcessPackageAsync(status, encryptionData);
+            PackageProcessingResult packageProcessingResult = downloadAndProcessPackage(status, encryptionData);
             totalMetadataEntries.addAndGet(packageProcessingResult.getInvoiceMetadataList().size());
 
             packageProcessingResult.getInvoiceMetadataList()
@@ -202,15 +198,15 @@ class IncrementalInvoiceRetrieveIntegrationTest extends BaseIntegrationTest {
             //UWAGA:
             // W tym teście CELOWO używamy oryginalnych granic okien, ignorując HWM/continuation points,
             // aby wymusić nakładające się zapytania i duplikaty, dla scenariuszy produkcyjnych zalecane wzorowanie się na teście invoiceIncrementalRetrievalWithHwmShift
-            EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
-            String operationReferenceNumber = initiateInvoiceExportAsync(task.getFrom(), task.getTo(), task.getSubjectType(), accessToken, encryptionData.encryptionInfo());
+            EncryptionData encryptionData = cryptographyService.getEncryptionData();
+            String operationReferenceNumber = initiateInvoiceExport(task.getFrom(), task.getTo(), task.getSubjectType(), accessToken, encryptionData.encryptionInfo());
 
             InvoiceExportStatus status = waitForExportCompletion(operationReferenceNumber, accessToken);
 
             if (status.getPackageParts().getInvoiceCount() == 0) {
                 return;
             }
-            PackageProcessingResult packageProcessingResult = downloadAndProcessPackageAsync(status, encryptionData);
+            PackageProcessingResult packageProcessingResult = downloadAndProcessPackage(status, encryptionData);
             totalMetadataEntries.addAndGet(packageProcessingResult.getInvoiceMetadataList().size());
 
             // Dodawanie unikalnych faktur i wykrywanie duplikatów
@@ -264,7 +260,7 @@ class IncrementalInvoiceRetrieveIntegrationTest extends BaseIntegrationTest {
         return false;
     }
 
-    private String initiateInvoiceExportAsync(OffsetDateTime windowFrom,
+    private String initiateInvoiceExport(OffsetDateTime windowFrom,
                                               OffsetDateTime windowTo, InvoiceQuerySubjectType subjectType,
                                               String accessToken, EncryptionInfo encryptionInfo) {
         InvoiceExportFilters filters = new InvoiceExportFilters();
@@ -292,7 +288,7 @@ class IncrementalInvoiceRetrieveIntegrationTest extends BaseIntegrationTest {
                                                                     int invoicesPartCount) throws IOException, ApiException {
         String invoice = new String(readBytesFromPath(PATH_SAMPLE_INVOICE_TEMPLATE_XML), StandardCharsets.UTF_8);
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
 
         Map<String, byte[]> invoicesInMemory = FilesUtil.generateInvoicesInMemory(invoicesCount, context, invoice);
 
@@ -301,11 +297,11 @@ class IncrementalInvoiceRetrieveIntegrationTest extends BaseIntegrationTest {
         int zipLength = zipInputStreamWithSize.getZipLength();
 
         // get ZIP metadata (before crypto)
-        FileMetadata zipMetadata = defaultCryptographyService.getMetaData(zipInputStream);
+        FileMetadata zipMetadata = cryptographyService.getMetaData(zipInputStream);
         zipInputStream.reset();
 
         List<BatchPartStreamSendingInfo> encryptedStreamParts = FilesUtil.splitAndEncryptZipStream(zipInputStream, invoicesPartCount, zipLength, encryptionData.cipherKey(),
-                encryptionData.cipherIv(), defaultCryptographyService);
+                encryptionData.cipherIv(), cryptographyService);
 
         // Build request
         OpenBatchSessionRequest request = buildOpenBatchSessionRequestForStream(zipMetadata, encryptedStreamParts, encryptionData);
@@ -352,7 +348,7 @@ class IncrementalInvoiceRetrieveIntegrationTest extends BaseIntegrationTest {
         OpenBatchSessionRequestBuilder builder = OpenBatchSessionRequestBuilder.create()
                 .withFormCode(SystemCode.FA_3, SchemaVersion.VERSION_1_0E, SessionValue.FA)
                 .withOfflineMode(false)
-                .withBatchFile(zipMetadata.getFileSize(), zipMetadata.getHashSHA());
+                .withBatchFile(zipMetadata.getFileSize(), zipMetadata.getHashSHA(), CompressionType.Zip);
 
         for (int i = 0; i < encryptedZipParts.size(); i++) {
             BatchPartStreamSendingInfo part = encryptedZipParts.get(i);
@@ -369,17 +365,24 @@ class IncrementalInvoiceRetrieveIntegrationTest extends BaseIntegrationTest {
                 .build();
     }
 
-    private PackageProcessingResult downloadAndProcessPackageAsync(InvoiceExportStatus invoiceExportStatus,
+    private PackageProcessingResult downloadAndProcessPackage(InvoiceExportStatus invoiceExportStatus,
                                                                    EncryptionData encryptionData) {
         try {
-            List<InvoicePackagePart> parts = invoiceExportStatus.getPackageParts().getParts();
-            byte[] mergedZip = FilesUtil.mergeZipParts(
+            InvoiceExportPackage packageParts = invoiceExportStatus.getPackageParts();
+            CompressionType compressionType = packageParts.getCompressionType();
+            List<InvoicePackagePart> parts = packageParts.getParts();
+            byte[] mergedParts = FilesUtil.mergeZipParts(
                     encryptionData,
                     parts,
                     part -> ksefClient.downloadPackagePart(part),
-                    (encryptedPackagePart, key, iv) -> defaultCryptographyService.decryptBytesWithAes256(encryptedPackagePart, key, iv)
+                    (encryptedPackagePart, key, iv) -> cryptographyService.decryptBytesWithAes256(encryptedPackagePart, key, iv)
             );
-            Map<String, String> downloadedFiles = FilesUtil.unzip(mergedZip);
+            Map<String, String> downloadedFiles;
+            if (compressionType == null || compressionType.equals(CompressionType.Zip)) {
+                downloadedFiles = FilesUtil.unzip(mergedParts);
+            } else {
+                downloadedFiles = FilesUtil.extractTarGz(mergedParts);
+            }
 
             String metadataJson = downloadedFiles.keySet()
                     .stream()

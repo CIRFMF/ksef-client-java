@@ -2,7 +2,8 @@ package pl.akmf.ksef.sdk.client.model.testdata;
 
 import java.util.List;
 
-public class TestDataPermissionRequest {
+public class TestDataPermissionRequest { // TestDataPermissionsGrantRequest
+
     private TestDataContextIdentifier contextIdentifier;
     private TestDataAuthorizedIdentifier authorizedIdentifier;
     private List<TestDataPermission> permissions;

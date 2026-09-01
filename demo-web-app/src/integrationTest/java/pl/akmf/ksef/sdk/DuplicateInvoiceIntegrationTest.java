@@ -6,11 +6,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.batch.OpenBatchSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
-import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
@@ -23,6 +21,7 @@ import pl.akmf.ksef.sdk.client.model.session.SessionStatusResponse;
 import pl.akmf.ksef.sdk.client.model.session.SessionValue;
 import pl.akmf.ksef.sdk.client.model.session.SystemCode;
 import pl.akmf.ksef.sdk.client.model.session.batch.BatchPartStreamSendingInfo;
+import pl.akmf.ksef.sdk.client.model.session.batch.CompressionType;
 import pl.akmf.ksef.sdk.client.model.session.batch.OpenBatchSessionRequest;
 import pl.akmf.ksef.sdk.client.model.session.batch.OpenBatchSessionResponse;
 import pl.akmf.ksef.sdk.client.model.session.online.OpenOnlineSessionRequest;
@@ -56,9 +55,6 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
     private static final int BATCH_TOTAL_INVOICES = 1;
     private static final int PART_QUANTITY = 1;
 
-    @Autowired
-    private DefaultCryptographyService defaultCryptographyService;
-
     static Stream<Arguments> inputTestParameters() {
         return Stream.of(
                 Arguments.of(SystemCode.FA_2, "invoice-template.xml"),
@@ -79,7 +75,7 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
         String sellerNip = IdentifierGeneratorUtils.generateRandomNIP();
         String accessToken = authWithCustomNip(sellerNip, sellerNip).accessToken();
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
         String sharedInvoiceNumber = UUID.randomUUID().toString();
 
         // 1. Batch: wysłanie i przetworzenie faktury
@@ -111,7 +107,7 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
         String sellerNip = IdentifierGeneratorUtils.generateRandomNIP();
         String accessToken = authWithCustomNip(sellerNip, sellerNip).accessToken();
 
-        EncryptionData encryptionData = defaultCryptographyService.getEncryptionData();
+        EncryptionData encryptionData = cryptographyService.getEncryptionData();
         String sharedInvoiceNumber = UUID.randomUUID().toString();
 
         // 1. Online: pierwsze wysłanie (powinno przejść poprawnie)
@@ -151,11 +147,11 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
         int zipLength = zipInputStreamWithSize.getZipLength();
 
         // get ZIP metadata (before crypto)
-        FileMetadata zipMetadata = defaultCryptographyService.getMetaData(zipInputStream);
+        FileMetadata zipMetadata = cryptographyService.getMetaData(zipInputStream);
         zipInputStream.reset();
 
         List<BatchPartStreamSendingInfo> encryptedStreamParts = FilesUtil.splitAndEncryptZipStream(zipInputStream, PART_QUANTITY, zipLength, encryptionData.cipherKey(),
-                encryptionData.cipherIv(), defaultCryptographyService);
+                encryptionData.cipherIv(), cryptographyService);
 
         // Build request
         OpenBatchSessionRequest request = buildOpenBatchSessionRequestForStream(zipMetadata, encryptedStreamParts, systemCode, encryptionData);
@@ -177,7 +173,7 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
         OpenBatchSessionRequestBuilder builder = OpenBatchSessionRequestBuilder.create()
                 .withFormCode(systemCode, SchemaVersion.VERSION_1_0E, SessionValue.FA)
                 .withOfflineMode(false)
-                .withBatchFile(zipMetadata.getFileSize(), zipMetadata.getHashSHA());
+                .withBatchFile(zipMetadata.getFileSize(), zipMetadata.getHashSHA(), CompressionType.Zip);
 
         for (int i = 0; i < encryptedZipParts.size(); i++) {
             BatchPartStreamSendingInfo part = encryptedZipParts.get(i);
@@ -224,12 +220,12 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
 
         byte[] invoice = invoiceTemplate.getBytes(StandardCharsets.UTF_8);
 
-        byte[] encryptedInvoice = defaultCryptographyService.encryptBytesWithAES256(invoice,
+        byte[] encryptedInvoice = cryptographyService.encryptBytesWithAES256(invoice,
                 encryptionData.cipherKey(),
                 encryptionData.cipherIv());
 
-        FileMetadata invoiceMetadata = defaultCryptographyService.getMetaData(invoice);
-        FileMetadata encryptedInvoiceMetadata = defaultCryptographyService.getMetaData(encryptedInvoice);
+        FileMetadata invoiceMetadata = cryptographyService.getMetaData(invoice);
+        FileMetadata encryptedInvoiceMetadata = cryptographyService.getMetaData(encryptedInvoice);
 
         SendInvoiceOnlineSessionRequest sendInvoiceOnlineSessionRequest = new SendInvoiceOnlineSessionRequestBuilder()
                 .withInvoiceHash(invoiceMetadata.getHashSHA())

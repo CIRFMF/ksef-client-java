@@ -3,17 +3,16 @@ package pl.akmf.ksef.sdk;
 import jakarta.xml.bind.JAXBException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import pl.akmf.ksef.sdk.api.builders.invoices.InvoicesAsyncQueryFiltersBuilder;
 import pl.akmf.ksef.sdk.api.builders.permission.entity.EntityAuthorizationPermissionsQueryRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.permission.proxy.GrantAuthorizationPermissionsRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
-import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.invoice.InitAsyncInvoicesQueryResponse;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportFilters;
+import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportPackage;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportRequest;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportStatus;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceFormType;
@@ -42,6 +41,7 @@ import pl.akmf.ksef.sdk.client.model.session.SessionInvoiceStatusResponse;
 import pl.akmf.ksef.sdk.client.model.session.SessionStatusResponse;
 import pl.akmf.ksef.sdk.client.model.session.SessionValue;
 import pl.akmf.ksef.sdk.client.model.session.SystemCode;
+import pl.akmf.ksef.sdk.client.model.session.batch.CompressionType;
 import pl.akmf.ksef.sdk.client.model.session.online.OpenOnlineSessionRequest;
 import pl.akmf.ksef.sdk.client.model.session.online.OpenOnlineSessionResponse;
 import pl.akmf.ksef.sdk.client.model.session.online.SendInvoiceOnlineSessionRequest;
@@ -68,8 +68,6 @@ import static org.awaitility.Awaitility.await;
 
 class RrInvoiceIntegrationTest extends BaseIntegrationTest {
 
-    @Autowired
-    private DefaultCryptographyService defaultCryptographyService;
     private EncryptionData encryptionData;
 
     private static final String templateFileName = "/xml/invoices/sample/invoice-template-fa-rr-1.xml";
@@ -120,7 +118,7 @@ class RrInvoiceIntegrationTest extends BaseIntegrationTest {
         // Uwierzytelnienie jako podmiot uprawniony (authorized)
         String authorizedAccessToken = authWithCustomNip(authorizedNip, authorizedNip).accessToken();
 
-        encryptionData = defaultCryptographyService.getEncryptionData();
+        encryptionData = cryptographyService.getEncryptionData();
 
         // Otwarcie sesji online z kodem systemu FA_RR
         String sessionReferenceNumber = openOnlineSession(encryptionData, SystemCode.FA_RR, SchemaVersion.VERSION_1_1E, SessionValue.FA_RR, authorizedAccessToken);
@@ -140,8 +138,8 @@ class RrInvoiceIntegrationTest extends BaseIntegrationTest {
                 .until(() -> waitForStoringInvoice(sessionReferenceNumber, invoiceReferenceNumber, authorizedAccessToken));
 
         // Pobranie paczki faktur
-        InvoiceExportStatus invoiceExportStatus = initExportAndFetchAsyncInvoiceExportStatus(authorizedAccessToken, encryptionData);
-        downloadAndProcessPackageAsync(invoiceExportStatus, 1, encryptionData);
+        InvoiceExportStatus invoiceExportStatus = initExportAndFetchInvoiceExportStatus(authorizedAccessToken, encryptionData);
+        downloadAndProcessPackage(invoiceExportStatus, 1, encryptionData);
 
         // Zamknięcie sesji online
         closeSession(sessionReferenceNumber, authorizedAccessToken);
@@ -207,12 +205,12 @@ class RrInvoiceIntegrationTest extends BaseIntegrationTest {
 
         byte[] invoice = invoiceTemplate.getBytes(StandardCharsets.UTF_8);
 
-        byte[] encryptedInvoice = defaultCryptographyService.encryptBytesWithAES256(invoice,
+        byte[] encryptedInvoice = cryptographyService.encryptBytesWithAES256(invoice,
                 encryptionData.cipherKey(),
                 encryptionData.cipherIv());
 
-        FileMetadata invoiceMetadata = defaultCryptographyService.getMetaData(invoice);
-        FileMetadata encryptedInvoiceMetadata = defaultCryptographyService.getMetaData(encryptedInvoice);
+        FileMetadata invoiceMetadata = cryptographyService.getMetaData(invoice);
+        FileMetadata encryptedInvoiceMetadata = cryptographyService.getMetaData(encryptedInvoice);
 
         SendInvoiceOnlineSessionRequest sendInvoiceOnlineSessionRequest = new SendInvoiceOnlineSessionRequestBuilder()
                 .withInvoiceHash(invoiceMetadata.getHashSHA())
@@ -298,7 +296,7 @@ class RrInvoiceIntegrationTest extends BaseIntegrationTest {
                 .toList();
     }
 
-    private InvoiceExportStatus initExportAndFetchAsyncInvoiceExportStatus(String accessToken, EncryptionData encryptionData) throws ApiException {
+    private InvoiceExportStatus initExportAndFetchInvoiceExportStatus(String accessToken, EncryptionData encryptionData) throws ApiException {
         InvoiceExportFilters filters = new InvoicesAsyncQueryFiltersBuilder()
                 .withSubjectType(InvoiceQuerySubjectType.SUBJECT2)
                 .withDateRange(
@@ -327,7 +325,7 @@ class RrInvoiceIntegrationTest extends BaseIntegrationTest {
         return response.getStatus().getCode().equals(200);
     }
 
-    private void downloadAndProcessPackageAsync(InvoiceExportStatus invoiceExportStatus, int expectedInvoiceSize, EncryptionData encryptionData) throws IOException {
+    private void downloadAndProcessPackage(InvoiceExportStatus invoiceExportStatus, int expectedInvoiceSize, EncryptionData encryptionData) throws IOException {
         Map<String, String> downloadedFiles = downloadPackage(invoiceExportStatus, encryptionData);
 
         String metadataJson = downloadedFiles.keySet()
@@ -349,14 +347,20 @@ class RrInvoiceIntegrationTest extends BaseIntegrationTest {
     }
 
     private Map<String, String> downloadPackage(InvoiceExportStatus invoiceExportStatus, EncryptionData encryptionData) throws IOException {
-        List<InvoicePackagePart> parts = invoiceExportStatus.getPackageParts().getParts();
+        InvoiceExportPackage packageParts = invoiceExportStatus.getPackageParts();
+        CompressionType compressionType = packageParts.getCompressionType();
+        List<InvoicePackagePart> parts = packageParts.getParts();
         byte[] mergedZip = FilesUtil.mergeZipParts(
                 encryptionData,
                 parts,
                 part -> ksefClient.downloadPackagePart(part),
-                (encryptedPackagePart, key, iv) -> defaultCryptographyService.decryptBytesWithAes256(encryptedPackagePart, key, iv)
+                (encryptedPackagePart, key, iv) -> cryptographyService.decryptBytesWithAes256(encryptedPackagePart, key, iv)
         );
-        return FilesUtil.unzip(mergedZip);
+        if (compressionType == null || compressionType.equals(CompressionType.Zip)) {
+            return FilesUtil.unzip(mergedZip);
+        } else {
+            return FilesUtil.extractTarGz(mergedZip);
+        }
     }
 
 }

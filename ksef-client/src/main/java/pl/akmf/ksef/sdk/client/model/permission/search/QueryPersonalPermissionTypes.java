@@ -3,7 +3,7 @@ package pl.akmf.ksef.sdk.client.model.permission.search;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum QueryPersonalPermissionTypes {
+public enum QueryPersonalPermissionTypes { // PersonalPermission/PersonalPermissionScopeType
 
     CREDENTIAL_MANAGE("CredentialsManage"),
     CREDENTIAL_READ("CredentialsRead"),
@@ -12,7 +12,8 @@ public enum QueryPersonalPermissionTypes {
     INTROSPECTION("Introspection"),
     SUBUNIT_MANAGE("SubunitManage"),
     ENFORCEMENT_OPERATION("EnforcementOperations"),
-    VAT_UE_MANAGE("VatUeManage");
+    VAT_UE_MANAGE("VatUeManage"),
+    COLLECTIVE_IDENTIFIER_MANAGE("CollectiveIdentifierManage");
 
     private final String value;
 

@@ -8,27 +8,32 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 public enum InvoiceMetadataInvoiceType {
 
-    VAT("Vat"),
+    VAT("Vat"), // (FA) Podstawowa
 
-    KOR("Kor"),
+    KOR("Kor"), // (FA) Korygująca
 
-    ZAL("Zal"),
+    ZAL("Zal"), // (FA) Zaliczkowa
 
-    ROZ("Roz"),
+    ROZ("Roz"), // (FA) Rozliczeniowa
 
-    UPR("Upr"),
+    UPR("Upr"), // (FA) Uproszczona
 
-    KOR_ZAL("KorZal"),
+    KOR_ZAL("KorZal"), // (FA) Korygująca fakturę zaliczkową
 
-    KOR_ROZ("KorRoz"),
+    KOR_ROZ("KorRoz"), // (FA) Korygująca fakturę rozliczeniową
 
-    VAT_PEF("VatPef"),
+    VAT_PEF("VatPef"), // (PEF) Podstawowa
 
-    KOR_PEF("KorPef"),
+    VAT_PEF_SP("VatPefSp"), // (PEF) Specjalizowana
 
-    VAT_RR("VatRr"),
+    KOR_PEF("KorPef"), // (PEF) Korygująca
 
-    KOR_VAT_SP("KorVatRr");
+    VAT_RR("VatRr"), //  	(FA_RR) Podstawowa
+
+    @Deprecated
+    KOR_VAT_SP("KorVatRr"), // (FA_RR) Korygująca
+
+    KOR_VAT_RR("KorVatRr"); // (FA_RR) Korygująca
 
     private final String value;
 

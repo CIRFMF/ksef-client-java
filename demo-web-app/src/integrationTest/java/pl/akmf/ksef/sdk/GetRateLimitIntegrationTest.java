@@ -12,6 +12,8 @@ import pl.akmf.ksef.sdk.client.model.limit.BatchSessionRateLimit;
 import pl.akmf.ksef.sdk.client.model.limit.CertificateLimit;
 import pl.akmf.ksef.sdk.client.model.limit.ChangeContextLimitRequest;
 import pl.akmf.ksef.sdk.client.model.limit.ChangeSubjectCertificateLimitRequest;
+import pl.akmf.ksef.sdk.client.model.limit.CollectiveIdentifierRateLimit;
+import pl.akmf.ksef.sdk.client.model.limit.CollectiveIdentifierSessionLimits;
 import pl.akmf.ksef.sdk.client.model.limit.EffectiveApiRateLimits;
 import pl.akmf.ksef.sdk.client.model.limit.EnrollmentLimit;
 import pl.akmf.ksef.sdk.client.model.limit.GetContextLimitResponse;
@@ -71,6 +73,8 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
         Assertions.assertTrue(limitsForContext.getBatchSession().getMaxInvoiceSizeInMB() > 0);
         Assertions.assertTrue(limitsForContext.getBatchSession().getMaxInvoiceWithAttachmentSizeInMB() > 0);
 
+        Assertions.assertTrue(limitsForContext.getCollectiveIdentifier().getMaxInvoices() > 0);
+
         // 4. Zmiana limitów bieżącego kontekstu sesji
         ChangeContextLimitRequest newLimits = new ChangeContextLimitRequest();
         OnlineSessionLimit onlineSession = new OnlineSessionLimit();
@@ -83,6 +87,7 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
         batchSession.setMaxInvoiceSizeInMB(limitsForContext.getBatchSession().getMaxInvoiceSizeInMB() + limitsChangeValue);
         batchSession.setMaxInvoiceWithAttachmentSizeInMB(limitsForContext.getBatchSession().getMaxInvoiceWithAttachmentSizeInMB() + limitsChangeValue);
         newLimits.setBatchSession(batchSession);
+        newLimits.setCollectiveIdentifier(new CollectiveIdentifierSessionLimits(limitsForContext.getCollectiveIdentifier().getMaxInvoices() + limitsChangeValue));
 
         ksefClient.changeContextLimitTest(newLimits, accessToken);
 
@@ -93,6 +98,7 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
         Assertions.assertEquals(limitsForContext.getOnlineSession().getMaxInvoiceSizeInMB(), newLimits.getOnlineSession().getMaxInvoiceSizeInMB());
         Assertions.assertEquals(limitsForContext.getOnlineSession().getMaxInvoiceWithAttachmentSizeInMB(), newLimits.getOnlineSession().getMaxInvoiceWithAttachmentSizeInMB());
         Assertions.assertNotNull(limitsForContext.getBatchSession());
+        Assertions.assertNotNull(limitsForContext.getCollectiveIdentifier());
 
         // 6. Przywrócenie oryginalnych limitów bieżącego kontekstu sesji
         ksefClient.resetContextLimitTest(accessToken);
@@ -104,6 +110,8 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
         Assertions.assertEquals(limitsForContext.getOnlineSession().getMaxInvoiceSizeInMB(), newLimits.getOnlineSession().getMaxInvoiceSizeInMB() - limitsChangeValue);
         Assertions.assertEquals(limitsForContext.getOnlineSession().getMaxInvoiceWithAttachmentSizeInMB(), newLimits.getOnlineSession().getMaxInvoiceWithAttachmentSizeInMB() - limitsChangeValue);
         Assertions.assertNotNull(limitsForContext.getBatchSession());
+        Assertions.assertNotNull(limitsForContext.getCollectiveIdentifier());
+        Assertions.assertEquals(limitsForContext.getCollectiveIdentifier().getMaxInvoices(), newLimits.getCollectiveIdentifier().getMaxInvoices() - limitsChangeValue);
     }
 
     // Sprawdzenie dostępnych limitów certyfikatów bieżącego podmiotu.
@@ -160,6 +168,7 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
     RateMax invoiceExportMax = new RateMax(8, 16, 20);
     RateMax invoiceDownloadMax = new RateMax(8, 16, 64);
     RateMax otherMax = new RateMax(10, 30, 120);
+    RateMax collectiveIdentifierMax = new RateMax(10, 60, 120);
     int minApiRateLimit = 1;
 
     // pobiera bieżące limity, wylicza i ustawia nowe ograniczenia w dopuszczalnych granicach,
@@ -242,7 +251,8 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
                 baseLimits.getInvoiceExport(),
                 baseLimits.getInvoiceStatusExport(),
                 baseLimits.getInvoiceDownload(),
-                baseLimits.getOther()
+                baseLimits.getOther(),
+                baseLimits.getCollectiveIdentifier()
         );
 
         SetRateLimitsRequest request = new SetRateLimitsRequest(invalidLimits);
@@ -274,7 +284,8 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
                 modifyWithinBounds(source.getInvoiceExport(), delta, invoiceExportMax),
                 null,
                 modifyWithinBounds(source.getInvoiceDownload(), delta, invoiceDownloadMax),
-                modifyWithinBounds(source.getOther(), delta, otherMax)
+                modifyWithinBounds(source.getOther(), delta, otherMax),
+                modifyWithinBounds(source.getCollectiveIdentifier(), delta, collectiveIdentifierMax)
         );
     }
 
@@ -416,6 +427,18 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
         );
     }
 
+    private CollectiveIdentifierRateLimit modifyWithinBounds(CollectiveIdentifierRateLimit values, int delta, RateMax max) {
+        if (values == null) {
+            return null;
+        }
+
+        return new CollectiveIdentifierRateLimit(
+                adjust(values.getPerSecond(), delta, minApiRateLimit, max.perSecond),
+                adjust(values.getPerMinute(), delta, minApiRateLimit, max.perMinute),
+                adjust(values.getPerHour(), delta, minApiRateLimit, max.perHour)
+        );
+    }
+
     // Zwraca nową wartość po dodaniu lub odjęciu delta tak, aby nie przekroczyć min/max.
     // current - Wartość bieżąca.
     // delta - Wartość inkrementacji/dekrementacji.
@@ -485,6 +508,10 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
         Assertions.assertEquals(expected.getOther().getPerSecond(), actual.getOther().getPerSecond());
         Assertions.assertEquals(expected.getOther().getPerMinute(), actual.getOther().getPerMinute());
         Assertions.assertEquals(expected.getOther().getPerHour(), actual.getOther().getPerHour());
+        // CollectiveIdentifier
+        Assertions.assertEquals(expected.getCollectiveIdentifier().getPerSecond(), actual.getCollectiveIdentifier().getPerSecond());
+        Assertions.assertEquals(expected.getCollectiveIdentifier().getPerMinute(), actual.getCollectiveIdentifier().getPerMinute());
+        Assertions.assertEquals(expected.getCollectiveIdentifier().getPerHour(), actual.getCollectiveIdentifier().getPerHour());
     }
 
     private EffectiveApiRateLimits convert(GetRateLimitResponse source) {
@@ -500,7 +527,8 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
                 source.getInvoiceExport(),
                 source.getInvoiceStatusExport(),
                 source.getInvoiceDownload(),
-                source.getOther()
+                source.getOther(),
+                source.getCollectiveIdentifier()
         );
     }
 

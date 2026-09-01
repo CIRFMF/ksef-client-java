@@ -16,6 +16,7 @@ public class GetRateLimitResponse {
     private InvoiceExportStatusRateLimit invoiceStatusExport;
     private InvoiceDownloadRateLimit invoiceDownload;
     private OtherRateLimit other;
+    private CollectiveIdentifierRateLimit collectiveIdentifier;
 
     public GetRateLimitResponse() {
 
@@ -115,5 +116,13 @@ public class GetRateLimitResponse {
 
     public void setOther(OtherRateLimit other) {
         this.other = other;
+    }
+
+    public CollectiveIdentifierRateLimit getCollectiveIdentifier() {
+        return collectiveIdentifier;
+    }
+
+    public void setCollectiveIdentifier(CollectiveIdentifierRateLimit collectiveIdentifier) {
+        this.collectiveIdentifier = collectiveIdentifier;
     }
 }
