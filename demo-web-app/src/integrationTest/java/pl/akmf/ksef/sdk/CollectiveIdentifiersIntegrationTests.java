@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import pl.akmf.ksef.sdk.api.builders.batch.OpenBatchSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.permission.person.GrantPersonPermissionsRequestBuilder;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.collectiveidentifiers.CollectiveIdentifierInvoice;
 import pl.akmf.ksef.sdk.client.model.collectiveidentifiers.CollectiveIdentifierInvoicesQueryRequest;
 import pl.akmf.ksef.sdk.client.model.collectiveidentifiers.CollectiveIdentifierInvoicesQueryResponse;
@@ -312,7 +311,7 @@ class CollectiveIdentifiersIntegrationTests extends BaseIntegrationTest {
         // Build request
         OpenBatchSessionRequest request = buildOpenBatchSessionRequest(packedFilesMetadata, encryptedPackedFilesParts, encryptionData, compressionType);
 
-        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken);
+        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, accessToken);
         Assertions.assertNotNull(response.getReferenceNumber());
 
         ksefClient.sendBatchParts(response, encryptedPackedFilesParts);

@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import pl.akmf.ksef.sdk.api.builders.batch.OpenBatchSessionRequestBuilder;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiError;
 import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiException;
 import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestProblemDetails;
@@ -206,7 +205,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
 
         // API KSeF powinno odrzucić żądanie ze względu na przekroczony limit fileSize
         ApiException apiException = assertThrows(ApiException.class, () ->
-                ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken));
+                ksefClient.openBatchSession(request, accessToken));
         BadRequestApiException badRequestApiException = (BadRequestApiException) apiException;
         BadRequestProblemDetails exceptionResponse = badRequestApiException.getBadRequestProblemDetails();
         Assertions.assertFalse(exceptionResponse.getErrors().isEmpty());
@@ -281,7 +280,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         // Build request
         OpenBatchSessionRequest request = buildOpenBatchSessionRequest(zipMetadata, encryptedZipParts, encryptionData);
 
-        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken);
+        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, accessToken);
         Assertions.assertNotNull(response.getReferenceNumber());
         String sessionReferenceNumber = response.getReferenceNumber();
         ksefClient.sendBatchParts(response, encryptedZipParts);
@@ -330,7 +329,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         // Build request
         OpenBatchSessionRequest request = buildOpenBatchSessionRequest(zipMetadata, encryptedZipParts, encryptionData);
 
-        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken);
+        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, accessToken);
         String sessionReferenceNumber = response.getReferenceNumber();
         Assertions.assertNotNull(sessionReferenceNumber);
 
@@ -380,7 +379,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
 
         // API KSeF odrzuca żądanie z przekroczoną liczbą części
         ApiException apiException = assertThrows(ApiException.class, () ->
-                ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken));
+                ksefClient.openBatchSession(request, accessToken));
         BadRequestApiException badRequestApiException = (BadRequestApiException) apiException;
         BadRequestProblemDetails exceptionResponse = badRequestApiException.getBadRequestProblemDetails();
         Assertions.assertFalse(exceptionResponse.getErrors().isEmpty());
@@ -459,7 +458,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         // Build request
         OpenBatchSessionRequest request = buildOpenBatchSessionRequest(zipMetadata, encryptedZipParts, corruptedEncryptionData);
 
-        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken);
+        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, accessToken);
         Assertions.assertNotNull(response.getReferenceNumber());
         String sessionReferenceNumber = response.getReferenceNumber();
 
@@ -514,7 +513,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         // Build request
         OpenBatchSessionRequest request = buildOpenBatchSessionRequest(zipMetadata, corruptedZipParts, encryptionData);
 
-        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken);
+        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, accessToken);
         Assertions.assertNotNull(response.getReferenceNumber());
         String sessionReferenceNumber = response.getReferenceNumber();
 
@@ -568,7 +567,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         // Build request
         OpenBatchSessionRequest request = buildOpenBatchSessionRequest(zipMetadata, encryptedZipParts, corruptedEncryptionData);
 
-        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken);
+        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, accessToken);
         Assertions.assertNotNull(response.getReferenceNumber());
         String sessionReferenceNumber = response.getReferenceNumber();
 
@@ -667,7 +666,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         // Build request
         OpenBatchSessionRequest request = buildOpenBatchSessionRequest(packedFilesMetadata, encryptedPackedFilesParts, encryptionData, compressionType);
 
-        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken);
+        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, accessToken);
         Assertions.assertNotNull(response.getReferenceNumber());
 
         ksefClient.sendBatchParts(response, encryptedPackedFilesParts);
@@ -746,7 +745,7 @@ class BatchIntegrationTest extends BaseIntegrationTest {
         // Build request
         OpenBatchSessionRequest request = buildOpenBatchSessionRequestForStream(zipMetadata, encryptedStreamParts, encryptionData);
 
-        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken);
+        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, accessToken);
         Assertions.assertNotNull(response.getReferenceNumber());
 
         ksefClient.sendBatchPartsWithStream(response, encryptedStreamParts);

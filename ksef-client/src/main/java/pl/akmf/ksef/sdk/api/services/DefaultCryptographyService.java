@@ -499,7 +499,7 @@ public class DefaultCryptographyService implements CryptographyService {
         } catch (ApiException | SystemKSeFSDKException e) {
             ksefIntegrationMode = KsefIntegrationMode.OFFLINE;
             offlineModeCause = e;
-            log.error("Error with connection to KseF Api: {}", e.getMessage() + ". Library works in offline mode");
+            log.error("Error with connection to KSeF Api: {}", e.getMessage() + ". Library works in offline mode");
         }
     }
 

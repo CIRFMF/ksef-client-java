@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import pl.akmf.ksef.sdk.api.builders.batch.OpenBatchSessionRequestBuilder;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.invoice.InitAsyncInvoicesQueryResponse;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportFilters;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceExportPackage;
@@ -261,8 +260,8 @@ class IncrementalInvoiceRetrieveIntegrationTest extends BaseIntegrationTest {
     }
 
     private String initiateInvoiceExport(OffsetDateTime windowFrom,
-                                              OffsetDateTime windowTo, InvoiceQuerySubjectType subjectType,
-                                              String accessToken, EncryptionInfo encryptionInfo) {
+                                         OffsetDateTime windowTo, InvoiceQuerySubjectType subjectType,
+                                         String accessToken, EncryptionInfo encryptionInfo) {
         InvoiceExportFilters filters = new InvoiceExportFilters();
         filters.setSubjectType(subjectType);
         filters.setDateRange(new InvoiceQueryDateRange(
@@ -306,7 +305,7 @@ class IncrementalInvoiceRetrieveIntegrationTest extends BaseIntegrationTest {
         // Build request
         OpenBatchSessionRequest request = buildOpenBatchSessionRequestForStream(zipMetadata, encryptedStreamParts, encryptionData);
 
-        OpenBatchSessionResponse openBatchSessionResponse = ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken);
+        OpenBatchSessionResponse openBatchSessionResponse = ksefClient.openBatchSession(request, accessToken);
         Assertions.assertNotNull(openBatchSessionResponse.getReferenceNumber());
 
         ksefClient.sendBatchPartsWithStream(openBatchSessionResponse, encryptedStreamParts);
@@ -366,7 +365,7 @@ class IncrementalInvoiceRetrieveIntegrationTest extends BaseIntegrationTest {
     }
 
     private PackageProcessingResult downloadAndProcessPackage(InvoiceExportStatus invoiceExportStatus,
-                                                                   EncryptionData encryptionData) {
+                                                              EncryptionData encryptionData) {
         try {
             InvoiceExportPackage packageParts = invoiceExportStatus.getPackageParts();
             CompressionType compressionType = packageParts.getCompressionType();

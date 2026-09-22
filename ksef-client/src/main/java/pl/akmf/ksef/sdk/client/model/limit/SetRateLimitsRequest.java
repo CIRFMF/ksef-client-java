@@ -2,20 +2,20 @@ package pl.akmf.ksef.sdk.client.model.limit;
 
 public class SetRateLimitsRequest {
 
-    private EffectiveApiRateLimits rateLimits;
+    private ApiRateLimitsChangeRequest rateLimits;
 
     public SetRateLimitsRequest() {
     }
 
-    public SetRateLimitsRequest(EffectiveApiRateLimits rateLimits) {
+    public SetRateLimitsRequest(ApiRateLimitsChangeRequest rateLimits) {
         this.rateLimits = rateLimits;
     }
 
-    public EffectiveApiRateLimits getRateLimits() {
+    public ApiRateLimitsChangeRequest getRateLimits() {
         return rateLimits;
     }
 
-    public void setRateLimits(EffectiveApiRateLimits rateLimits) {
+    public void setRateLimits(ApiRateLimitsChangeRequest rateLimits) {
         this.rateLimits = rateLimits;
     }
 }
