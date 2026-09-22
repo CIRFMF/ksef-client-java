@@ -16,7 +16,6 @@ import pl.akmf.ksef.sdk.client.model.KsefApiException;
 import pl.akmf.ksef.sdk.client.model.TooManyRequestsResponse;
 import pl.akmf.ksef.sdk.client.model.UnauthorizedApiException;
 import pl.akmf.ksef.sdk.client.model.UnauthorizedProblemDetails;
-import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiError;
 import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiException;
 import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestProblemDetails;
@@ -27,7 +26,9 @@ import pl.akmf.ksef.sdk.client.model.invoice.InvoiceQueryDateType;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceQueryFilters;
 import pl.akmf.ksef.sdk.client.model.invoice.InvoiceQuerySubjectType;
 import pl.akmf.ksef.sdk.client.model.invoice.QueryInvoiceMetadataResponse;
+import pl.akmf.ksef.sdk.client.model.limit.ApiRateLimitsChangeRequest;
 import pl.akmf.ksef.sdk.client.model.limit.EffectiveApiRateLimits;
+import pl.akmf.ksef.sdk.client.model.limit.GetRateLimitResponse;
 import pl.akmf.ksef.sdk.client.model.limit.OnlineSessionRateLimit;
 import pl.akmf.ksef.sdk.client.model.limit.SetRateLimitsRequest;
 import pl.akmf.ksef.sdk.client.model.permission.OperationResponse;
@@ -137,9 +138,9 @@ class ExceptionsApiIntegrationTest extends BaseIntegrationTest {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
 
-        EffectiveApiRateLimits invalidLimits = new EffectiveApiRateLimits(
+        ApiRateLimitsChangeRequest invalidLimits = new ApiRateLimitsChangeRequest(
                 new OnlineSessionRateLimit(1, 1, 11_111_111),
-                null, null, null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null, null, null
         );
 
         SetRateLimitsRequest badRequest = new SetRateLimitsRequest(invalidLimits);
@@ -278,9 +279,22 @@ class ExceptionsApiIntegrationTest extends BaseIntegrationTest {
         String contextNip = IdentifierGeneratorUtils.generateRandomNIP();
         String accessToken = authWithCustomNip(contextNip, contextNip).accessToken();
 
-        EffectiveApiRateLimits invalidLimits = new EffectiveApiRateLimits(
+        EffectiveApiRateLimits baseLimits = convert(ksefClient.getRateLimit(accessToken));
+
+        ApiRateLimitsChangeRequest invalidLimits = new ApiRateLimitsChangeRequest(
                 new OnlineSessionRateLimit(1, 1, 11_111_111),
-                null, null, null, null, null, null, null, null, null, null, null
+                baseLimits.getBatchSession(),
+                baseLimits.getInvoiceSend(),
+                baseLimits.getInvoiceStatus(),
+                baseLimits.getSessionList(),
+                baseLimits.getSessionInvoiceList(),
+                baseLimits.getSessionMisc(),
+                baseLimits.getInvoiceMetadata(),
+                baseLimits.getInvoiceExport(),
+                baseLimits.getInvoiceStatusExport(),
+                baseLimits.getInvoiceDownload(),
+                baseLimits.getOther(),
+                baseLimits.getCollectiveIdentifier()
         );
 
         SetRateLimitsRequest badRequest = new SetRateLimitsRequest(invalidLimits);
@@ -301,7 +315,7 @@ class ExceptionsApiIntegrationTest extends BaseIntegrationTest {
         Assertions.assertEquals("Błąd walidacji danych wejściowych.", exceptionDetails.get(0).getExceptionDescription());
         Assertions.assertEquals(21405, exceptionDetails.get(0).getExceptionCode());
         List<String> details = exceptionDetails.get(0).getDetails();
-        Assertions.assertEquals(12, details.size());
+        Assertions.assertEquals(1, details.size());
         Assertions.assertTrue(details.stream()
                 .anyMatch(s -> s.contains("'rateLimits.onlineSession.perHour' must be between 1 and 1200. You entered 11111111.")));
         ksefClient.addDefaultHeader(X_ERROR_FORMAT, X_ERROR_FORMAT_PROBLEM_DETAILS);
@@ -380,7 +394,7 @@ class ExceptionsApiIntegrationTest extends BaseIntegrationTest {
                 .withEncryptionInfo(encryptionData.encryptionInfo())
                 .build();
 
-        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, UpoVersion.UPO_4_3, accessToken);
+        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, accessToken);
         Assertions.assertNotNull(openOnlineSessionResponse);
         Assertions.assertNotNull(openOnlineSessionResponse.getReferenceNumber());
         return openOnlineSessionResponse.getReferenceNumber();
@@ -455,4 +469,21 @@ class ExceptionsApiIntegrationTest extends BaseIntegrationTest {
         return response;
     }
 
+    private EffectiveApiRateLimits convert(GetRateLimitResponse source) {
+        return new EffectiveApiRateLimits(
+                source.getOnlineSession(),
+                source.getBatchSession(),
+                source.getInvoiceSend(),
+                source.getInvoiceStatus(),
+                source.getSessionList(),
+                source.getSessionInvoiceList(),
+                source.getSessionMisc(),
+                source.getInvoiceMetadata(),
+                source.getInvoiceExport(),
+                source.getInvoiceStatusExport(),
+                source.getInvoiceDownload(),
+                source.getOther(),
+                source.getCollectiveIdentifier()
+        );
+    }
 }

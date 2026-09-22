@@ -5,10 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 // Aktualnie obowiązujące limity ilości żądań przesyłanych do API.
 public class EffectiveApiRateLimits {
 
-    // Limity otwierania/zamykania sesji interaktywnych.
+    // Limity otwierania sesji interaktywnych.
     private OnlineSessionRateLimit onlineSession;
-    // Limity otwierania/zamykania sesji wsadowych.
+    // Limity zamykania sesji interaktywnych.
+    private OnlineSessionRateLimit onlineSessionClose;
+    // Limity otwierania sesji wsadowych.
     private BatchSessionRateLimit batchSession;
+    // Limity zamykania sesji wsadowych.
+    private BatchSessionRateLimit batchSessionClose;
     // Limity wysyłki faktur.
     private InvoiceSendRateLimit invoiceSend;
     // Limity pobierania statusu faktury z sesji.
@@ -31,7 +35,11 @@ public class EffectiveApiRateLimits {
     // Limity pozostałych operacji API.
     private OtherRateLimit other;
     // Limity generowania identyfikatorów zbiorczych.
-    public CollectiveIdentifierRateLimit collectiveIdentifier;
+    private CollectiveIdentifierRateLimit collectiveIdentifier;
+    // Limity anonimowych (nieuwierzytelnionych) operacji API.
+    private AnonymousRateLimit anonymous;
+    // Limity globalne API naliczane per adres IP. Mechanizm może być wyłączony (wartości -1).
+    private GlobalRateLimit global;
 
     public EffectiveApiRateLimits() {
     }
@@ -78,6 +86,34 @@ public class EffectiveApiRateLimits {
         this.collectiveIdentifier = collectiveIdentifier;
     }
 
+    public EffectiveApiRateLimits(OnlineSessionRateLimit onlineSession, OnlineSessionRateLimit onlineSessionClose,
+                                  BatchSessionRateLimit batchSession, BatchSessionRateLimit batchSessionClose,
+                                  InvoiceSendRateLimit invoiceSend, InvoiceStatusRateLimit invoiceStatus,
+                                  SessionListRateLimit sessionList, SessionInvoiceListRateLimit sessionInvoiceList,
+                                  SessionMiscRateLimits sessionMisc, InvoiceMetadataRateLimit invoiceMetadata,
+                                  InvoiceExportRateLimit invoiceExport, InvoiceExportStatusRateLimit invoiceStatusExport,
+                                  InvoiceDownloadRateLimit invoiceDownload, OtherRateLimit other,
+                                  CollectiveIdentifierRateLimit collectiveIdentifier, AnonymousRateLimit anonymous,
+                                  GlobalRateLimit global) {
+        this.onlineSession = onlineSession;
+        this.onlineSessionClose = onlineSessionClose;
+        this.batchSession = batchSession;
+        this.batchSessionClose = batchSessionClose;
+        this.invoiceSend = invoiceSend;
+        this.invoiceStatus = invoiceStatus;
+        this.sessionList = sessionList;
+        this.sessionInvoiceList = sessionInvoiceList;
+        this.sessionMisc = sessionMisc;
+        this.invoiceMetadata = invoiceMetadata;
+        this.invoiceExport = invoiceExport;
+        this.invoiceStatusExport = invoiceStatusExport;
+        this.invoiceDownload = invoiceDownload;
+        this.other = other;
+        this.collectiveIdentifier = collectiveIdentifier;
+        this.anonymous = anonymous;
+        this.global = global;
+    }
+
     public OnlineSessionRateLimit getOnlineSession() {
         return onlineSession;
     }
@@ -86,12 +122,28 @@ public class EffectiveApiRateLimits {
         this.onlineSession = onlineSession;
     }
 
+    public OnlineSessionRateLimit getOnlineSessionClose() {
+        return onlineSessionClose;
+    }
+
+    public void setOnlineSessionClose(OnlineSessionRateLimit onlineSessionClose) {
+        this.onlineSessionClose = onlineSessionClose;
+    }
+
     public BatchSessionRateLimit getBatchSession() {
         return batchSession;
     }
 
     public void setBatchSession(BatchSessionRateLimit batchSession) {
         this.batchSession = batchSession;
+    }
+
+    public BatchSessionRateLimit getBatchSessionClose() {
+        return batchSessionClose;
+    }
+
+    public void setBatchSessionClose(BatchSessionRateLimit batchSessionClose) {
+        this.batchSessionClose = batchSessionClose;
     }
 
     public InvoiceSendRateLimit getInvoiceSend() {
@@ -180,5 +232,21 @@ public class EffectiveApiRateLimits {
 
     public void setCollectiveIdentifier(CollectiveIdentifierRateLimit collectiveIdentifier) {
         this.collectiveIdentifier = collectiveIdentifier;
+    }
+
+    public AnonymousRateLimit getAnonymous() {
+        return anonymous;
+    }
+
+    public void setAnonymous(AnonymousRateLimit anonymous) {
+        this.anonymous = anonymous;
+    }
+
+    public GlobalRateLimit getGlobal() {
+        return global;
+    }
+
+    public void setGlobal(GlobalRateLimit global) {
+        this.global = global;
     }
 }

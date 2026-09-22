@@ -1,6 +1,18 @@
 # Rejestr zmian
 
 
+## Wersja 3.0.28 (2026-09-22) - API: 2.8.0
+
+### Nowe
+- `EffectiveApiRateLimits`: dodano pola `onlineSessionClose`, `batchSessionClose`, `anonymous` oraz `global` zgodnie z kontraktem API 2.8.0 (domyślne limity zamykania sesji: `20/60/240` i `20/40/120`).
+- `ApiRateLimitsChangeRequest`: dodano model nadpisywalnych limitów dla POST `/testdata/rate-limits` (bez grup `OnlineSessionClose`, `BatchSessionClose`, `Anonymous`, `Global`).
+- `KsefFeatures`: dodano stałe nagłówka `X-KSeF-Feature` (m.in. `SUBJECT_IDENTIFIER_VALIDATION`).
+
+### Zmodyfikowane
+- `openOnlineSession` / `openBatchSession`: parametr `upoVersion` przemianowano na `feature`; dokumentacja i przeznaczenie nagłówka `X-KSeF-Feature` odpowiadają teraz `subject-identifier-validation` (walidacja NIP/IdWew), a nie wersji UPO. Wywołania z `upoVersion` oznaczono jak Deprecated.
+- `SetRateLimitsRequest.rateLimits`: typ zmieniono z `EffectiveApiRateLimits` na `ApiRateLimitsChangeRequest`, zgodnie z kontraktem POST `/testdata/rate-limits`.
+
+
 ## Wersja 3.0.27 (2026-09-01) - API: 2.7.1
 
 ### Nowe

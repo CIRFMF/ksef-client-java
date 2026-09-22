@@ -20,7 +20,6 @@ import pl.akmf.ksef.sdk.api.builders.certificate.SendCertificateEnrollmentReques
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.auth.EncryptionMethod;
 import pl.akmf.ksef.sdk.client.model.certificate.CertificateEnrollmentResponse;
 import pl.akmf.ksef.sdk.client.model.certificate.CertificateEnrollmentStatusResponse;
@@ -424,7 +423,7 @@ class QrCodeOfflineIntegrationTest extends BaseIntegrationTest {
                 .withEncryptionInfo(encryptionData.encryptionInfo())
                 .build();
 
-        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, UpoVersion.UPO_4_3, accessToken);
+        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, accessToken);
         Assertions.assertNotNull(openOnlineSessionResponse);
         String sessionReferenceNumber = openOnlineSessionResponse.getReferenceNumber();
         Assertions.assertNotNull(sessionReferenceNumber);

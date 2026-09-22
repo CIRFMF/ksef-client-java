@@ -13,7 +13,6 @@ import pl.akmf.ksef.sdk.api.builders.permission.proxy.GrantAuthorizationPermissi
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiError;
 import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiException;
 import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestProblemDetails;
@@ -99,7 +98,7 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
         await().pollDelay(Duration.ZERO)
                 .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
-                .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessToken));
+                .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, 1, accessToken));
 
         await().pollDelay(Duration.ZERO)
                 .atMost(50, SECONDS)
@@ -129,7 +128,7 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
         await().pollDelay(Duration.ZERO)
                 .atMost(80, SECONDS)
                 .pollInterval(5, SECONDS)
-                .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessToken));
+                .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, DEFAULT_INVOICES_COUNT, accessToken));
 
         getInvoiceMetadata(DEFAULT_INVOICES_COUNT, null, accessToken);
 
@@ -153,7 +152,7 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
         await().pollDelay(Duration.ZERO)
                 .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
-                .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessToken));
+                .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, 1, accessToken));
 
         await().pollDelay(Duration.ZERO)
                 .atMost(50, SECONDS)
@@ -222,11 +221,11 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
         await().pollDelay(Duration.ZERO)
                 .atMost(60, SECONDS)
                 .pollInterval(5, SECONDS)
-                .until(() -> isInvoicesInSessionProcessed(pefSessionReferenceNumber, accessTokenForPefProvider));
+                .until(() -> isInvoicesInSessionProcessed(pefSessionReferenceNumber, 1, accessTokenForPefProvider));
         await().pollDelay(Duration.ZERO)
                 .atMost(30, SECONDS)
                 .pollInterval(5, SECONDS)
-                .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, accessToken));
+                .until(() -> isInvoicesInSessionProcessed(sessionReferenceNumber, 1, accessToken));
         await().pollDelay(Duration.ZERO)
                 .atMost(50, SECONDS)
                 .pollInterval(5, SECONDS)
@@ -295,14 +294,15 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
         Assertions.assertEquals("'pageSize' must be between 10 and 250. You entered 5.", error.getDetails().getFirst());
     }
 
-    private boolean isInvoicesInSessionProcessed(String sessionReferenceNumber, String accessToken) {
+    private boolean isInvoicesInSessionProcessed(String sessionReferenceNumber, int expectedSuccessfulInvoicesCount, String accessToken) {
         try {
             SessionStatusResponse statusResponse = ksefClient.getSessionStatus(sessionReferenceNumber, accessToken);
             return statusResponse != null &&
                     statusResponse.getSuccessfulInvoiceCount() != null &&
                     statusResponse.getSuccessfulInvoiceCount() > 0 &&
+                    statusResponse.getSuccessfulInvoiceCount() == expectedSuccessfulInvoicesCount &&
                     (statusResponse.getFailedInvoiceCount() == null ||
-                    statusResponse.getFailedInvoiceCount() == 0);
+                            statusResponse.getFailedInvoiceCount() == 0);
         } catch (Exception e) {
             Assertions.fail(e.getMessage());
         }
@@ -328,7 +328,7 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
                 .withEncryptionInfo(encryptionData.encryptionInfo())
                 .build();
 
-        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, UpoVersion.UPO_4_3, accessToken);
+        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, accessToken);
         Assertions.assertNotNull(openOnlineSessionResponse);
         Assertions.assertNotNull(openOnlineSessionResponse.getReferenceNumber());
         return openOnlineSessionResponse.getReferenceNumber();
@@ -572,7 +572,7 @@ class QueryInvoiceIntegrationTest extends BaseIntegrationTest {
         // Build request
         OpenBatchSessionRequest request = buildOpenBatchSessionRequest(packedFilesMetadata, encryptedPackedFilesParts, encryptionData, compressionType);
 
-        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken);
+        OpenBatchSessionResponse response = ksefClient.openBatchSession(request, accessToken);
         Assertions.assertNotNull(response.getReferenceNumber());
 
         ksefClient.sendBatchParts(response, encryptedPackedFilesParts);

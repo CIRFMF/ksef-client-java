@@ -13,7 +13,6 @@ import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.services.DefaultCryptographyService;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
 import pl.akmf.ksef.sdk.client.model.session.FormCode;
 import pl.akmf.ksef.sdk.client.model.session.SchemaVersion;
@@ -57,7 +56,7 @@ public class OnlineSessionController {
                 .build();
 
         //otwarcie sesji interaktywnej
-        return ksefClient.openOnlineSession(request, UpoVersion.UPO_4_3, authToken);
+        return ksefClient.openOnlineSession(request, authToken);
     }
 
     /**
@@ -69,8 +68,8 @@ public class OnlineSessionController {
      */
     @PostMapping(value = "/send-invoice/{referenceNumber}/{contextIdentifier}")
     public SendInvoiceResponse sendInvoiceOnlineSession(@PathVariable String referenceNumber,
-                                                             @PathVariable String contextIdentifier,
-                                                             @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException, IOException {
+                                                        @PathVariable String contextIdentifier,
+                                                        @RequestHeader(name = AUTHORIZATION) String authToken) throws ApiException, IOException {
         //read example invoice
         String invoicePath = "demo-web-app/src/main/resources/xml/invoices/sample/invoice-template_v3.xml";
         String invoiceTemplate = Files.readString(Paths.get(invoicePath), StandardCharsets.UTF_8)

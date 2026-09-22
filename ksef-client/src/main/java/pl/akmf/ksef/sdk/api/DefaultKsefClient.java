@@ -389,6 +389,7 @@ public class DefaultKsefClient implements KSeFClient {
      * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
      * @throws ApiException - Brak autoryzacji. (401 Unauthorized)
      */
+    @Deprecated
     @Override
     public OpenBatchSessionResponse openBatchSession(OpenBatchSessionRequest openBatchSessionRequest, UpoVersion upoVersion, String accessToken) throws ApiException {
         Map<String, String> headers = new HashMap<>();
@@ -402,6 +403,45 @@ public class DefaultKsefClient implements KSeFClient {
         return getResponse(response, CREATED, BATCH_SESSION_OPEN, OpenBatchSessionResponse.class);
     }
 
+    /**
+     * Otwarcie sesji wsadowej
+     * Otwiera sesję do wysyłki wsadowej faktur.
+     *
+     * @param openBatchSessionRequest - OpenBatchSessionRequest - schemat wysyłanych faktur, informacje o paczce faktur oraz informacje o kluczu używanym do szyfrowania.
+     * @return OpenBatchSessionResponse
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
+     * @throws ApiException - Brak autoryzacji. (401 Unauthorized)
+     */
+    @Override
+    public OpenBatchSessionResponse openBatchSession(OpenBatchSessionRequest openBatchSessionRequest, String accessToken) throws ApiException {
+
+        return openBatchSession(openBatchSessionRequest, accessToken, null);
+    }
+
+    /**
+     * Otwarcie sesji wsadowej
+     * Otwiera sesję do wysyłki wsadowej faktur.
+     *
+     * @param openBatchSessionRequest - OpenBatchSessionRequest - schemat wysyłanych faktur, informacje o paczce faktur oraz informacje o kluczu używanym do szyfrowania.
+     * @param feature              - Opcjonalna wartość nagłówka X-KSeF-Feature.
+     * @return OpenBatchSessionResponse
+     * @throws ApiException - Nieprawidłowe żądanie. (400 Bad request)
+     * @throws ApiException - Brak autoryzacji. (401 Unauthorized)
+     */
+    @Override
+    public OpenBatchSessionResponse openBatchSession(OpenBatchSessionRequest openBatchSessionRequest, String accessToken, String feature) throws ApiException {
+        Map<String, String> headers = new HashMap<>();
+        headers.put(AUTHORIZATION, BEARER + accessToken);
+        headers.put(CONTENT_TYPE, APPLICATION_JSON);
+        headers.put(ACCEPT, APPLICATION_JSON);
+        if (feature != null) {
+            headers.put(X_KSEF_FEATURE, feature);
+        }
+
+        HttpResponse<byte[]> response = post(BATCH_SESSION_OPEN.getUrl(), openBatchSessionRequest, headers);
+
+        return getResponse(response, CREATED, BATCH_SESSION_OPEN, OpenBatchSessionResponse.class);
+    }
 
     /**
      * Zamknięcie sesji wsadowej
@@ -499,12 +539,51 @@ public class DefaultKsefClient implements KSeFClient {
      * @throws ApiException if fails to make API call
      */
     @Override
+    @Deprecated
     public OpenOnlineSessionResponse openOnlineSession(OpenOnlineSessionRequest openOnlineSessionRequest, UpoVersion upoVersion, String accessToken) throws ApiException {
         Map<String, String> headers = new HashMap<>();
         headers.put(AUTHORIZATION, BEARER + accessToken);
         headers.put(CONTENT_TYPE, APPLICATION_JSON);
         headers.put(ACCEPT, APPLICATION_JSON);
         headers.put(X_KSEF_FEATURE, upoVersion.value());
+
+        HttpResponse<byte[]> response = post(SESSION_OPEN.getUrl(), openOnlineSessionRequest, headers);
+
+        return getResponse(response, CREATED, SESSION_OPEN, OpenOnlineSessionResponse.class);
+    }
+
+    /**
+     * Otwarcie sesji interaktywnej
+     * Inicjalizacja wysyłki interaktywnej faktur.
+     *
+     * @param openOnlineSessionRequest (optional)
+     * @return ApiResponse&lt;OpenOnlineSessionResponse&gt;
+     * @throws ApiException if fails to make API call
+     */
+    @Override
+    public OpenOnlineSessionResponse openOnlineSession(OpenOnlineSessionRequest openOnlineSessionRequest, String accessToken) throws ApiException {
+
+        return openOnlineSession(openOnlineSessionRequest, accessToken, null);
+    }
+
+    /**
+     * Otwarcie sesji interaktywnej
+     * Inicjalizacja wysyłki interaktywnej faktur.
+     *
+     * @param openOnlineSessionRequest (optional)
+     * @param feature - Opcjonalna wartość nagłówka X-KSeF-Feature.
+     * @return ApiResponse&lt;OpenOnlineSessionResponse&gt;
+     * @throws ApiException if fails to make API call
+     */
+    @Override
+    public OpenOnlineSessionResponse openOnlineSession(OpenOnlineSessionRequest openOnlineSessionRequest, String accessToken, String feature) throws ApiException {
+        Map<String, String> headers = new HashMap<>();
+        headers.put(AUTHORIZATION, BEARER + accessToken);
+        headers.put(CONTENT_TYPE, APPLICATION_JSON);
+        headers.put(ACCEPT, APPLICATION_JSON);
+        if (feature != null) {
+            headers.put(X_KSEF_FEATURE, feature);
+        }
 
         HttpResponse<byte[]> response = post(SESSION_OPEN.getUrl(), openOnlineSessionRequest, headers);
 

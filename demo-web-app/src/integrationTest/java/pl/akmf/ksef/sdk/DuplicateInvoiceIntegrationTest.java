@@ -10,7 +10,6 @@ import pl.akmf.ksef.sdk.api.builders.batch.OpenBatchSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.OpenOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.api.builders.session.SendInvoiceOnlineSessionRequestBuilder;
 import pl.akmf.ksef.sdk.client.model.ApiException;
-import pl.akmf.ksef.sdk.client.model.UpoVersion;
 import pl.akmf.ksef.sdk.client.model.session.EncryptionData;
 import pl.akmf.ksef.sdk.client.model.session.FileMetadata;
 import pl.akmf.ksef.sdk.client.model.session.FormCode;
@@ -156,7 +155,7 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
         // Build request
         OpenBatchSessionRequest request = buildOpenBatchSessionRequestForStream(zipMetadata, encryptedStreamParts, systemCode, encryptionData);
 
-        OpenBatchSessionResponse openBatchSessionResponse = ksefClient.openBatchSession(request, UpoVersion.UPO_4_3, accessToken);
+        OpenBatchSessionResponse openBatchSessionResponse = ksefClient.openBatchSession(request, accessToken);
         Assertions.assertNotNull(openBatchSessionResponse.getReferenceNumber());
 
         ksefClient.sendBatchPartsWithStream(openBatchSessionResponse, encryptedStreamParts);
@@ -209,7 +208,7 @@ class DuplicateInvoiceIntegrationTest extends BaseIntegrationTest {
                 .withEncryptionInfo(encryptionData.encryptionInfo())
                 .build();
 
-        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, UpoVersion.UPO_4_3, accessToken);
+        OpenOnlineSessionResponse openOnlineSessionResponse = ksefClient.openOnlineSession(request, accessToken);
         Assertions.assertNotNull(openOnlineSessionResponse);
         Assertions.assertNotNull(openOnlineSessionResponse.getReferenceNumber());
 

@@ -7,6 +7,7 @@ import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiError;
 import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestApiException;
 import pl.akmf.ksef.sdk.client.model.exceptions.BadRequestProblemDetails;
+import pl.akmf.ksef.sdk.client.model.limit.ApiRateLimitsChangeRequest;
 import pl.akmf.ksef.sdk.client.model.limit.BatchSessionLimit;
 import pl.akmf.ksef.sdk.client.model.limit.BatchSessionRateLimit;
 import pl.akmf.ksef.sdk.client.model.limit.CertificateLimit;
@@ -188,8 +189,11 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
         // Assert: Wstępna walidacja danych wejściowych testu
         Assertions.assertNotNull(originalLimits);
 
+        // Assert: Limity zamykania sesji = 2x limity otwierania (kontrakt API 2.8.0)
+        assertSessionCloseLimitsAreDoubleOpen(originalLimits);
+
         // Act: Wyliczenie nowych limitów w bezpiecznych widełkach (min=1, max wg kategorii)
-        EffectiveApiRateLimits modifiedLimits = cloneAndModifyWithinBounds(originalLimits, limitsChangeValue);
+        ApiRateLimitsChangeRequest modifiedLimits = cloneAndModifyWithinBounds(originalLimits, limitsChangeValue);
 
         SetRateLimitsRequest setRequest = new SetRateLimitsRequest(modifiedLimits);
 
@@ -205,7 +209,7 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
         EffectiveApiRateLimits currentLimits = convert(ksefClient.getRateLimit(accessToken));
 
         // Assert: Weryfikacja, że limity zostały zmienione zgodnie z oczekiwaniami
-        assertRateLimitsEqual(modifiedLimits, currentLimits);
+        asertOverrideableRateLimitsEqual(setRequest.getRateLimits(), currentLimits);
 
         // Act: Przywrócenie wartości domyślnych
         ksefClient.restoreRateLimits(accessToken);
@@ -235,7 +239,7 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
         Assertions.assertNotNull(baseLimits);
 
         // Arrange: Przygotowanie jawnie nieprawidłowych wartości (OnlineSession poza maksimum)
-        EffectiveApiRateLimits invalidLimits = new EffectiveApiRateLimits(
+        ApiRateLimitsChangeRequest invalidLimits = new ApiRateLimitsChangeRequest(
                 new OnlineSessionRateLimit(onlineSessionMax.perSecond + 1,
                         onlineSessionMax.perMinute + 1,
                         onlineSessionMax.perHour + 11111
@@ -271,8 +275,8 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
     // source - Oryginalne limity.
     // delta - Wartość inkrementacji/dekrementacji.
     // zwraca nowy obiekt z bezpiecznie zmodyfikowanymi limitami.
-    private EffectiveApiRateLimits cloneAndModifyWithinBounds(EffectiveApiRateLimits source, int delta) {
-        return new EffectiveApiRateLimits(
+    private ApiRateLimitsChangeRequest cloneAndModifyWithinBounds(EffectiveApiRateLimits source, int delta) {
+        return new ApiRateLimitsChangeRequest(
                 modifyWithinBounds(source.getOnlineSession(), delta, onlineSessionMax),
                 modifyWithinBounds(source.getBatchSession(), delta, batchSessionMax),
                 modifyWithinBounds(source.getInvoiceSend(), delta, invoiceSendMax),
@@ -282,7 +286,7 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
                 modifyWithinBounds(source.getSessionMisc(), delta, sessionMiscMax),
                 modifyWithinBounds(source.getInvoiceMetadata(), delta, invoiceMetadataMax),
                 modifyWithinBounds(source.getInvoiceExport(), delta, invoiceExportMax),
-                null,
+                source.getInvoiceStatusExport(),
                 modifyWithinBounds(source.getInvoiceDownload(), delta, invoiceDownloadMax),
                 modifyWithinBounds(source.getOther(), delta, otherMax),
                 modifyWithinBounds(source.getCollectiveIdentifier(), delta, collectiveIdentifierMax)
@@ -460,7 +464,7 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
     // Porównuje wszystkie wartości limitów pomiędzy oczekiwanymi i aktualnymi.
     // expected - Oczekiwane limity.
     // actual - Aktualne limity.
-    private void assertRateLimitsEqual(EffectiveApiRateLimits expected, EffectiveApiRateLimits actual) {
+    private void asertOverrideableRateLimitsEqual(ApiRateLimitsChangeRequest expected, EffectiveApiRateLimits actual) {
         Assertions.assertNotNull(expected);
         Assertions.assertNotNull(actual);
 
@@ -514,8 +518,75 @@ class GetRateLimitIntegrationTest extends BaseIntegrationTest {
         Assertions.assertEquals(expected.getCollectiveIdentifier().getPerHour(), actual.getCollectiveIdentifier().getPerHour());
     }
 
+    // Porównuje wszystkie wartości limitów pomiędzy oczekiwanymi i aktualnymi.
+    // expected - Oczekiwane limity.
+    // actual - Aktualne limity.
+    private void assertRateLimitsEqual(EffectiveApiRateLimits expected, EffectiveApiRateLimits actual) {
+        asertOverrideableRateLimitsEqual(convertToApiRateLimitsChangeRequest(expected), actual);
+
+        // OnlineSessionClose
+        Assertions.assertEquals(expected.getOnlineSessionClose().getPerSecond(), actual.getOnlineSessionClose().getPerSecond());
+        Assertions.assertEquals(expected.getOnlineSessionClose().getPerMinute(), actual.getOnlineSessionClose().getPerMinute());
+        Assertions.assertEquals(expected.getOnlineSessionClose().getPerHour(), actual.getOnlineSessionClose().getPerHour());
+        // BatchSessionClose
+        Assertions.assertEquals(expected.getBatchSessionClose().getPerSecond(), actual.getBatchSessionClose().getPerSecond());
+        Assertions.assertEquals(expected.getBatchSessionClose().getPerMinute(), actual.getBatchSessionClose().getPerMinute());
+        Assertions.assertEquals(expected.getBatchSessionClose().getPerHour(), actual.getBatchSessionClose().getPerHour());
+        // InvoiceExportStatus
+        Assertions.assertEquals(expected.getInvoiceStatusExport().getPerSecond(), actual.getInvoiceStatusExport().getPerSecond());
+        Assertions.assertEquals(expected.getInvoiceStatusExport().getPerMinute(), actual.getInvoiceStatusExport().getPerMinute());
+        Assertions.assertEquals(expected.getInvoiceStatusExport().getPerHour(), actual.getInvoiceStatusExport().getPerHour());
+        // Anonymous
+        Assertions.assertEquals(expected.getAnonymous().getPerSecond(), actual.getAnonymous().getPerSecond());
+        Assertions.assertEquals(expected.getAnonymous().getPerMinute(), actual.getAnonymous().getPerMinute());
+        Assertions.assertEquals(expected.getAnonymous().getPerHour(), actual.getAnonymous().getPerHour());
+        // Global
+        Assertions.assertEquals(expected.getGlobal().getPerSecond(), actual.getGlobal().getPerSecond());
+        Assertions.assertEquals(expected.getGlobal().getPerMinute(), actual.getGlobal().getPerMinute());
+        Assertions.assertEquals(expected.getGlobal().getPerHour(), actual.getGlobal().getPerHour());
+    }
+
+    // Weryfikuje, że limity zamykania sesji wynoszą dwukrotność limitów otwierania (online i batch).
+    private void assertSessionCloseLimitsAreDoubleOpen(EffectiveApiRateLimits limits) {
+        Assertions.assertNotNull(limits.getOnlineSession());
+        Assertions.assertNotNull(limits.getOnlineSessionClose());
+        Assertions.assertNotNull(limits.getBatchSession());
+        Assertions.assertNotNull(limits.getBatchSessionClose());
+
+        // OnlineSessionClose
+        Assertions.assertEquals(2 * limits.getOnlineSession().getPerSecond(), limits.getOnlineSessionClose().getPerSecond());
+        Assertions.assertEquals(2 * limits.getOnlineSession().getPerMinute(), limits.getOnlineSessionClose().getPerMinute());
+        Assertions.assertEquals(2 * limits.getOnlineSession().getPerHour(), limits.getOnlineSessionClose().getPerHour());
+        // BatchSessionClose
+        Assertions.assertEquals(2 * limits.getBatchSession().getPerSecond(), limits.getBatchSessionClose().getPerSecond());
+        Assertions.assertEquals(2 * limits.getBatchSession().getPerMinute(), limits.getBatchSessionClose().getPerMinute());
+        Assertions.assertEquals(2 * limits.getBatchSession().getPerHour(), limits.getBatchSessionClose().getPerHour());
+    }
+
     private EffectiveApiRateLimits convert(GetRateLimitResponse source) {
         return new EffectiveApiRateLimits(
+                source.getOnlineSession(),
+                source.getOnlineSessionClose(),
+                source.getBatchSession(),
+                source.getBatchSessionClose(),
+                source.getInvoiceSend(),
+                source.getInvoiceStatus(),
+                source.getSessionList(),
+                source.getSessionInvoiceList(),
+                source.getSessionMisc(),
+                source.getInvoiceMetadata(),
+                source.getInvoiceExport(),
+                source.getInvoiceStatusExport(),
+                source.getInvoiceDownload(),
+                source.getOther(),
+                source.getCollectiveIdentifier(),
+                source.getAnonymous(),
+                source.getGlobal()
+        );
+    }
+
+    private ApiRateLimitsChangeRequest convertToApiRateLimitsChangeRequest(EffectiveApiRateLimits source) {
+        return new ApiRateLimitsChangeRequest(
                 source.getOnlineSession(),
                 source.getBatchSession(),
                 source.getInvoiceSend(),
