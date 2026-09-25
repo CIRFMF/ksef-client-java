@@ -2,16 +2,30 @@ package pl.akmf.ksef.sdk.client.model.testdata;
 
 import java.time.OffsetDateTime;
 
+/**
+ * TestDataPersonCreateRequest.
+ *
+ * Odpowiednik w specyfikacji OpenAPI KSeF API 2.0: {@code PersonCreateRequest}.
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class TestDataPersonCreateRequest {
+
     private String nip;
+
     private String pesel;
+
     private Boolean isBailiff;
+
     private String description;
+
     private Boolean isDeceased;
+
+    /**
+     * W przypadku wielokrotnego tworzenia danych testowych z tym samym identyfikatorem nie można podawać daty wcześniejszej ani takiej samej jak poprzednia.
+     */
     private OffsetDateTime createdDate;
 
     public TestDataPersonCreateRequest() {
-
     }
 
     public String getNip() {
@@ -42,7 +56,7 @@ public class TestDataPersonCreateRequest {
         return isDeceased;
     }
 
-    public void setIsDeceased(Boolean isDeceased){
+    public void setIsDeceased(Boolean isDeceased) {
         this.isDeceased = isDeceased;
     }
 
@@ -54,10 +68,16 @@ public class TestDataPersonCreateRequest {
         this.description = description;
     }
 
+    /**
+     * W przypadku wielokrotnego tworzenia danych testowych z tym samym identyfikatorem nie można podawać daty wcześniejszej ani takiej samej jak poprzednia.
+     */
     public OffsetDateTime getCreatedDate() {
         return createdDate;
     }
 
+    /**
+     * W przypadku wielokrotnego tworzenia danych testowych z tym samym identyfikatorem nie można podawać daty wcześniejszej ani takiej samej jak poprzednia.
+     */
     public void setCreatedDate(OffsetDateTime createdDate) {
         this.createdDate = createdDate;
     }

@@ -3,6 +3,20 @@ package pl.akmf.ksef.sdk.client.model.permission.search;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * EntityRoleType.
+ * Dozwolone wartości (zgodnie ze specyfikacją OpenAPI KSeF API 2.0):
+ * <ul>
+ *   <li>{@code CourtBailiff}</li>
+ *   <li>{@code EnforcementAuthority}</li>
+ *   <li>{@code LocalGovernmentUnit}</li>
+ *   <li>{@code LocalGovernmentSubUnit}</li>
+ *   <li>{@code VatGroupUnit}</li>
+ *   <li>{@code VatGroupSubUnit}</li>
+ * </ul>
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public enum EntityRoleType {
 
     COURT_BAILIFF("CourtBailiff"),
@@ -38,4 +52,3 @@ public enum EntityRoleType {
         throw new IllegalArgumentException("Unexpected value '" + value + "'");
     }
 }
-

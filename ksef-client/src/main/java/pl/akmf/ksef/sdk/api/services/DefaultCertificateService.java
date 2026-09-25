@@ -32,6 +32,12 @@ public class DefaultCertificateService implements CertificateService {
     private static final String BC = "BC";
     private static final String SHA_256 = "SHA-256";
 
+    /**
+     * Oblicza odcisk (fingerprint) certyfikatu w algorytmie SHA-256, zwracany jako ciąg znaków szesnastkowych (wielkie litery).
+     *
+     * @param certificate Certyfikat, dla którego liczony jest odcisk.
+     * @return Odcisk SHA-256 certyfikatu w postaci szesnastkowej.
+     */
     @Override
     public String getSha256Fingerprint(X509Certificate certificate) {
         try {
@@ -51,11 +57,33 @@ public class DefaultCertificateService implements CertificateService {
         }
     }
 
+    /**
+     * Generuje samopodpisany certyfikat osobisty (kluczem RSA) wraz z parą kluczy, na podstawie danych osoby fizycznej.
+     *
+     * @param givenName          Imię.
+     * @param surname            Nazwisko.
+     * @param serialNumberPrefix Prefiks identyfikatora (np. rodzaj identyfikatora, np. PNOPL/TINPL).
+     * @param serialNumber       Numer identyfikacyjny (np. PESEL lub NIP).
+     * @param commonName         Nazwa pospolita (CN) certyfikatu.
+     * @return Wygenerowany samopodpisany certyfikat wraz z parą kluczy.
+     */
     @Override
     public SelfSignedCertificate getPersonalCertificate(String givenName, String surname, String serialNumberPrefix, String serialNumber, String commonName) {
         return getPersonalCertificate(givenName, surname, serialNumberPrefix, serialNumber, commonName, EncryptionMethod.RSA);
     }
 
+    /**
+     * Generuje samopodpisany certyfikat osobisty wraz z parą kluczy, na podstawie danych osoby fizycznej,
+     * z wyborem algorytmu klucza.
+     *
+     * @param givenName          Imię.
+     * @param surname            Nazwisko.
+     * @param serialNumberPrefix Prefiks identyfikatora (np. rodzaj identyfikatora, np. PNOPL/TINPL).
+     * @param serialNumber       Numer identyfikacyjny (np. PESEL lub NIP).
+     * @param commonName         Nazwa pospolita (CN) certyfikatu.
+     * @param encryptionMethod   Algorytm klucza certyfikatu (RSA albo ECDSA).
+     * @return Wygenerowany samopodpisany certyfikat wraz z parą kluczy.
+     */
     @Override
     public SelfSignedCertificate getPersonalCertificate(String givenName, String surname, String serialNumberPrefix, String serialNumber, String commonName, EncryptionMethod encryptionMethod) {
         CertificateBuilders.X500NameHolder x500Name = new CertificateBuilders()
@@ -71,11 +99,29 @@ public class DefaultCertificateService implements CertificateService {
         }
     }
 
+    /**
+     * Generuje samopodpisaną pieczęć firmową (kluczem RSA) wraz z parą kluczy, na podstawie danych podmiotu.
+     *
+     * @param organizationName       Nazwa organizacji.
+     * @param organizationIdentifier Identyfikator organizacji (np. NIP).
+     * @param commonName             Nazwa pospolita (CN) certyfikatu.
+     * @return Wygenerowany samopodpisany certyfikat wraz z parą kluczy.
+     */
     @Override
     public SelfSignedCertificate getCompanySeal(String organizationName, String organizationIdentifier, String commonName) {
         return getCompanySeal(organizationName, organizationIdentifier, commonName, EncryptionMethod.RSA);
     }
 
+    /**
+     * Generuje samopodpisaną pieczęć firmową wraz z parą kluczy, na podstawie danych podmiotu,
+     * z wyborem algorytmu klucza.
+     *
+     * @param organizationName       Nazwa organizacji.
+     * @param organizationIdentifier Identyfikator organizacji (np. NIP).
+     * @param commonName             Nazwa pospolita (CN) certyfikatu.
+     * @param encryptionMethod       Algorytm klucza certyfikatu (RSA albo ECDSA).
+     * @return Wygenerowany samopodpisany certyfikat wraz z parą kluczy.
+     */
     @Override
     public SelfSignedCertificate getCompanySeal(String organizationName, String organizationIdentifier, String commonName, EncryptionMethod encryptionMethod) {
         CertificateBuilders.X500NameHolder x500Name = new CertificateBuilders()
@@ -91,12 +137,24 @@ public class DefaultCertificateService implements CertificateService {
         }
     }
 
+    /**
+     * Generuje samopodpisany certyfikat RSA (2048 bitów, podpisany SHA256withRSA) dla wskazanego podmiotu.
+     *
+     * @param x500Name Dane podmiotu (X.500 Distinguished Name) certyfikatu.
+     * @return Wygenerowany samopodpisany certyfikat wraz z parą kluczy.
+     */
     @Override
     public SelfSignedCertificate generateSelfSignedCertificateRsa(CertificateBuilders.X500NameHolder x500Name) {
 
         return generateSelfSignedCertificate(RSA, 2048, SHA_256_WITH_RSA, x500Name.getX500Name());
     }
 
+    /**
+     * Generuje samopodpisany certyfikat ECDSA (krzywa 256-bitowa, podpisany SHA256withECDSA) dla wskazanego podmiotu.
+     *
+     * @param x500Name Dane podmiotu (X.500 Distinguished Name) certyfikatu.
+     * @return Wygenerowany samopodpisany certyfikat wraz z parą kluczy.
+     */
     @Override
     public SelfSignedCertificate generateSelfSignedCertificateEcdsa(CertificateBuilders.X500NameHolder x500Name) {
 

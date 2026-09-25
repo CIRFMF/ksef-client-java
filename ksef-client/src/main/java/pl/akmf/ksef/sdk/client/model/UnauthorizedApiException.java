@@ -2,6 +2,12 @@ package pl.akmf.ksef.sdk.client.model;
 
 import java.net.http.HttpHeaders;
 
+/**
+ * Wyjątek zgłaszany przez klienta SDK, gdy API KSeF zwróci odpowiedź HTTP 401 (Unauthorized).
+ * Przenosi szczegóły błędu jako {@link UnauthorizedProblemDetails}.
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class UnauthorizedApiException extends ApiException {
 
     private final UnauthorizedProblemDetails unauthorizedProblemDetails;
@@ -37,9 +43,6 @@ public class UnauthorizedApiException extends ApiException {
 
     @Override
     public String toString() {
-        return "UnauthorizedApiException{" +
-                "unauthorizedProblemDetails=" + unauthorizedProblemDetails +
-                ", " + super.toString() +
-                '}';
+        return "UnauthorizedApiException{" + "unauthorizedProblemDetails=" + unauthorizedProblemDetails + ", " + super.toString() + '}';
     }
 }

@@ -3,35 +3,68 @@ package pl.akmf.ksef.sdk.client.model.permission.search;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * EntityPermissionsContextIdentifier
+ * Identyfikator kontekstu uprawnienia (dla uprawnień nadanych administratorom jednostek podrzędnych).
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class PersonPermissionsContextIdentifier {
+
+    /**
+     * Wartość identyfikatora.
+     */
     private String value;
+
+    /**
+     * Typ identyfikatora.
+     */
     private IdentifierType type;
 
     public PersonPermissionsContextIdentifier() {
-
     }
 
+    /**
+     * Wartość identyfikatora.
+     */
     public String getValue() {
         return value;
     }
 
+    /**
+     * Wartość identyfikatora.
+     */
     public void setValue(String value) {
         this.value = value;
     }
 
+    /**
+     * Typ identyfikatora.
+     */
     public IdentifierType getType() {
         return type;
     }
 
+    /**
+     * Typ identyfikatora.
+     */
     public void setType(IdentifierType type) {
         this.type = type;
     }
 
+    /**
+     * PersonPermissionsContextIdentifierType, EntityPermissionsContextIdentifierType.
+     * Dozwolone wartości (zgodnie ze specyfikacją OpenAPI KSeF API 2.0):
+     * <ul>
+     *   <li>{@code Nip}</li>
+     *   <li>{@code InternalId}</li>
+     * </ul>
+     *
+     * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+     */
     public enum IdentifierType {
 
-        NIP("Nip"),
-
-        INTERNAL_ID("InternalId");
+        NIP("Nip"), INTERNAL_ID("InternalId");
 
         private final String value;
 

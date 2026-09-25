@@ -3,11 +3,23 @@ package pl.akmf.ksef.sdk.client.model;
 import java.net.http.HttpHeaders;
 import java.util.stream.Collectors;
 
+/**
+ * Bazowy wyjątek transportowy klienta SDK, zgłaszany w reakcji na błędną odpowiedź HTTP
+ * z API KSeF. Przechowuje kod statusu HTTP, adres URL i metodę żądania oraz nagłówki
+ * odpowiedzi.
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public abstract class ApiException extends Exception {
+
     private final int code;
+
     private final String url;
+
     private final String method;
+
     private final transient HttpHeaders responseHeaders;
+
     private final transient ExceptionResponse exceptionResponse;
 
     public ApiException(int code, String message) {
@@ -77,15 +89,6 @@ public abstract class ApiException extends Exception {
 
     @Override
     public String toString() {
-        return "code=" + code +
-                "\nurl=" + url +
-                "\nmethod=" + method +
-                ",\nresponseHeaders=" + (responseHeaders != null
-                ? responseHeaders.map().entrySet().stream()
-                .flatMap(entry -> entry.getValue().stream()
-                        .map(value -> "'" + entry.getKey() + ": " + value + "'"))
-                .collect(Collectors.joining(", ")) : responseHeaders) +
-                ",\n" + exceptionResponse +
-                ",\nmessage=" + getMessage();
+        return "code=" + code + "\nurl=" + url + "\nmethod=" + method + ",\nresponseHeaders=" + (responseHeaders != null ? responseHeaders.map().entrySet().stream().flatMap(entry -> entry.getValue().stream().map(value -> "'" + entry.getKey() + ": " + value + "'")).collect(Collectors.joining(", ")) : responseHeaders) + ",\n" + exceptionResponse + ",\nmessage=" + getMessage();
     }
 }

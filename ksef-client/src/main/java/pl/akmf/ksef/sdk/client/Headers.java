@@ -17,6 +17,7 @@ public final class Headers {
     public static final String APPLICATION_XML =  "application/xml";
     public static final String BEARER = "Bearer ";
     public static final String X_KSEF_FEATURE = "X-KSeF-Feature";
+    public static final String X_MS_META_HASH = "x-ms-meta-hash";
     // Włącza walidację numerów NIP oraz identyfikatorów wewnętrznych podmiotów wskazanych na fakturze - Funkcjonalność dostępna jedynie na środowisku testowym.
     public static final String SUBJECT_IDENTIFIER_VALIDATION = "subject-identifier-validation";
     public static final String ENFORCE_XADES_COMPLIANCE = "enforce-xades-compliance";

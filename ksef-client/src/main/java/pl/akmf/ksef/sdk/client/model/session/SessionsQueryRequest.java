@@ -1,18 +1,33 @@
 package pl.akmf.ksef.sdk.client.model.session;
 
-
 import java.time.OffsetDateTime;
 import java.util.List;
 
+/**
+ * Wewnętrzny typ klienta SDK grupujący parametry zapytania listy sesji
+ * (GET {@code /sessions}). W specyfikacji OpenAPI KSeF API 2.0 te same informacje
+ * przekazywane są jako osobne parametry zapytania (query params) tej operacji.
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class SessionsQueryRequest {
+
     private SessionType sessionType;
+
     private String referenceNumber;
+
     private OffsetDateTime dateCreatedFrom;
+
     private OffsetDateTime dateCreatedTo;
+
     private OffsetDateTime dateClosedFrom;
+
     private OffsetDateTime dateClosedTo;
+
     private OffsetDateTime dateModifiedFrom;
+
     private OffsetDateTime dateModifiedTo;
+
     private List<CommonSessionStatus> statuses;
 
     public SessionType getSessionType() {
@@ -87,4 +102,3 @@ public class SessionsQueryRequest {
         this.statuses = statuses;
     }
 }
-

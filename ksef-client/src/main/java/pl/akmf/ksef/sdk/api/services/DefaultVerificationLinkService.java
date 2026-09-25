@@ -31,6 +31,14 @@ public class DefaultVerificationLinkService implements VerificationLinkService {
         this.qrAppUrl = qrAppUrl;
     }
 
+    /**
+     * Buduje link do weryfikacji faktury w systemie KSeF (do zakodowania w kodzie QR).
+     *
+     * @param nip         NIP sprzedawcy/wystawcy faktury.
+     * @param issueDate   Data wystawienia faktury.
+     * @param invoiceHash Skrót (hash) faktury w formacie Base64.
+     * @return Adres URL do weryfikacji faktury.
+     */
     @Override
     public String buildInvoiceVerificationUrl(String nip, LocalDate issueDate, String invoiceHash) {
         String date = issueDate.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
@@ -40,6 +48,18 @@ public class DefaultVerificationLinkService implements VerificationLinkService {
         return String.format("%s/invoice/%s/%s/%s", qrAppUrl, nip, date, invoiceHashUrlEncoded);
     }
 
+    /**
+     * Buduje link do weryfikacji certyfikatu wystawcy faktury offline (tryb bez połączenia z KSeF),
+     * podpisując treść linku wskazanym kluczem prywatnym.
+     *
+     * @param sellerNip              NIP sprzedawcy/wystawcy faktury.
+     * @param contextIdentifierType  Typ identyfikatora kontekstu użytego przy wystawianiu faktury.
+     * @param contextIdentifierValue Wartość identyfikatora kontekstu.
+     * @param certificateSerial      Numer seryjny certyfikatu użytego do podpisu faktury.
+     * @param invoiceHash            Skrót (hash) faktury w formacie Base64.
+     * @param privateKey             Klucz prywatny odpowiadający certyfikatowi, użyty do podpisania linku weryfikacyjnego.
+     * @return Podpisany adres URL do weryfikacji certyfikatu wystawcy.
+     */
     @Override
     public String buildCertificateVerificationUrl(String sellerNip,
                                                   ContextIdentifierType contextIdentifierType,

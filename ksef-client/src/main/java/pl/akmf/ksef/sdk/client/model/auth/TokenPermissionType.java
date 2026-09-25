@@ -3,7 +3,24 @@ package pl.akmf.ksef.sdk.client.model.auth;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * TokenPermissionType.
+ * Dozwolone wartości (zgodnie ze specyfikacją OpenAPI KSeF API 2.0):
+ * <ul>
+ *   <li>{@code InvoiceRead}</li>
+ *   <li>{@code InvoiceWrite}</li>
+ *   <li>{@code CredentialsRead}</li>
+ *   <li>{@code CredentialsManage}</li>
+ *   <li>{@code SubunitManage}</li>
+ *   <li>{@code EnforcementOperations}</li>
+ *   <li>{@code Introspection}</li>
+ *   <li>{@code CollectiveIdentifierManage}</li>
+ * </ul>
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public enum TokenPermissionType {
+
     INVOICE_READ("InvoiceRead"),
     INVOICE_WRITE("InvoiceWrite"),
     CREDENTIALS_READ("CredentialsRead"),

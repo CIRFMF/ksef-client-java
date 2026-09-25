@@ -1,6 +1,15 @@
 # Rejestr zmian
 
 
+
+## Wersja 3.0.29 (2026-09-25) - API: 2.8.0
+
+### Zmodyfikowane
+- Dodanie opisów dla pól/getterów/setterów i klas modelowych zgodnych/zbliżonych do tych ze specyfikacji `ksefApi.yaml`. W klasach pojawił się wpis `Odpowiednik w specyfikacji OpenAPI KSeF API 2.0 ${NAZWA_KLASY_Z_OPENAPI}` lub w komentarzu bezpośrednio nazwa klasy odpowiadającej tej w OpenAPI.
+- Poprawki w opisach dla klas serwisów.
+- `OnlineSessionIntegrationTest` - dodanie sprawdzania hasha faktury pobranego z nagłówka `x-ms-meta-hash` przy GET `invoices/ksef/{ksefReferenceNumber}`
+
+
 ## Wersja 3.0.28 (2026-09-22) - API: 2.8.0
 
 ### Nowe

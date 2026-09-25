@@ -3,8 +3,15 @@ package pl.akmf.ksef.sdk.client.model.testdata;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * TestDataAuthorizedIdentifier.
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class TestDataAuthorizedIdentifier {
+
     private TestDataAuthorizedIdentifierType type;
+
     private String value;
 
     public TestDataAuthorizedIdentifier(TestDataAuthorizedIdentifierType type, String value) {
@@ -28,13 +35,20 @@ public class TestDataAuthorizedIdentifier {
         this.value = value;
     }
 
+    /**
+     * TestDataAuthorizedIdentifierType.
+     * Dozwolone wartości (zgodnie ze specyfikacją OpenAPI KSeF API 2.0):
+     * <ul>
+     *   <li>{@code Nip}</li>
+     *   <li>{@code Pesel}</li>
+     *   <li>{@code Fingerprint}</li>
+     * </ul>
+     *
+     * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+     */
     public enum TestDataAuthorizedIdentifierType {
 
-        NIP("Nip"),
-
-        PESEL("Pesel"),
-
-        FINGERPRINT("Fingerprint");
+        NIP("Nip"), PESEL("Pesel"), FINGERPRINT("Fingerprint");
 
         private final String value;
 
@@ -63,4 +77,3 @@ public class TestDataAuthorizedIdentifier {
         }
     }
 }
-

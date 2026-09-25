@@ -3,8 +3,15 @@ package pl.akmf.ksef.sdk.client.model.testdata;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * TestDataContextIdentifier, TestDataAuthenticationContextIdentifier
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class TestDataContextIdentifier {
+
     private ContextIdentifierType type;
+
     private String value;
 
     public TestDataContextIdentifier(ContextIdentifierType type, String value) {
@@ -28,12 +35,21 @@ public class TestDataContextIdentifier {
         this.value = value;
     }
 
+    /**
+     * TestDataContextIdentifierType, TestDataAuthenticationContextIdentifierType
+     * Dozwolone wartości (zgodnie ze specyfikacją OpenAPI KSeF API 2.0):
+     * <ul>
+     *   <li>{@code Nip}</li>
+     *   <li>{@code InternalId}</li>
+     *   <li>{@code NipVatUe}</li>
+     *   <li>{@code PeppolId}</li>
+     * </ul>
+     *
+     * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+     */
     public enum ContextIdentifierType {
 
-        NIP("Nip"),
-        INTERNAL_ID("InternalId"),
-        NIP_VAT_UE("NipVatUe"),
-        PEPPOL_ID("PeppolId");
+        NIP("Nip"), INTERNAL_ID("InternalId"), NIP_VAT_UE("NipVatUe"), PEPPOL_ID("PeppolId");
 
         private final String value;
 

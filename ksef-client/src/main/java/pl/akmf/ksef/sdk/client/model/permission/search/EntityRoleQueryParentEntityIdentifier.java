@@ -3,8 +3,22 @@ package pl.akmf.ksef.sdk.client.model.permission.search;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * Identyfikator podmiotu podrzędnego.
+ *
+ * Odpowiednik w specyfikacji OpenAPI KSeF API 2.0: {@code SubordinateRoleSubordinateEntityIdentifier, EntityRolesParentEntityIdentifier}.
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class EntityRoleQueryParentEntityIdentifier {
+
+    /**
+     * Typ identyfikatora.
+     */
     private IdentifierType type;
+
+    /**
+     * Wartość identyfikatora.
+     */
     private String value;
 
     public EntityRoleQueryParentEntityIdentifier() {
@@ -15,22 +29,43 @@ public class EntityRoleQueryParentEntityIdentifier {
         this.value = value;
     }
 
+    /**
+     * Typ identyfikatora.
+     */
     public IdentifierType getType() {
         return type;
     }
 
+    /**
+     * Typ identyfikatora.
+     */
     public void setType(IdentifierType type) {
         this.type = type;
     }
 
+    /**
+     * Wartość identyfikatora.
+     */
     public String getValue() {
         return value;
     }
 
+    /**
+     * Wartość identyfikatora.
+     */
     public void setValue(String value) {
         this.value = value;
     }
 
+    /**
+     * SubordinateRoleSubordinateEntityIdentifierType, EntityRolesParentEntityIdentifierType.
+     * Dozwolone wartości (zgodnie ze specyfikacją OpenAPI KSeF API 2.0):
+     * <ul>
+     *   <li>{@code Nip}</li>
+     * </ul>
+     *
+     * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+     */
     public enum IdentifierType {
 
         NIP("Nip");

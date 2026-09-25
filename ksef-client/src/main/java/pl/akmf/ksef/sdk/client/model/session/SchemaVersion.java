@@ -3,10 +3,15 @@ package pl.akmf.ksef.sdk.client.model.session;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * Wewnętrzny enum klienta SDK identyfikujący wersję schematu XML faktury
+ * ({@code 1-0E}, {@code 1-1E}, {@code 2-1}) używaną przy budowaniu nagłówka sesji.
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public enum SchemaVersion {
-    VERSION_1_0E("1-0E"),
-    VERSION_1_1E("1-1E"),
-    VERSION_2_1("2-1");
+
+    VERSION_1_0E("1-0E"), VERSION_1_1E("1-1E"), VERSION_2_1("2-1");
 
     private final String value;
 

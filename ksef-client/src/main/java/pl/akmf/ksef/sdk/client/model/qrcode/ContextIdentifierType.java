@@ -3,10 +3,15 @@ package pl.akmf.ksef.sdk.client.model.qrcode;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * Typ identyfikatora kontekstu używany lokalnie przez SDK przy generowaniu kodów QR
+ * (zgodnie z zasadami znakowania faktur kodem QR).
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public enum ContextIdentifierType {
-    NIP("Nip"),
-    INTERNALID("InternalId"),
-    NIPVATUE("NipVatUe");
+
+    NIP("Nip"), INTERNALID("InternalId"), NIPVATUE("NipVatUe");
 
     private final String value;
 

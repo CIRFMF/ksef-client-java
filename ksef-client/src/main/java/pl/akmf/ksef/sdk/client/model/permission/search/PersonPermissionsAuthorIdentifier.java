@@ -3,8 +3,21 @@ package pl.akmf.ksef.sdk.client.model.permission.search;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * Identyfikator osoby lub podmiotu nadającego uprawnienie.
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class PersonPermissionsAuthorIdentifier {
+
+    /**
+     * Typ identyfikatora.
+     */
     private IdentifierType type;
+
+    /**
+     * Wartość identyfikatora. W przypadku typu System należy pozostawić puste. W pozostałych przypadkach pole jest wymagane.
+     */
     private String value;
 
     public PersonPermissionsAuthorIdentifier() {
@@ -15,31 +28,49 @@ public class PersonPermissionsAuthorIdentifier {
         this.value = value;
     }
 
+    /**
+     * Typ identyfikatora.
+     */
     public IdentifierType getType() {
         return type;
     }
 
+    /**
+     * Typ identyfikatora.
+     */
     public void setType(IdentifierType type) {
         this.type = type;
     }
 
+    /**
+     * Wartość identyfikatora. W przypadku typu System należy pozostawić puste. W pozostałych przypadkach pole jest wymagane.
+     */
     public String getValue() {
         return value;
     }
 
+    /**
+     * Wartość identyfikatora. W przypadku typu System należy pozostawić puste. W pozostałych przypadkach pole jest wymagane.
+     */
     public void setValue(String value) {
         this.value = value;
     }
 
+    /**
+     * PersonPermissionsAuthorIdentifierType.
+     * Dozwolone wartości (zgodnie ze specyfikacją OpenAPI KSeF API 2.0):
+     * <ul>
+     *   <li>{@code Nip}</li>
+     *   <li>{@code Pesel}</li>
+     *   <li>{@code Fingerprint}</li>
+     *   <li>{@code System}</li>
+     * </ul>
+     *
+     * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+     */
     public enum IdentifierType {
 
-        NIP("Nip"),
-
-        PESEL("Pesel"),
-
-        SYSTEM("System"),
-
-        FINGERPRINT("Fingerprint");
+        NIP("Nip"), PESEL("Pesel"), SYSTEM("System"), FINGERPRINT("Fingerprint");
 
         private final String value;
 
@@ -68,4 +99,3 @@ public class PersonPermissionsAuthorIdentifier {
         }
     }
 }
-
