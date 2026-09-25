@@ -30,14 +30,18 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
+import static pl.akmf.ksef.sdk.client.Headers.X_MS_META_HASH;
 
 class OnlineSessionIntegrationTest extends BaseIntegrationTest {
 
     private EncryptionData encryptionData;
+    private String invSha;
 
     @Test
     void onlineSessionE2EIntegrationTest() throws JAXBException, IOException, ApiException {
@@ -81,8 +85,23 @@ class OnlineSessionIntegrationTest extends BaseIntegrationTest {
         // Step 7: Get session UPO
         getOnlineSessionUpo(sessionReferenceNumber, upoReferenceNumber, accessToken);
 
+        ksefClient.getResponseHeaderCaptureHandler().subscribe(X_MS_META_HASH);
         // Step 8: Get invoice
         getInvoice(sessionInvoice.getKsefNumber(), accessToken);
+
+        // sprawdzenie czy hash faktury który zwraca api w ksefClient.getInvoice() zgadza się z hashem faktury którą wysłalismy
+        Map<String, Map<String, List<String>>> capturedHeaders = ksefClient.getResponseHeaderCaptureHandler().getCaptured();
+        ksefClient.getResponseHeaderCaptureHandler().clear(); // po każdym requeście należy wyczyścić subskrybowane nagłówki
+        Assertions.assertTrue(capturedHeaders.entrySet().stream()
+                .anyMatch(entry -> {
+                    var values = entry.getValue().get(X_MS_META_HASH.toLowerCase());
+                    return values != null &&
+                            values.stream()
+                                    .anyMatch(v -> v.contains(invSha));
+                })
+        );
+
+        ksefClient.getResponseHeaderCaptureHandler().unsubscribe(X_MS_META_HASH);
     }
 
     @Test
@@ -234,6 +253,8 @@ class OnlineSessionIntegrationTest extends BaseIntegrationTest {
 
         FileMetadata invoiceMetadata = cryptographyService.getMetaData(invoice);
         FileMetadata encryptedInvoiceMetadata = cryptographyService.getMetaData(encryptedInvoice);
+
+        invSha = invoiceMetadata.getHashSHA();
 
         SendInvoiceOnlineSessionRequest sendInvoiceOnlineSessionRequest = new SendInvoiceOnlineSessionRequestBuilder()
                 .withInvoiceHash(invoiceMetadata.getHashSHA())

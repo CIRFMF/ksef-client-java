@@ -3,8 +3,21 @@ package pl.akmf.ksef.sdk.client.model.permission.search;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * Identyfikator jednostki lub podmiotu podrzędnego.
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class SubunitPermissionsSubunitIdentifier {
+
+    /**
+     * Typ identyfikatora.
+     */
     private IdentifierType type;
+
+    /**
+     * Wartość identyfikatora.
+     */
     private String value;
 
     public SubunitPermissionsSubunitIdentifier() {
@@ -15,26 +28,47 @@ public class SubunitPermissionsSubunitIdentifier {
         this.value = value;
     }
 
+    /**
+     * Typ identyfikatora.
+     */
     public IdentifierType getType() {
         return type;
     }
 
+    /**
+     * Typ identyfikatora.
+     */
     public void setType(IdentifierType type) {
         this.type = type;
     }
 
+    /**
+     * Wartość identyfikatora.
+     */
     public String getValue() {
         return value;
     }
 
+    /**
+     * Wartość identyfikatora.
+     */
     public void setValue(String value) {
         this.value = value;
     }
 
+    /**
+     * SubunitPermissionsSubunitIdentifierType.
+     * Dozwolone wartości (zgodnie ze specyfikacją OpenAPI KSeF API 2.0):
+     * <ul>
+     *   <li>{@code InternalId}</li>
+     *   <li>{@code Nip}</li>
+     * </ul>
+     *
+     * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+     */
     public enum IdentifierType {
 
-        INTERNALID("InternalId"),
-        NIP("Nip");
+        INTERNALID("InternalId"), NIP("Nip");
 
         private final String value;
 
@@ -63,4 +97,3 @@ public class SubunitPermissionsSubunitIdentifier {
         }
     }
 }
-

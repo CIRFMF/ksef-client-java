@@ -3,8 +3,16 @@ package pl.akmf.ksef.sdk.client.model.testdata;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public class TestDataPermission { // TestDataPermissionsGrantRequest//Permission
+/**
+ * TestDataPermission.
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
+public class // TestDataPermissionsGrantRequest//Permission
+TestDataPermission {
+
     private String description;
+
     private PermissionType permission;
 
     public TestDataPermission(String description, PermissionType permission) {
@@ -28,6 +36,22 @@ public class TestDataPermission { // TestDataPermissionsGrantRequest//Permission
         this.permission = permission;
     }
 
+    /**
+     * TestDataPermissionType.
+     * Dozwolone wartości (zgodnie ze specyfikacją OpenAPI KSeF API 2.0):
+     * <ul>
+     *   <li>{@code InvoiceRead}</li>
+     *   <li>{@code InvoiceWrite}</li>
+     *   <li>{@code Introspection}</li>
+     *   <li>{@code CredentialsRead}</li>
+     *   <li>{@code CredentialsManage}</li>
+     *   <li>{@code EnforcementOperations}</li>
+     *   <li>{@code SubunitManage}</li>
+     *   <li>{@code CollectiveIdentifierManage}</li>
+     * </ul>
+     *
+     * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+     */
     public enum PermissionType {
 
         INVOICE_READ("InvoiceRead"),

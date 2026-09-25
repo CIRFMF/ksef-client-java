@@ -4,36 +4,34 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * Gets or Sets InvoiceMetadataInvoiceType
+ * InvoiceType
  */
 public enum InvoiceMetadataInvoiceType {
 
-    VAT("Vat"), // (FA) Podstawowa
-
-    KOR("Kor"), // (FA) Korygująca
-
-    ZAL("Zal"), // (FA) Zaliczkowa
-
-    ROZ("Roz"), // (FA) Rozliczeniowa
-
-    UPR("Upr"), // (FA) Uproszczona
-
-    KOR_ZAL("KorZal"), // (FA) Korygująca fakturę zaliczkową
-
-    KOR_ROZ("KorRoz"), // (FA) Korygująca fakturę rozliczeniową
-
-    VAT_PEF("VatPef"), // (PEF) Podstawowa
-
-    VAT_PEF_SP("VatPefSp"), // (PEF) Specjalizowana
-
-    KOR_PEF("KorPef"), // (PEF) Korygująca
-
-    VAT_RR("VatRr"), //  	(FA_RR) Podstawowa
-
-    @Deprecated
-    KOR_VAT_SP("KorVatRr"), // (FA_RR) Korygująca
-
-    KOR_VAT_RR("KorVatRr"); // (FA_RR) Korygująca
+    // (FA) Podstawowa
+    VAT("Vat"),
+    // (FA) Korygująca
+    KOR("Kor"),
+    // (FA) Zaliczkowa
+    ZAL("Zal"),
+    // (FA) Rozliczeniowa
+    ROZ("Roz"),
+    // (FA) Uproszczona
+    UPR("Upr"),
+    // (FA) Korygująca fakturę zaliczkową
+    KOR_ZAL("KorZal"),
+    // (FA) Korygująca fakturę rozliczeniową
+    KOR_ROZ("KorRoz"),
+    // (PEF) Podstawowa
+    VAT_PEF("VatPef"),
+    // (PEF) Specjalizowana
+    VAT_PEF_SP("VatPefSp"),
+    // (PEF) Korygująca
+    KOR_PEF("KorPef"),
+    //  	(FA_RR) Podstawowa
+    VAT_RR("VatRr"),
+    // (FA_RR) Korygująca
+    KOR_VAT_RR("KorVatRr");
 
     private final String value;
 
@@ -61,4 +59,3 @@ public enum InvoiceMetadataInvoiceType {
         throw new IllegalArgumentException("Unexpected value '" + value + "'");
     }
 }
-

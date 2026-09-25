@@ -3,9 +3,15 @@ package pl.akmf.ksef.sdk.client.model.auth;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * Wewnętrzny enum klienta SDK określający algorytm klucza używany po stronie klienta
+ * przy generowaniu par kluczy/certyfikatów ({@code RSA} albo {@code ECDSA}).
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public enum EncryptionMethod {
-    RSA("RSA"),
-    ECDSA("ECDSA");
+
+    RSA("RSA"), ECDSA("ECDSA");
 
     private final String value;
 

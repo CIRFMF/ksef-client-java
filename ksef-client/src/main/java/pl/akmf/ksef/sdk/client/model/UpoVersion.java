@@ -1,9 +1,14 @@
 package pl.akmf.ksef.sdk.client.model;
 
+/**
+ * Wewnętrzny enum klienta SDK określający obsługiwaną wersję schematu UPO
+ * (Urzędowego Poświadczenia Odbioru) używaną przy pobieraniu i parsowaniu UPO.
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public enum UpoVersion {
 
-    UPO_4_2("upo-v4-2"),
-    UPO_4_3("upo-v4-3");
+    UPO_4_2("upo-v4-2"), UPO_4_3("upo-v4-3");
 
     private final String value;
 
@@ -23,5 +28,4 @@ public enum UpoVersion {
         }
         return UpoVersion.UPO_4_3;
     }
-
 }

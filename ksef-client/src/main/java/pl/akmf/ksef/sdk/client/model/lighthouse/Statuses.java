@@ -2,16 +2,13 @@ package pl.akmf.ksef.sdk.client.model.lighthouse;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-// Statusy systemu KSeF zwracane przez Latarnię.
+/**
+ * Kod statusu systemu KSeF zwracany przez usługę statusową ("Latarnia" / Lighthouse) —
+ * odrębną usługę monitorującą dostępność systemu KSeF
+ */
 public enum Statuses {
 
-    FULL_AVAILABILITY(0),
-
-    ONGOING_UNAVAILABILITY(100),
-
-    ONGOING_FAILURE(500),
-
-    ONGOING_TOTAL_FAILURE(900);
+    FULL_AVAILABILITY(0), ONGOING_UNAVAILABILITY(100), ONGOING_FAILURE(500), ONGOING_TOTAL_FAILURE(900);
 
     private final int value;
 
@@ -28,5 +25,4 @@ public enum Statuses {
     public String toString() {
         return String.valueOf(value);
     }
-
 }

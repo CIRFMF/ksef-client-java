@@ -2,6 +2,13 @@ package pl.akmf.ksef.sdk.client.model;
 
 import java.net.http.HttpHeaders;
 
+/**
+ * Ogólny wyjątek klienta SDK reprezentujący błąd zwrócony przez API KSeF w przypadkach,
+ * które nie kwalifikują się do żadnego bardziej szczegółowego typu wyjątku
+ * (np. {@link ForbiddenApiException}, {@link UnauthorizedApiException}).
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class KsefApiException extends ApiException {
 
     public KsefApiException(int code, String message) {

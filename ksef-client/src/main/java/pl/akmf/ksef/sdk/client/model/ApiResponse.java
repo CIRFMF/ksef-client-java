@@ -2,9 +2,18 @@ package pl.akmf.ksef.sdk.client.model;
 
 import java.net.http.HttpHeaders;
 
+/**
+ * Ogólny, wewnętrzny kontener odpowiedzi HTTP klienta SDK: przechowuje kod statusu,
+ * nagłówki odpowiedzi oraz zdeserializowane dane odpowiedzi typu {@code T}.
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class ApiResponse<T> {
+
     private final int statusCode;
+
     private final HttpHeaders headers;
+
     private final T data;
 
     /**

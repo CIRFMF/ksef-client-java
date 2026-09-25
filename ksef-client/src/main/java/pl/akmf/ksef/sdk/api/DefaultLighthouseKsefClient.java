@@ -46,6 +46,11 @@ public class DefaultLighthouseKsefClient implements LighthouseKsefClient {
         this.defaultHeaders = defaultHeaders;
     }
 
+    /**
+     * Pobiera aktualny status systemu KSeF (np. dostępność, przerwa techniczna, awaria).
+     *
+     * @return Aktualny status systemu KSeF.
+     */
     @Override
     public KsefStatusResponse getStatus() throws ApiException {
         Map<String, String> headers = new HashMap<>();
@@ -56,6 +61,11 @@ public class DefaultLighthouseKsefClient implements LighthouseKsefClient {
         return getResponse(response, OK, LIGHTHOUSE_STATUS, KsefStatusResponse.class);
     }
 
+    /**
+     * Pobiera bieżące komunikaty usługi statusowej KSeF ("Latarnia").
+     *
+     * @return Lista bieżących komunikatów.
+     */
     @Override
     public KsefMessagesResponse getMessages() throws ApiException {
         Map<String, String> headers = new HashMap<>();

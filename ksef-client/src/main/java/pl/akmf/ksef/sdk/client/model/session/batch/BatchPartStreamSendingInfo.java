@@ -1,12 +1,21 @@
 package pl.akmf.ksef.sdk.client.model.session.batch;
 
 import pl.akmf.ksef.sdk.client.model.session.FileMetadata;
-
 import java.io.InputStream;
 
+/**
+ * Strumieniowy odpowiednik {@link BatchPartSendingInfo}: opisuje pojedynczą część
+ * paczki wsadowej przekazywaną jako strumień danych, wraz z metadanymi pliku
+ * i numerem porządkowym.
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class BatchPartStreamSendingInfo {
+
     private InputStream dataStream;
+
     private FileMetadata metadata;
+
     private int ordinalNumber;
 
     public BatchPartStreamSendingInfo() {
@@ -41,5 +50,4 @@ public class BatchPartStreamSendingInfo {
     public void setOrdinalNumber(int ordinalNumber) {
         this.ordinalNumber = ordinalNumber;
     }
-
 }

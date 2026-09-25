@@ -3,12 +3,16 @@ package pl.akmf.ksef.sdk.client.model.session;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * Wewnętrzny enum klienta SDK identyfikujący rodzaj/wersję schematu faktury
+ * ({@code FA}, {@code PEF}, {@code PEF_KOR}, {@code FA_RR}) używany przy budowaniu
+ * nagłówka sesji. Typ techniczny klienta SDK.
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public enum SystemCode {
-    FA_2("FA (2)"),
-    PEF_3("PEF (3)"),
-    KOR_PEF_3("PEF_KOR (3)"),
-    FA_3("FA (3)"),
-    FA_RR("FA_RR (1)");
+
+    FA_2("FA (2)"), PEF_3("PEF (3)"), KOR_PEF_3("PEF_KOR (3)"), FA_3("FA (3)"), FA_RR("FA_RR (1)");
 
     private final String value;
 

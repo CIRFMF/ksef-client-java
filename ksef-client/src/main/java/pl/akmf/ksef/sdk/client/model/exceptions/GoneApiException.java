@@ -1,9 +1,14 @@
 package pl.akmf.ksef.sdk.client.model.exceptions;
 
 import pl.akmf.ksef.sdk.client.model.ApiException;
-
 import java.net.http.HttpHeaders;
 
+/**
+ * Wyjątek zgłaszany przez klienta SDK, gdy API KSeF zwróci odpowiedź HTTP 410 (Gone).
+ * Przenosi szczegóły błędu jako {@link GoneProblemDetails}.
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class GoneApiException extends ApiException {
 
     private final GoneProblemDetails goneProblemDetails;
@@ -39,9 +44,6 @@ public class GoneApiException extends ApiException {
 
     @Override
     public String toString() {
-        return "GoneApiException{" +
-                "goneProblemDetails=" + goneProblemDetails +
-                ", " + super.toString() +
-                '}';
+        return "GoneApiException{" + "goneProblemDetails=" + goneProblemDetails + ", " + super.toString() + '}';
     }
 }

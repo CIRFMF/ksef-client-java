@@ -4,24 +4,17 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * Gets or Sets PersonPermissionType
+ * PersonPermissionType, PersonPermissionScope
  */
 public enum PersonPermissionType {
 
     CREDENTIALSMANAGE("CredentialsManage"),
-
     CREDENTIALSREAD("CredentialsRead"),
-
     INVOICEWRITE("InvoiceWrite"),
-
     INVOICEREAD("InvoiceRead"),
-
     INTROSPECTION("Introspection"),
-
     SUBUNITMANAGE("SubunitManage"),
-
     ENFORCEMENTOPERATIONS("EnforcementOperations"),
-
     COLLECTIVE_IDENTIFIER_MANAGE("CollectiveIdentifierManage");
 
     private final String value;
@@ -50,4 +43,3 @@ public enum PersonPermissionType {
         throw new IllegalArgumentException("Unexpected value '" + value + "'");
     }
 }
-

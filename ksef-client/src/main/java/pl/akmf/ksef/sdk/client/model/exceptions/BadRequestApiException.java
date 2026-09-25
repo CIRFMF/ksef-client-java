@@ -1,9 +1,14 @@
 package pl.akmf.ksef.sdk.client.model.exceptions;
 
 import pl.akmf.ksef.sdk.client.model.ApiException;
-
 import java.net.http.HttpHeaders;
 
+/**
+ * Wyjątek zgłaszany przez klienta SDK, gdy API KSeF zwróci odpowiedź HTTP 400 (Bad Request).
+ * Przenosi szczegóły błędu jako {@link BadRequestProblemDetails}.
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class BadRequestApiException extends ApiException {
 
     private final BadRequestProblemDetails badRequestProblemDetails;
@@ -39,9 +44,6 @@ public class BadRequestApiException extends ApiException {
 
     @Override
     public String toString() {
-        return "BadRequestApiException{" +
-                "badRequestProblemDetails=" + badRequestProblemDetails +
-                ", " + super.toString() +
-                '}';
+        return "BadRequestApiException{" + "badRequestProblemDetails=" + badRequestProblemDetails + ", " + super.toString() + '}';
     }
 }

@@ -2,8 +2,22 @@ package pl.akmf.ksef.sdk.client.model.permission.proxy;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * Identyfikator podmiotu uprawnianego.
+ *
+ * Odpowiednik w specyfikacji OpenAPI KSeF API 2.0: {@code EntityAuthorizationPermissionsSubjectIdentifier}.
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class SubjectIdentifier {
+
+    /**
+     * Typ identyfikatora.
+     */
     private IdentifierType type;
+
+    /**
+     * Wartość identyfikatora.
+     */
     private String value;
 
     public SubjectIdentifier() {
@@ -14,25 +28,47 @@ public class SubjectIdentifier {
         this.value = value;
     }
 
+    /**
+     * Typ identyfikatora.
+     */
     public IdentifierType getType() {
         return type;
     }
 
+    /**
+     * Typ identyfikatora.
+     */
     public void setType(IdentifierType type) {
         this.type = type;
     }
 
+    /**
+     * Wartość identyfikatora.
+     */
     public String getValue() {
         return value;
     }
 
+    /**
+     * Wartość identyfikatora.
+     */
     public void setValue(String value) {
         this.value = value;
     }
 
+    /**
+     * EntityAuthorizationPermissionsSubjectIdentifierType.
+     * Dozwolone wartości (zgodnie ze specyfikacją OpenAPI KSeF API 2.0):
+     * <ul>
+     *   <li>{@code Nip}</li>
+     *   <li>{@code PeppolId}</li>
+     * </ul>
+     *
+     * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+     */
     public enum IdentifierType {
-        PEPPOL_ID("PeppolId"),
-        NIP("Nip");
+
+        PEPPOL_ID("PeppolId"), NIP("Nip");
 
         private final String value;
 
@@ -51,4 +87,3 @@ public class SubjectIdentifier {
         }
     }
 }
-

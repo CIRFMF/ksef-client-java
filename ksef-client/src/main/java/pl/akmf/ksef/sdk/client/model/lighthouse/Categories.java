@@ -2,10 +2,13 @@ package pl.akmf.ksef.sdk.client.model.lighthouse;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * Kategoria komunikatu usługi statusowej KSeF ("Latarnia" / Lighthouse) — odrębnej
+ * usługi monitorującej dostępność systemu KSeF
+ */
 public enum Categories {
-    FAILURE("01"),
-    TOTAL_FAILURE("02"),
-    PLANNED_UNAVAILABILITY("03");
+
+    FAILURE("01"), TOTAL_FAILURE("02"), PLANNED_UNAVAILABILITY("03");
 
     private final String value;
 

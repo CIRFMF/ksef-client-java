@@ -4,36 +4,37 @@ package pl.akmf.ksef.sdk.client.model.invoice;
  * DownloadInvoiceBuyer
  */
 public class DownloadInvoiceBuyer {
-  private IdentifierType identifierType;
-  private String identifier;
 
-  private String name;
+    private IdentifierType identifierType;
 
-  public DownloadInvoiceBuyer() { 
-  }
+    private String identifier;
 
-  public IdentifierType getIdentifierType() {
-    return identifierType;
-  }
+    private String name;
 
-  public void setIdentifierType(IdentifierType identifierType) {
-    this.identifierType = identifierType;
-  }
+    public DownloadInvoiceBuyer() {
+    }
 
-  public String getIdentifier() {
-    return identifier;
-  }
+    public IdentifierType getIdentifierType() {
+        return identifierType;
+    }
 
-  public void setIdentifier(String identifier) {
-    this.identifier = identifier;
-  }
+    public void setIdentifierType(IdentifierType identifierType) {
+        this.identifierType = identifierType;
+    }
 
-  public String getName() {
-    return name;
-  }
+    public String getIdentifier() {
+        return identifier;
+    }
 
-  public void setName(String name) {
-    this.name = name;
-  }
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }
-

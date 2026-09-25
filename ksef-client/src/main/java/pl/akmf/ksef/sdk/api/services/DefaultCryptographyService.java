@@ -121,6 +121,13 @@ public class DefaultCryptographyService implements CryptographyService {
         initCryptographyService();
     }
 
+    /**
+     * Generuje nowe dane szyfrowania (losowy klucz AES-256 i wektor IV), szyfrując klucz AES
+     * kluczem publicznym do szyfrowania symetrycznego pobranym z API KSeF.
+     *
+     * @return Nowo wygenerowane dane szyfrowania (klucz AES, IV, zaszyfrowany klucz oraz metadane szyfrowania).
+     * @throws SystemKSeFSDKException gdy serwis nie został poprawnie zainicjowany lub wystąpi błąd kryptograficzny.
+     */
     @Override
     public EncryptionData getEncryptionData() throws SystemKSeFSDKException {
         validateServiceConfiguration();
@@ -146,6 +153,13 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Szyfruje dowolną tablicę bajtów, automatycznie dobierając algorytm szyfrowania (RSA albo ECIES)
+     * na podstawie typu klucza publicznego pobranego z API KSeF.
+     *
+     * @param content Dane do zaszyfrowania.
+     * @return Zaszyfrowane dane.
+     */
     @Override
     public byte[] encryptUsingPublicKey(byte[] content) throws SystemKSeFSDKException {
         validateServiceConfiguration();
@@ -162,6 +176,14 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Zwraca zaszyfrowany token KSeF (połączony ze znacznikiem czasu), automatycznie dobierając
+     * algorytm szyfrowania (RSA albo ECIES) na podstawie typu klucza publicznego pobranego z API KSeF.
+     *
+     * @param ksefToken          Token KSeF do zaszyfrowania.
+     * @param challengeTimestamp Znacznik czasu challenge'u, dołączany do tokenu przed zaszyfrowaniem.
+     * @return Zaszyfrowany token KSeF.
+     */
     @Override
     public byte[] encryptKsefTokenUsingPublicKey(String ksefToken, Instant challengeTimestamp) throws SystemKSeFSDKException {
         validateServiceConfiguration();
@@ -179,6 +201,14 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Deszyfrowanie danych przy użyciu AES-256 w trybie CBC z PKCS7.
+     *
+     * @param encryptedPackagePart Zaszyfrowany plik w formie tablicy bajtów.
+     * @param cipherKey            Klucz symetryczny.
+     * @param cipherIv             Wektor inicjalizujący (IV) klucza symetrycznego.
+     * @return Odszyfrowany plik w formie tablicy bajtów.
+     */
     @Override
     public byte[] decryptBytesWithAes256(byte[] encryptedPackagePart, byte[] cipherKey, byte[] cipherIv) {
         validateServiceConfiguration();
@@ -216,6 +246,14 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Deszyfrowanie danych przy użyciu AES-256 w trybie CBC z PKCS7.
+     *
+     * @param encryptedPackagePart Input stream - zaszyfrowany.
+     * @param output               Output stream - odszyfrowany.
+     * @param cipherKey            Klucz symetryczny.
+     * @param cipherIv             Wektor inicjalizujący (IV) klucza symetrycznego.
+     */
     @Override
     public void decryptStreamBytesWithAes256(InputStream encryptedPackagePart, OutputStream output, byte[] cipherKey, byte[] cipherIv) {
         validateServiceConfiguration();
@@ -233,6 +271,14 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Szyfrowanie danych przy użyciu AES-256 w trybie CBC z PKCS7 paddingiem.
+     *
+     * @param content Plik w formie byte array.
+     * @param key     Klucz symetryczny.
+     * @param iv      Wektor IV klucza symetrycznego.
+     * @return Zaszyfrowany plik w formie byte array.
+     */
     @Override
     public byte[] encryptBytesWithAES256(byte[] content, byte[] key, byte[] iv) throws SystemKSeFSDKException {
         validateServiceConfiguration();
@@ -251,6 +297,15 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Szyfrowanie strumienia danych przy użyciu AES-256 w trybie CBC z PKCS7 paddingiem,
+     * bez buforowania całej zawartości w pamięci.
+     *
+     * @param input  Strumień wejściowy niezaszyfrowany.
+     * @param output Strumień wyjściowy zaszyfrowany.
+     * @param key    Klucz symetryczny.
+     * @param iv     Wektor IV klucza symetrycznego.
+     */
     @Override
     public void encryptStreamWithAES256(InputStream input, OutputStream output, byte[] key, byte[] iv) throws SystemKSeFSDKException {
         validateServiceConfiguration();
@@ -276,6 +331,12 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Generuje żądanie podpisania certyfikatu (CSR) kluczem RSA (2048 bitów) na podstawie przekazanych informacji o certyfikacie.
+     *
+     * @param certificateInfo Dane podmiotu i informacje wymagane do zbudowania żądania (CSR).
+     * @return CSR oraz klucz prywatny, oba zakodowane w formacie Base64.
+     */
     @Override
     public CsrResult generateCsrWithRsa(CertificateEnrollmentsInfoResponse certificateInfo) throws SystemKSeFSDKException {
         validateServiceConfiguration();
@@ -304,6 +365,12 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Generuje żądanie podpisania certyfikatu (CSR) z użyciem krzywej eliptycznej (EC) na podstawie przekazanych informacji o certyfikacie.
+     *
+     * @param certificateInfo Dane podmiotu i informacje wymagane do zbudowania żądania (CSR).
+     * @return CSR oraz klucz prywatny, oba zakodowane w Base64 w formacie DER.
+     */
     @Override
     public CsrResult generateCsrWithEcdsa(CertificateEnrollmentsInfoResponse certificateInfo) throws SystemKSeFSDKException {
         validateServiceConfiguration();
@@ -331,6 +398,12 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Zwraca metadane pliku: rozmiar i hash SHA-256.
+     *
+     * @param file Plik w formie byte array.
+     * @return Metadane pliku (rozmiar i skrót SHA-256).
+     */
     @Override
     public FileMetadata getMetaData(byte[] file) throws SystemKSeFSDKException {
         try {
@@ -350,6 +423,12 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Zwraca metadane pliku: rozmiar i hash SHA-256, dla strumienia bez buforowania całej zawartości w pamięci.
+     *
+     * @param inputStream Strumień pliku.
+     * @return Metadane pliku (rozmiar i skrót SHA-256).
+     */
     @Override
     public FileMetadata getMetaData(InputStream inputStream) throws SystemKSeFSDKException {
         if (inputStream == null) {
@@ -376,6 +455,12 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Zwraca klucz publiczny w formacie PublicKey na podstawie certyfikatu w formacie PEM.
+     *
+     * @param certificatePem Certyfikat w formacie PEM (tekstowym).
+     * @return Klucz publiczny odczytany z certyfikatu.
+     */
     @Override
     public PublicKey parsePublicKeyFromCertificatePem(String certificatePem) throws SystemKSeFSDKException {
         validateServiceConfiguration();
@@ -389,6 +474,12 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Zwraca klucz prywatny w formacie PrivateKey na podstawie klucza RSA zakodowanego w formacie PKCS#8 (DER).
+     *
+     * @param privateKey Klucz prywatny RSA zakodowany w formacie PKCS#8 (DER).
+     * @return Klucz prywatny w formacie PrivateKey.
+     */
     @Override
     public PrivateKey parseRsaPrivateKeyFromPem(byte[] privateKey) throws SystemKSeFSDKException {
         validateServiceConfiguration();
@@ -404,6 +495,12 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Zwraca klucz prywatny w formacie PrivateKey na podstawie klucza ECDSA zakodowanego w formacie PKCS#8 (DER).
+     *
+     * @param privateKey Klucz prywatny ECDSA zakodowany w formacie PKCS#8 (DER).
+     * @return Klucz prywatny w formacie PrivateKey.
+     */
     @Override
     public PrivateKey parseEcdsaPrivateKeyFromPem(byte[] privateKey) throws SystemKSeFSDKException {
         validateServiceConfiguration();
@@ -418,6 +515,14 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Odszyfrowuje i zwraca klucz prywatny ECDSA zaszyfrowany hasłem, zapisany w formacie PEM
+     * (nagłówek {@code BEGIN ENCRYPTED PRIVATE KEY}).
+     *
+     * @param pemBytes Zaszyfrowany klucz prywatny ECDSA w formacie PEM.
+     * @param password Hasło szyfrujące klucz prywatny.
+     * @return Odszyfrowany klucz prywatny.
+     */
     @Override
     public PrivateKey parseEncryptedEcdsaPrivateKeyFromPem(byte[] pemBytes, char[] password) {
         try (PEMParser parser = new PEMParser(
@@ -446,6 +551,12 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Zwraca certyfikat w formacie X509Certificate na podstawie tablicy bajtów zawierającej certyfikat (DER).
+     *
+     * @param certBytes Certyfikat X.509 w postaci zakodowanych bajtów (DER).
+     * @return Certyfikat w formacie X509Certificate.
+     */
     @Override
     public X509Certificate parseCertificateFromBytes(byte[] certBytes) throws CertificateException {
         CertificateFactory certFactory = CertificateFactory.getInstance(X_509);
@@ -453,6 +564,12 @@ public class DefaultCryptographyService implements CryptographyService {
         return (X509Certificate) certFactory.generateCertificate(inputStream);
     }
 
+    /**
+     * Zwraca certyfikat w formacie X509Certificate na podstawie certyfikatu w formacie PEM.
+     *
+     * @param pem Certyfikat X.509 w formacie PEM (tekstowym, z nagłówkami BEGIN/END CERTIFICATE).
+     * @return Certyfikat w formacie X509Certificate.
+     */
     @Override
     public X509Certificate parseCertificate(String pem) throws CertificateException {
         String cleaned = pem
@@ -468,6 +585,11 @@ public class DefaultCryptographyService implements CryptographyService {
         );
     }
 
+    /**
+     * Inicjuje (lub ponownie inicjuje) serwis kryptograficzny, pobierając z API KSeF aktualne
+     * certyfikaty publiczne używane do szyfrowania klucza symetrycznego oraz tokenu KSeF.
+     * W razie niepowodzenia serwis przechodzi w tryb {@code OFFLINE} (patrz {@link #getKsefIntegrationMode()}).
+     */
     @Override
     public void initCryptographyService() {
         try {
@@ -503,31 +625,51 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
-    // Certyfikat używany do szyfrowania klucza symetrycznego w formacie PEM.
+    /**
+     * Certyfikat używany do szyfrowania klucza symetrycznego w formacie PEM.
+     *
+     * @return Certyfikat w formacie PEM albo {@code null}, jeśli serwis działa w trybie OFFLINE.
+     */
     @Override
     public String getSymmetricKeyEncryptionPem() {
         return symmetricKeyEncryptionPem;
     }
 
-    // Certyfikat używany do szyfrowania tokenu KSeF w formacie PEM.
+    /**
+     * Certyfikat używany do szyfrowania tokenu KSeF w formacie PEM.
+     *
+     * @return Certyfikat w formacie PEM albo {@code null}, jeśli serwis działa w trybie OFFLINE.
+     */
     @Override
     public String getKsefTokenPem() {
         return ksefTokenPem;
     }
 
-    // Certyfikat używany do szyfrowania klucza symetrycznego w formie PublicKeyCertificate.
+    /**
+     * Certyfikat używany do szyfrowania klucza symetrycznego w formie PublicKeyCertificate.
+     *
+     * @return Certyfikat wraz z metadanymi albo {@code null}, jeśli serwis działa w trybie OFFLINE.
+     */
     @Override
     public PublicKeyCertificate getSymmetricKeyEncryption() {
         return symmetricKeyEncryption;
     }
 
-    // Certyfikat używany do szyfrowania tokenu KSeF w formie PublicKeyCertificate.
+    /**
+     * Certyfikat używany do szyfrowania tokenu KSeF w formie PublicKeyCertificate.
+     *
+     * @return Certyfikat wraz z metadanymi albo {@code null}, jeśli serwis działa w trybie OFFLINE.
+     */
     @Override
     public PublicKeyCertificate getKsefToken() {
         return ksefToken;
     }
 
-    // Certyfikat używany do szyfrowania symetrycznego klucza AES.
+    /**
+     * Certyfikat używany do szyfrowania symetrycznego klucza AES.
+     *
+     * @return Certyfikat w formacie X509Certificate albo {@code null}, jeśli serwis działa w trybie OFFLINE.
+     */
     @Override
     public X509Certificate getSymmetricKeyCertificate() throws CertificateException {
         if (symmetricKeyEncryption == null || symmetricKeyEncryption.getCertificate() == null) {
@@ -536,7 +678,11 @@ public class DefaultCryptographyService implements CryptographyService {
         return parseCertificate(symmetricKeyEncryption.getCertificate());
     }
 
-    // Certyfikat używany do szyfrowania tokena KSeF.
+    /**
+     * Certyfikat używany do szyfrowania tokena KSeF.
+     *
+     * @return Certyfikat w formacie X509Certificate albo {@code null}, jeśli serwis działa w trybie OFFLINE.
+     */
     @Override
     public X509Certificate getKsefTokenCertificate() throws CertificateException {
         if (ksefToken == null || ksefToken.getCertificate() == null) {
@@ -545,11 +691,21 @@ public class DefaultCryptographyService implements CryptographyService {
         return parseCertificate(ksefToken.getCertificate());
     }
 
+    /**
+     * Zwraca status serwisu (w razie nieudanego pobrania certyfikatów podczas inicjowania serwisu jest ustawiony na OFFLINE).
+     *
+     * @return Aktualny tryb pracy serwisu ({@code ONLINE} albo {@code OFFLINE}).
+     */
     @Override
     public KsefIntegrationMode getKsefIntegrationMode() {
         return ksefIntegrationMode;
     }
 
+    /**
+     * Zwraca powód przejścia w tryb OFFLINE.
+     *
+     * @return Wyjątek, który spowodował przejście w tryb OFFLINE, albo {@code null}, jeśli serwis działa poprawnie.
+     */
     @Override
     public Exception getOfflineModeCause() {
         return offlineModeCause;
@@ -614,6 +770,13 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Zwraca zaszyfrowany content przy użyciu algorytmu RSA z publicznym kluczem.
+     *
+     * @param content Dane do zaszyfrowania.
+     * @return Zaszyfrowane dane (RSA).
+     * @deprecated użyj {@link #encryptUsingPublicKey(byte[])}, który sam dobiera algorytm klucza.
+     */
     @Override
     @Deprecated
     public byte[] encryptWithRSAUsingPublicKey(byte[] content) throws SystemKSeFSDKException {
@@ -623,6 +786,13 @@ public class DefaultCryptographyService implements CryptographyService {
         return encryptWithRSAUsingPublicKey(content, publicKey);
     }
 
+    /**
+     * Zwraca zaszyfrowany content przy użyciu algorytmu ECIes z publicznym kluczem.
+     *
+     * @param content Dane do zaszyfrowania.
+     * @return Zaszyfrowane dane (ECIES).
+     * @deprecated użyj {@link #encryptUsingPublicKey(byte[])}, który sam dobiera algorytm klucza.
+     */
     @Override
     @Deprecated
     public byte[] encryptWithECDsaUsingPublicKey(byte[] content) throws SystemKSeFSDKException {
@@ -665,6 +835,15 @@ public class DefaultCryptographyService implements CryptographyService {
         }
     }
 
+    /**
+     * Zwraca zaszyfrowany token KSeF (połączony ze znacznikiem czasu) przy użyciu algorytmu RSA
+     * z kluczem publicznym pobranym z API KSeF.
+     *
+     * @param ksefToken          Token KSeF do zaszyfrowania.
+     * @param challengeTimestamp Znacznik czasu challenge'u, dołączany do tokenu przed zaszyfrowaniem.
+     * @return Zaszyfrowany token KSeF (RSA).
+     * @deprecated użyj {@link #encryptKsefTokenUsingPublicKey(String, Instant)}, który sam dobiera algorytm klucza.
+     */
     @Override
     @Deprecated
     public byte[] encryptKsefTokenWithRSAUsingPublicKey(String ksefToken, Instant challengeTimestamp) throws SystemKSeFSDKException {
@@ -675,6 +854,15 @@ public class DefaultCryptographyService implements CryptographyService {
         return encryptWithRSAUsingPublicKey(tokenWithTimestamp);
     }
 
+    /**
+     * Zwraca zaszyfrowany token KSeF (połączony ze znacznikiem czasu) przy użyciu algorytmu ECIES
+     * (ECDH + AES-GCM) z kluczem publicznym pobranym z API KSeF.
+     *
+     * @param ksefToken          Token KSeF do zaszyfrowania.
+     * @param challengeTimestamp Znacznik czasu challenge'u, dołączany do tokenu przed zaszyfrowaniem.
+     * @return Zaszyfrowany token KSeF (ECIES).
+     * @deprecated użyj {@link #encryptKsefTokenUsingPublicKey(String, Instant)}, który sam dobiera algorytm klucza.
+     */
     @Override
     @Deprecated
     public byte[] encryptKsefTokenWithECDsaUsingPublicKey(String ksefToken, Instant challengeTimestamp) {

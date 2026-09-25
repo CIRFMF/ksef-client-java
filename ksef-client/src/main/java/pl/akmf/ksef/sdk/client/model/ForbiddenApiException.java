@@ -2,6 +2,12 @@ package pl.akmf.ksef.sdk.client.model;
 
 import java.net.http.HttpHeaders;
 
+/**
+ * Wyjątek zgłaszany przez klienta SDK, gdy API KSeF zwróci odpowiedź HTTP 403 (Forbidden).
+ * Przenosi szczegóły błędu jako {@link ForbiddenProblemDetails}.
+ *
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
 public class ForbiddenApiException extends ApiException {
 
     private final ForbiddenProblemDetails forbiddenProblemDetails;
@@ -37,9 +43,6 @@ public class ForbiddenApiException extends ApiException {
 
     @Override
     public String toString() {
-        return "ForbiddenApiException{" +
-                "forbiddenProblemDetails=" + forbiddenProblemDetails +
-                ", " + super.toString() +
-                '}';
+        return "ForbiddenApiException{" + "forbiddenProblemDetails=" + forbiddenProblemDetails + ", " + super.toString() + '}';
     }
 }

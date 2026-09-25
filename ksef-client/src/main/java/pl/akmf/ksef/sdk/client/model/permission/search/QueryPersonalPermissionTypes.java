@@ -3,7 +3,26 @@ package pl.akmf.ksef.sdk.client.model.permission.search;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum QueryPersonalPermissionTypes { // PersonalPermission/PersonalPermissionScopeType
+/**
+ * QueryPersonalPermissionTypes.
+ * Dozwolone wartości (zgodnie ze specyfikacją OpenAPI KSeF API 2.0):
+ * <ul>
+ *   <li>{@code CredentialsManage}</li>
+ *   <li>{@code CredentialsRead}</li>
+ *   <li>{@code InvoiceWrite}</li>
+ *   <li>{@code InvoiceRead}</li>
+ *   <li>{@code Introspection}</li>
+ *   <li>{@code SubunitManage}</li>
+ *   <li>{@code EnforcementOperations}</li>
+ *   <li>{@code VatUeManage}</li>
+ *   <li>{@code CollectiveIdentifierManage}</li>
+ * </ul>
+ *
+ * Odpowiednik w specyfikacji OpenAPI KSeF API 2.0: {@code PersonalPermissionType, PersonalPermissionScope}.
+ * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
+ */
+public enum // PersonalPermission/PersonalPermissionScopeType
+QueryPersonalPermissionTypes {
 
     CREDENTIAL_MANAGE("CredentialsManage"),
     CREDENTIAL_READ("CredentialsRead"),

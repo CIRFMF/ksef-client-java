@@ -4,7 +4,7 @@ plugins {
 }
 
 
-val appVersion = "3.0.28"
+val appVersion = "3.0.29"
 val artifactName = "ksef-client"
 
 val githubRepositoryToken = "token"
@@ -89,6 +89,14 @@ tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
 }
 
+tasks.withType<Test>().configureEach {
+    systemProperty("file.encoding", "UTF-8")
+}
+
+tasks.withType<Javadoc>().configureEach {
+    (options as StandardJavadocDocletOptions)
+        .addStringOption("Xdoclint:none", "-quiet")
+}
 
 sourceSets["main"].java.srcDir("${buildDir}/generated/src/main/java")
 
