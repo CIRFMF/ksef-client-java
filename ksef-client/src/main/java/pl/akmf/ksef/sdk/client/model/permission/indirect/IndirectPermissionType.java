@@ -8,13 +8,14 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * <ul>
  *   <li>{@code InvoiceRead}</li>
  *   <li>{@code InvoiceWrite}</li>
+ *   <li>{@code CollectiveIdentifierManage}</li>
  * </ul>
  *
  * @see <a href="https://api.ksef.mf.gov.pl/docs/v2/openapi.json">Specyfikacja OpenAPI KSeF API 2.0</a>
  */
 public enum IndirectPermissionType {
 
-    INVOICE_WRITE("InvoiceWrite"), INVOICE_READ("InvoiceRead");
+    INVOICE_WRITE("InvoiceWrite"), INVOICE_READ("InvoiceRead"), COLLECTIVE_IDENTIFIER_MANAGE("CollectiveIdentifierManage");
 
     private final String value;
 

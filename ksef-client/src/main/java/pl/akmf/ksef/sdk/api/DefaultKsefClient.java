@@ -5,6 +5,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pl.akmf.ksef.sdk.client.interfaces.KSeFClient;
 import pl.akmf.ksef.sdk.client.model.ApiException;
 import pl.akmf.ksef.sdk.client.model.ApiResponse;
@@ -110,11 +112,14 @@ import pl.akmf.ksef.sdk.system.circuitbreaker.KsefCircuitBreakerHandler;
 import pl.akmf.ksef.sdk.system.circuitbreaker.KsefCircuitBreakerOptions;
 import pl.akmf.ksef.sdk.system.circuitbreaker.KsefCircuitBreakerProperties;
 import pl.akmf.ksef.sdk.system.headerobservation.ResponseHeaderCaptureHandler;
+import pl.akmf.ksef.sdk.system.headerobservation.ResponseHeaderObservationOptions;
 import pl.akmf.ksef.sdk.system.headerobservation.ResponseHeaderObservationProperties;
+import pl.akmf.ksef.sdk.system.headerobservation.ResponseHeaderObserver;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
@@ -263,7 +268,10 @@ public class DefaultKsefClient implements KSeFClient {
     private final Map<String, String> defaultHeaders;
     private final ExceptionHandler exceptionHandler;
     private final KsefCircuitBreakerHandler circuitBreakerHandler;
-    private ResponseHeaderCaptureHandler responseHeaderCaptureHandler = null;
+    // volatile + dedykowany lock: handler może być tworzony leniwie z dowolnego wątku (getResponseHeaderCaptureHandler),
+    // a odczytywany równolegle w wątkach HttpClient (sendHttpRequest)
+    private volatile ResponseHeaderCaptureHandler responseHeaderCaptureHandler = null;
+    private final Object responseHeaderCaptureHandlerLock = new Object();
 
     public DefaultKsefClient(HttpClient apiClient,
                              KsefApiProperties ksefApiProperties,
@@ -305,23 +313,61 @@ public class DefaultKsefClient implements KSeFClient {
                              KsefCircuitBreakerProperties circuitBreakerProperties,
                              ResponseHeaderObservationProperties responseHeaderObservationProperties,
                              ObjectMapper objectMapper) {
+        this(apiClient, ksefApiProperties, circuitBreakerProperties, responseHeaderObservationProperties, null, objectMapper);
+    }
+
+    /**
+     * Konstruktor z observerem nagłówków odpowiedzi (patrz {@link ResponseHeaderObserver}).
+     * Observer jest wołany w wątku wywołującym metodę klienta, po każdej odpowiedzi zawierającej
+     * zasubskrybowany nagłówek (nazwy z {@code responseHeaderObservationProperties}, domyślnie {@code X-System-Warning}).
+     * <p>
+     * Właściwość {@code enabled} z {@code responseHeaderObservationProperties} dotyczy bufora
+     * ({@code getAndClear()}); przy {@code enabled = false} observer przekazany tym konstruktorem działa
+     * mimo to, a bufor pozostaje wyłączony.
+     *
+     * @param observer opcjonalny observer ({@code null} = brak, zachowanie jak w konstruktorze bez observera)
+     */
+    public DefaultKsefClient(HttpClient apiClient,
+                             KsefApiProperties ksefApiProperties,
+                             KsefCircuitBreakerProperties circuitBreakerProperties,
+                             ResponseHeaderObservationProperties responseHeaderObservationProperties,
+                             ResponseHeaderObserver observer,
+                             ObjectMapper objectMapper) {
         this(apiClient, ksefApiProperties, circuitBreakerProperties, objectMapper);
-        if (responseHeaderObservationProperties != null
-                && responseHeaderObservationProperties.getResponseHeaderObservationOptions() != null
-                && responseHeaderObservationProperties.getResponseHeaderObservationOptions().isEnabled()) {
-            this.responseHeaderCaptureHandler = new ResponseHeaderCaptureHandler();
-            responseHeaderObservationProperties.getResponseHeaderObservationOptions()
-                    .getHeaderNames().forEach(h -> this.responseHeaderCaptureHandler.subscribe(h));
+        ResponseHeaderObservationOptions options = responseHeaderObservationProperties != null
+                ? responseHeaderObservationProperties.getResponseHeaderObservationOptions()
+                : null;
+        boolean bufferEnabled = options != null && options.isEnabled();
+        // handler tworzymy, gdy włączony jest bufor albo przekazano observera
+        if (bufferEnabled || observer != null) {
+            ResponseHeaderObservationOptions effective = options != null ? options : new ResponseHeaderObservationOptions();
+            // handler w pełni skonfigurowany (subskrypcje, observer) przed opublikowaniem w polu volatile
+            ResponseHeaderCaptureHandler handler = new ResponseHeaderCaptureHandler(effective.getMaxCapturedEntries());
+            if (effective.getHeaderNames() != null) {
+                effective.getHeaderNames().forEach(handler::subscribe);
+            }
+            handler.setBufferingEnabled(bufferEnabled);
+            if (observer != null) {
+                handler.addObserver(observer);
+            }
+            this.responseHeaderCaptureHandler = handler;
         }
     }
 
     @Override
     public ResponseHeaderCaptureHandler getResponseHeaderCaptureHandler() {
-        if (this.responseHeaderCaptureHandler == null) {
-            // mimo wyłączonego w property handlera możemy w runtime go utworzyć wywołując tą metodę, pozostanie zasubskrybować się na nagłówek
-            this.responseHeaderCaptureHandler = new ResponseHeaderCaptureHandler();
+        ResponseHeaderCaptureHandler handler = this.responseHeaderCaptureHandler;
+        if (handler == null) {
+            synchronized (responseHeaderCaptureHandlerLock) {
+                handler = this.responseHeaderCaptureHandler;
+                if (handler == null) {
+                    // mimo wyłączonego w property handlera możemy w runtime go utworzyć wywołując tą metodę, pozostanie zasubskrybować się na nagłówek
+                    handler = new ResponseHeaderCaptureHandler();
+                    this.responseHeaderCaptureHandler = handler;
+                }
+            }
         }
-        return this.responseHeaderCaptureHandler;
+        return handler;
     }
 
     /**
@@ -356,7 +402,7 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * Nadanie podmiotom uprawnień o charakterze upoważnień
+     * Nadanie uprawnień podmiotowych
      * <p>
      * Metoda pozwala na nadanie jednego z uprawnień podmiotowych do obsługi podmiotu kontekstu  podmiotowi wskazanemu w żądaniu.
      * <p>
@@ -367,6 +413,8 @@ public class DefaultKsefClient implements KSeFClient {
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
      *
      * <b>Wymagane uprawnienie</b>: {@code CredentialsManage}.
+     * <p>
+     * Endpoint: POST /permissions/authorizations/grants
      *
      * @param entityAuthorizationPermissionsGrantRequest Treść żądania — patrz opis pól klasy {@link GrantAuthorizationPermissionsRequest}.
      * @param accessToken                                Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
@@ -388,11 +436,11 @@ public class DefaultKsefClient implements KSeFClient {
     /**
      * Nadanie uprawnień w sposób pośredni
      * <p>
-     * Metoda pozwala na nadanie w sposób pośredni osobie wskazanej w żądaniu uprawnień do obsługi faktur innego podmiotu – klienta. Może to być jedna z możliwości: - nadanie uprawnień generalnych – do obsługi wszystkich klientów - nadanie uprawnień selektywnych – do obsługi wskazanego klienta
+     * Metoda pozwala na nadanie w sposób pośredni osobie wskazanej w żądaniu uprawnień do obsługi faktur innego podmiotu – klienta. Może to być jedna z możliwości: nadanie uprawnień generalnych – do obsługi wszystkich klientów nadanie uprawnień selektywnych – do obsługi wskazanego klienta
      * <p>
      * Uprawnienie selektywne może być nadane wyłącznie wtedy, gdy klient nadał wcześniej podmiotowi bieżącego kontekstu dowolne uprawnienie z prawem do jego dalszego przekazywania (patrz [POST /v2/permissions/entities/grants](/docs/v2/index.html#tag/Nadawanie-uprawnien/paths/~1permissions~1entities~1grants/post)).
      * <p>
-     * W żądaniu określane są nadawane uprawnienia ze zbioru: - <b>InvoiceWrite</b> – wystawianie faktur - <b>InvoiceRead</b> – przeglądanie faktur
+     * W żądaniu określane są nadawane uprawnienia ze zbioru: <b>InvoiceWrite</b> – wystawianie faktur <b>InvoiceRead</b> – przeglądanie faktur
      * <p>
      * Metoda pozwala na wybór dowolnej kombinacji powyższych uprawnień.
      * <p>
@@ -403,6 +451,8 @@ public class DefaultKsefClient implements KSeFClient {
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
      *
      * <b>Wymagane uprawnienie</b>: {@code CredentialsManage}.
+     * <p>
+     * Endpoint: POST /permissions/indirect/grants
      *
      * @param grantIndirectEntityPermissionsRequest Treść żądania — patrz opis pól klasy {@link GrantIndirectEntityPermissionsRequest}.
      * @param accessToken                           Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
@@ -523,13 +573,16 @@ public class DefaultKsefClient implements KSeFClient {
 
     /**
      * Zamknięcie sesji wsadowej
+     * <p>
      * Zamyka sesję wsadową, rozpoczyna procesowanie paczki faktur i generowanie UPO dla prawidłowych faktur oraz zbiorczego UPO dla sesji.
+     *
+     * <b>Headers:</b>
      * <p>
-     * **Headers:**
+     * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
+     *
+     * <b>Wymagane jedno z uprawnień</b>: {@code InvoiceWrite}, {@code EnforcementOperations}.
      * <p>
-     * `X-Error-Format: problem-details` - ustawienie tego nagłówka powoduje zwracanie błędów w formacie **Problem Details** (`application/problem+json`).
-     * <p>
-     * **Wymagane jedno z uprawnień**: `InvoiceWrite`, `EnforcementOperations`.
+     * Endpoint: POST /sessions/batch/{referenceNumber}/close
      *
      * @param referenceNumber Numer referencyjny sesji (required)
      * @param accessToken     Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
@@ -1010,13 +1063,15 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * Inicjalizacja mechanizmu uwierzytelnienia i autoryzacji
+     * Inicjalizacja uwierzytelnienia
      * <p>
      * Generuje unikalny challenge wymagany w kolejnym kroku operacji uwierzytelnienia.
      *
      * <b>Headers:</b>
      * <p>
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
+     * <p>
+     * Endpoint: POST /auth/challenge
      *
      * @return AuthenticationChallengeResponse
      */
@@ -1171,7 +1226,7 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * Odświeżenie tokena autoryzacyjnego
+     * Odświeżenie tokena dostępowego
      * <p>
      * Generuje nowy token dostępu na podstawie ważnego refresh tokena.
      * <p>
@@ -1180,6 +1235,8 @@ public class DefaultKsefClient implements KSeFClient {
      * <b>Headers:</b>
      * <p>
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
+     * <p>
+     * Endpoint: POST /auth/token/refresh
      *
      * @param refreshToken Token odświeżający (refresh token), przekazywany w nagłówku Authorization jako Bearer, służący do uzyskania nowego tokena dostępowego.
      * @return AuthenticationTokenRefreshResponse
@@ -1227,19 +1284,19 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * Pobranie listy uprawnień do pracy w KSeF nadanych osobom fizycznym
+     * Pobranie listy uprawnień do pracy w KSeF nadanych osobom fizycznym lub podmiotom
      * <p>
-     * Metoda pozwala na odczytanie uprawnień nadanych osobie fizycznej lub podmiotowi. Lista pobranych uprawnień może być dwóch rodzajów: - Lista wszystkich uprawnień obowiązujących w bieżącym kontekście logowania (używana, gdy administrator chce przejrzeć uprawnienia wszystkich użytkowników w bieżącym kontekście) - Lista wszystkich uprawnień nadanych w bieżącym kontekście przez uwierzytelnionego klienta API (używana, gdy administrator chce przejrzeć listę nadanych przez siebie uprawnień w bieżącym kontekście)
+     * Metoda pozwala na odczytanie uprawnień nadanych osobie fizycznej lub podmiotowi. Lista pobranych uprawnień może być dwóch rodzajów: Lista wszystkich uprawnień obowiązujących w bieżącym kontekście logowania (używana, gdy administrator chce przejrzeć uprawnienia wszystkich użytkowników w bieżącym kontekście) Lista wszystkich uprawnień nadanych w bieżącym kontekście przez uwierzytelnionego klienta API (używana, gdy administrator chce przejrzeć listę nadanych przez siebie uprawnień w bieżącym kontekście)
      * <p>
-     * Dla pierwszej listy (obowiązujących uprawnień) w odpowiedzi przekazywane są: - osoby i podmioty mogące pracować w bieżącym kontekście z wyjątkiem osób uprawnionych w sposób pośredni - osoby uprawnione w sposób pośredni przez podmiot bieżącego kontekstu
+     * Dla pierwszej listy (obowiązujących uprawnień) w odpowiedzi przekazywane są: osoby i podmioty mogące pracować w bieżącym kontekście z wyjątkiem osób uprawnionych w sposób pośredni osoby uprawnione w sposób pośredni przez podmiot bieżącego kontekstu
      * <p>
-     * Dla drugiej listy (nadanych uprawnień) w odpowiedzi przekazywane są: - uprawnienia nadane w sposób bezpośredni do pracy w bieżącym kontekście lub w kontekście jednostek podrzędnych - uprawnienia nadane w sposób pośredni do obsługi klientów podmiotu bieżącego kontekstu
+     * Dla drugiej listy (nadanych uprawnień) w odpowiedzi przekazywane są: uprawnienia nadane w sposób bezpośredni do pracy w bieżącym kontekście lub w kontekście jednostek podrzędnych uprawnienia nadane w sposób pośredni do obsługi klientów podmiotu bieżącego kontekstu
      * <p>
-     * Uprawnienia zwracane przez operację obejmują: - <b>CredentialsManage</b> – zarządzanie uprawnieniami - <b>CredentialsRead</b> – przeglądanie uprawnień - <b>InvoiceWrite</b> – wystawianie faktur - <b>InvoiceRead</b> – przeglądanie faktur - <b>Introspection</b> – przeglądanie historii sesji - <b>SubunitManage</b> – zarządzanie podmiotami podrzędnymi - <b>EnforcementOperations</b> – wykonywanie operacji egzekucyjnych - <b>CollectiveIdentifierManage</b> – zarządzanie identyfikatorami zbiorczymi
+     * Uprawnienia zwracane przez operację obejmują: <b>CredentialsManage</b> – zarządzanie uprawnieniami <b>CredentialsRead</b> – przeglądanie uprawnień <b>InvoiceWrite</b> – wystawianie faktur <b>InvoiceRead</b> – przeglądanie faktur <b>Introspection</b> – przeglądanie historii sesji <b>SubunitManage</b> – zarządzanie podmiotami podrzędnymi <b>EnforcementOperations</b> – wykonywanie operacji egzekucyjnych <b>CollectiveIdentifierManage</b> – zarządzanie identyfikatorami zbiorczymi
      * <p>
-     * Odpowiedź może być filtrowana na podstawie parametrów: - <b>authorIdentifier</b> – identyfikator osoby, która nadała uprawnienie - <b>authorizedIdentifier</b> – identyfikator osoby lub podmiotu uprawnionego - <b>targetIdentifier</b> – identyfikator podmiotu docelowego dla uprawnień nadanych pośrednio - <b>permissionTypes</b> – lista rodzajów wyszukiwanych uprawnień - <b>permissionState</b> – status uprawnienia - <b>queryType</b> – typ zapytania określający, która z dwóch list ma zostać zwrócona
+     * Odpowiedź może być filtrowana na podstawie parametrów: <b>authorIdentifier</b> – identyfikator osoby, która nadała uprawnienie <b>authorizedIdentifier</b> – identyfikator osoby lub podmiotu uprawnionego <b>targetIdentifier</b> – identyfikator podmiotu docelowego dla uprawnień nadanych pośrednio <b>permissionTypes</b> – lista rodzajów wyszukiwanych uprawnień <b>permissionState</b> – status uprawnienia <b>queryType</b> – typ zapytania określający, która z dwóch list ma zostać zwrócona
      * <p>
-     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. - Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. - Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. - W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
+     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
      * <p>
      * Więcej informacji: <a href="https://github.com/CIRFMF/ksef-api/blob/main/uprawnienia.md#pobranie-listy-uprawnie%C5%84-do-pracy-w-ksef-nadanych-osobom-fizycznym-lub-podmiotom">Pobieranie listy uprawnień</a>
      *
@@ -1249,9 +1306,11 @@ public class DefaultKsefClient implements KSeFClient {
      *
      * <b>Sortowanie:</b>
      * <p>
-     * - startDate (Desc) - id (Asc)
+     * startDate (Desc) id (Asc)
      *
      * <b>Wymagane jedno z uprawnień</b>: {@code CredentialsManage}, {@code CredentialsRead}, {@code SubunitManage}.
+     * <p>
+     * Endpoint: POST /permissions/query/persons/grants
      *
      * @param personPermissionsQueryRequest Treść żądania — patrz opis pól klasy {@link PersonPermissionsQueryRequest}.
      * @param pageOffset                    Numer strony wyników.
@@ -1278,15 +1337,15 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * Pobranie listy uprawnień administratora podmiotu podrzędnego
+     * Pobranie listy uprawnień administratorów jednostek i podmiotów podrzędnych
      * <p>
-     * Metoda pozwala na odczytanie uprawnień do zarządzania uprawnieniami nadanych administratorom: - jednostek podrzędnych identyfikowanych identyfikatorem wewnętrznym - podmiotów podrzędnych (podrzędnych JST lub członków grupy VAT) identyfikowanych przez NIP
+     * Metoda pozwala na odczytanie uprawnień do zarządzania uprawnieniami nadanych administratorom: jednostek podrzędnych identyfikowanych identyfikatorem wewnętrznym podmiotów podrzędnych (podrzędnych JST lub członków grupy VAT) identyfikowanych przez NIP
      * <p>
      * Lista zwraca wyłącznie uprawnienia do zarządzania uprawnieniami nadane z kontekstu bieżącego (z podmiotu nadrzędnego). Nie są odczytywane uprawnienia nadane przez administratorów jednostek podrzędnych wewnątrz tych jednostek.
      * <p>
-     * Odpowiedź może być filtrowana na podstawie parametru: - <b>subunitIdentifier</b> – identyfikator jednostki lub podmiotu podrzędnego
+     * Odpowiedź może być filtrowana na podstawie parametru: <b>subunitIdentifier</b> – identyfikator jednostki lub podmiotu podrzędnego
      * <p>
-     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. - Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. - Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. - W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
+     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
      * <p>
      * Więcej informacji: <a href="https://github.com/CIRFMF/ksef-api/blob/main/uprawnienia.md#pobranie-listy-uprawnie%C5%84-administrator%C3%B3w-jednostek-i-podmiot%C3%B3w-podrz%C4%99dnych">Pobieranie listy uprawnień</a>
      *
@@ -1296,9 +1355,11 @@ public class DefaultKsefClient implements KSeFClient {
      *
      * <b>Sortowanie:</b>
      * <p>
-     * - startDate (Desc) - id (Asc)
+     * startDate (Desc) id (Asc)
      *
      * <b>Wymagane jedno z uprawnień</b>: {@code CredentialsManage}, {@code CredentialsRead}, {@code SubunitManage}.
+     * <p>
+     * Endpoint: POST /permissions/query/subunits/grants
      *
      * @param subunitPermissionsQueryRequest Treść żądania — patrz opis pól klasy {@link SubunitPermissionsQueryRequest}.
      * @param pageOffset                     Numer strony wyników.
@@ -1325,17 +1386,17 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * Zwraca listę uprawnień przysługujących uwierzytelnionemu podmiotowi.
+     * Pobranie listy własnych uprawnień
      * <p>
      * Metoda pozwala na odczytanie własnych uprawnień uwierzytelnionego klienta API w bieżącym kontekście logowania.
      * <p>
-     * W odpowiedzi przekazywane są następujące uprawnienia: - nadane w sposób bezpośredni w bieżącym kontekście - nadane przez podmiot nadrzędny - nadane w sposób pośredni, jeżeli podmiot kontekstu logowania jest w uprawnieniu pośrednikiem lub podmiotem docelowym - nadane podmiotowi do obsługi faktur przez inny podmiot, jeśli podmiot uwierzytelniony ma w bieżącym kontekście uprawnienia właścicielskie
+     * W odpowiedzi przekazywane są następujące uprawnienia: nadane w sposób bezpośredni w bieżącym kontekście nadane przez podmiot nadrzędny nadane w sposób pośredni, jeżeli podmiot kontekstu logowania jest w uprawnieniu pośrednikiem lub podmiotem docelowym nadane podmiotowi do obsługi faktur przez inny podmiot, jeśli podmiot uwierzytelniony ma w bieżącym kontekście uprawnienia właścicielskie
      * <p>
-     * Uprawnienia zwracane przez operację obejmują: - <b>CredentialsManage</b> – zarządzanie uprawnieniami - <b>CredentialsRead</b> – przeglądanie uprawnień - <b>InvoiceWrite</b> – wystawianie faktur - <b>InvoiceRead</b> – przeglądanie faktur - <b>Introspection</b> – przeglądanie historii sesji - <b>SubunitManage</b> – zarządzanie podmiotami podrzędnymi - <b>EnforcementOperations</b> – wykonywanie operacji egzekucyjnych - <b>VatEuManage</b> – zarządzanie uprawnieniami w ramach podmiotu unijnego - <b>CollectiveIdentifierManage</b> – zarządzanie identyfikatorami zbiorczymi
+     * Uprawnienia zwracane przez operację obejmują: <b>CredentialsManage</b> – zarządzanie uprawnieniami <b>CredentialsRead</b> – przeglądanie uprawnień <b>InvoiceWrite</b> – wystawianie faktur <b>InvoiceRead</b> – przeglądanie faktur <b>Introspection</b> – przeglądanie historii sesji <b>SubunitManage</b> – zarządzanie podmiotami podrzędnymi <b>EnforcementOperations</b> – wykonywanie operacji egzekucyjnych <b>VatEuManage</b> – zarządzanie uprawnieniami w ramach podmiotu unijnego <b>CollectiveIdentifierManage</b> – zarządzanie identyfikatorami zbiorczymi
      * <p>
-     * Odpowiedź może być filtrowana na podstawie następujących parametrów: - <b>contextIdentifier</b> – identyfikator podmiotu, który nadał uprawnienie do obsługi faktur - <b>targetIdentifier</b> – identyfikator podmiotu docelowego dla uprawnień nadanych pośrednio - <b>permissionTypes</b> – lista rodzajów wyszukiwanych uprawnień - <b>permissionState</b> – status uprawnienia
+     * Odpowiedź może być filtrowana na podstawie następujących parametrów: <b>contextIdentifier</b> – identyfikator podmiotu, który nadał uprawnienie do obsługi faktur <b>targetIdentifier</b> – identyfikator podmiotu docelowego dla uprawnień nadanych pośrednio <b>permissionTypes</b> – lista rodzajów wyszukiwanych uprawnień <b>permissionState</b> – status uprawnienia
      * <p>
-     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. - Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. - Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. - W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
+     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
      * <p>
      * Więcej informacji: <a href="https://github.com/CIRFMF/ksef-api/blob/main/uprawnienia.md#pobranie-listy-w%C5%82asnych-uprawnie%C5%84">Pobieranie listy uprawnień</a>
      *
@@ -1345,7 +1406,9 @@ public class DefaultKsefClient implements KSeFClient {
      *
      * <b>Sortowanie:</b>
      * <p>
-     * - startDate (Desc) - id (Asc)
+     * startDate (Desc) id (Asc)
+     * <p>
+     * Endpoint: POST /permissions/query/personal/grants
      *
      * @param request     Treść żądania — patrz opis pól klasy {@link QueryPersonalGrantRequest}.
      * @param pageOffset  - Index strony wyników (domyślnie 0)
@@ -1371,13 +1434,13 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * Pobranie listy uprawnień do obsługi faktur nadanych podmiotom
+     * Pobranie listy ról podmiotu
      * <p>
      * Metoda pozwala na <b>odczytanie listy ról podmiotu bieżącego kontekstu logowania</b>.
      * <p>
-     * #### Role podmiotów zwracane przez operację: - <b>CourtBailiff</b> – komornik sądowy - <b>EnforcementAuthority</b> – organ egzekucyjny - <b>LocalGovernmentUnit</b> – nadrzędna JST - <b>LocalGovernmentSubUnit</b> – podrzędne JST - <b>VatGroupUnit</b> – grupa VAT - <b>VatGroupSubUnit</b> – członek grupy VAT
+     * #### Role podmiotów zwracane przez operację: <b>CourtBailiff</b> – komornik sądowy <b>EnforcementAuthority</b> – organ egzekucyjny <b>LocalGovernmentUnit</b> – nadrzędna JST <b>LocalGovernmentSubUnit</b> – podrzędne JST <b>VatGroupUnit</b> – grupa VAT <b>VatGroupSubUnit</b> – członek grupy VAT
      * <p>
-     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. - Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. - Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. - W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
+     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
      * <p>
      * Więcej informacji: <a href="https://github.com/CIRFMF/ksef-api/blob/main/uprawnienia.md#pobranie-listy-r%C3%B3l-podmiotu">Pobieranie listy ról</a>
      *
@@ -1387,9 +1450,11 @@ public class DefaultKsefClient implements KSeFClient {
      *
      * <b>Sortowanie:</b>
      * <p>
-     * - startDate (Desc) - id (Asc)
+     * startDate (Desc) id (Asc)
      *
      * <b>Wymagane jedno z uprawnień</b>: {@code CredentialsManage}, {@code CredentialsRead}.
+     * <p>
+     * Endpoint: GET /permissions/query/entities/roles
      *
      * @param pageOffset  Numer strony wyników.
      * @param pageSize    Rozmiar strony wyników.
@@ -1413,17 +1478,17 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * Wyszukiwanie uprawnień do obsługi faktur w bieżącym kontekście.
+     * Pobranie listy uprawnień do obsługi faktur w bieżącym kontekście
      * <p>
      * Metoda pozwala na odczytanie otrzymanych uprawnień do obsługi faktur w bieżącym kontekście logowania.
      * <p>
-     * W odpowiedzi przekazywane są następujące uprawnienia: - nadane podmiotowi do obsługi faktur przez inny podmiot
+     * W odpowiedzi przekazywane są następujące uprawnienia: nadane podmiotowi do obsługi faktur przez inny podmiot
      * <p>
-     * Uprawnienia zwracane przez operację obejmują: - <b>InvoiceWrite</b> – wystawianie faktur - <b>InvoiceRead</b> – przeglądanie faktur
+     * Uprawnienia zwracane przez operację obejmują: <b>InvoiceWrite</b> – wystawianie faktur <b>InvoiceRead</b> – przeglądanie faktur
      * <p>
-     * Odpowiedź może być filtrowana na podstawie następujących parametrów: - <b>contextIdentifier</b> – identyfikator podmiotu, który nadał uprawnienie do obsługi faktur
+     * Odpowiedź może być filtrowana na podstawie następujących parametrów: <b>contextIdentifier</b> – identyfikator podmiotu, który nadał uprawnienie do obsługi faktur
      * <p>
-     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. - Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. - Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. - W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
+     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
      * <p>
      * Więcej informacji: <a href="https://github.com/CIRFMF/ksef-api/blob/main/uprawnienia.md#pobranie-listy-uprawnie%C5%84-do-obs%C5%82ugi-faktur-w-bie%C5%BC%C4%85cym-kontek%C5%9Bcie">Pobieranie listy uprawnień</a>
      *
@@ -1433,9 +1498,11 @@ public class DefaultKsefClient implements KSeFClient {
      *
      * <b>Sortowanie:</b>
      * <p>
-     * - startDate (Desc) - id (Asc)
+     * startDate (Desc) id (Asc)
      *
      * <b>Wymagane jedno z uprawnień</b>: {@code CredentialsManage}, {@code CredentialsRead}.
+     * <p>
+     * Endpoint: POST /permissions/query/entities/grants
      *
      * @param request     Treść żądania — patrz opis pól klasy {@link EntityPermissionsQueryRequest}.
      * @param pageOffset  Numer strony wyników.
@@ -1461,15 +1528,15 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * Pobranie listy uprawnień do obsługi faktur nadanych podmiotom
+     * Pobranie listy podmiotów podrzędnych
      * <p>
-     * Metoda pozwala na odczytanie listy podmiotów podrzędnych, jeżeli podmiot bieżącego kontekstu ma rolę podmiotu nadrzędnego: - <b>nadrzędna JST</b> – odczytywane są podrzędne JST, - <b>grupa VAT</b> – odczytywane są podmioty będące członkami grupy VAT.
+     * Metoda pozwala na odczytanie listy podmiotów podrzędnych, jeżeli podmiot bieżącego kontekstu ma rolę podmiotu nadrzędnego: <b>nadrzędna JST</b> – odczytywane są podrzędne JST, <b>grupa VAT</b> – odczytywane są podmioty będące członkami grupy VAT.
      * <p>
-     * Role podmiotów zwracane przez operację obejmują: - <b>LocalGovernmentSubUnit</b> – podrzędne JST, - <b>VatGroupSubUnit</b> – członek grupy VAT.
+     * Role podmiotów zwracane przez operację obejmują: <b>LocalGovernmentSubUnit</b> – podrzędne JST, <b>VatGroupSubUnit</b> – członek grupy VAT.
      * <p>
-     * Odpowiedź może być filtrowana według parametru: - <b>subordinateEntityIdentifier</b> – identyfikator podmiotu podrzędnego.
+     * Odpowiedź może być filtrowana według parametru: <b>subordinateEntityIdentifier</b> – identyfikator podmiotu podrzędnego.
      * <p>
-     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. - Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. - Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. - W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
+     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
      * <p>
      * Więcej informacji: <a href="https://github.com/CIRFMF/ksef-api/blob/main/uprawnienia.md#pobranie-listy-podmiot%C3%B3w-podrz%C4%99dnych">Pobieranie listy podmiotów podrzędnych</a>
      *
@@ -1479,9 +1546,11 @@ public class DefaultKsefClient implements KSeFClient {
      *
      * <b>Sortowanie:</b>
      * <p>
-     * - startDate (Desc) - id (Asc)
+     * startDate (Desc) id (Asc)
      *
      * <b>Wymagane jedno z uprawnień</b>: {@code CredentialsManage}, {@code CredentialsRead}, {@code SubunitManage}.
+     * <p>
+     * Endpoint: POST /permissions/query/subordinate-entities/roles
      *
      * @param subordinateEntityRolesQueryRequest Treść żądania — patrz opis pól klasy {@link SubordinateEntityRolesQueryRequest}.
      * @param pageOffset                         Numer strony wyników.
@@ -1508,17 +1577,17 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * Pobranie listy uprawnień o charakterze uprawnień nadanych podmiotom
+     * Pobranie listy uprawnień podmiotowych do obsługi faktur
      * <p>
-     * Metoda pozwala na odczytanie uprawnień podmiotowych: - otrzymanych przez podmiot bieżącego kontekstu - nadanych przez podmiot bieżącego kontekstu
+     * Metoda pozwala na odczytanie uprawnień podmiotowych: otrzymanych przez podmiot bieżącego kontekstu nadanych przez podmiot bieżącego kontekstu
      * <p>
      * Wybór listy nadanych lub otrzymanych uprawnień odbywa się przy użyciu parametru <b>queryType</b>.
      * <p>
-     * Uprawnienia zwracane przez operację obejmują: - <b>SelfInvoicing</b> – wystawianie faktur w trybie samofakturowania - <b>TaxRepresentative</b> – wykonywanie operacji przedstawiciela podatkowego - <b>RRInvoicing</b> – wystawianie faktur VAT RR - <b>PefInvoicing</b> – wystawianie faktur PEF
+     * Uprawnienia zwracane przez operację obejmują: <b>SelfInvoicing</b> – wystawianie faktur w trybie samofakturowania <b>TaxRepresentative</b> – wykonywanie operacji przedstawiciela podatkowego <b>RRInvoicing</b> – wystawianie faktur VAT RR <b>PefInvoicing</b> – wystawianie faktur PEF
      * <p>
-     * Odpowiedź może być filtrowana na podstawie następujących parametrów: - <b>authorizingIdentifier</b> – identyfikator podmiotu uprawniającego (stosowane przy queryType = Received) - <b>authorizedIdentifier</b> – identyfikator podmiotu uprawnionego (stosowane przy queryType = Granted) - <b>permissionTypes</b> – lista rodzajów wyszukiwanych uprawnień
+     * Odpowiedź może być filtrowana na podstawie następujących parametrów: <b>authorizingIdentifier</b> – identyfikator podmiotu uprawniającego (stosowane przy queryType = Received) <b>authorizedIdentifier</b> – identyfikator podmiotu uprawnionego (stosowane przy queryType = Granted) <b>permissionTypes</b> – lista rodzajów wyszukiwanych uprawnień
      * <p>
-     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. - Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. - Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. - W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
+     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
      * <p>
      * Więcej informacji: <a href="https://github.com/CIRFMF/ksef-api/blob/main/uprawnienia.md#pobranie-listy-uprawnie%C5%84-podmiotowych-do-obs%C5%82ugi-faktur">Pobieranie listy uprawnień</a>
      *
@@ -1528,9 +1597,11 @@ public class DefaultKsefClient implements KSeFClient {
      *
      * <b>Sortowanie:</b>
      * <p>
-     * - startDate (Desc) - id (Asc)
+     * startDate (Desc) id (Asc)
      *
      * <b>Wymagane jedno z uprawnień</b>: {@code CredentialsManage}, {@code CredentialsRead}, {@code PefInvoiceWrite}.
+     * <p>
+     * Endpoint: POST /permissions/query/authorizations/grants
      *
      * @param entityAuthorizationPermissionsQueryRequest Treść żądania — patrz opis pól klasy {@link EntityAuthorizationPermissionsQueryRequest}.
      * @param pageOffset                                 Numer strony wyników.
@@ -1557,15 +1628,15 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * Pobranie listy uprawnień nadanych podmiotom unijnym
+     * Pobranie listy uprawnień administratorów lub reprezentantów podmiotów unijnych uprawnionych do samofakturowania
      * <p>
-     * Metoda pozwala na odczytanie uprawnień administratorów lub reprezentantów podmiotów unijnych: - Jeżeli kontekstem logowania jest NIP, możliwe jest odczytanie uprawnień administratorów podmiotów unijnych powiązanych z podmiotem bieżącego kontekstu, czyli takich, dla których pierwszy człon kontekstu złożonego jest równy NIP-owi kontekstu logowania. - Jeżeli kontekst logowania jest złożony (NIP-VAT UE), możliwe jest pobranie wszystkich uprawnień administratorów i reprezentantów podmiotu w bieżącym kontekście złożonym.
+     * Metoda pozwala na odczytanie uprawnień administratorów lub reprezentantów podmiotów unijnych: Jeżeli kontekstem logowania jest NIP, możliwe jest odczytanie uprawnień administratorów podmiotów unijnych powiązanych z podmiotem bieżącego kontekstu, czyli takich, dla których pierwszy człon kontekstu złożonego jest równy NIP-owi kontekstu logowania. Jeżeli kontekst logowania jest złożony (NIP-VAT UE), możliwe jest pobranie wszystkich uprawnień administratorów i reprezentantów podmiotu w bieżącym kontekście złożonym.
      * <p>
-     * Uprawnienia zwracane przez operację obejmują: - <b>VatUeManage</b> – zarządzanie uprawnieniami w ramach podmiotu unijnego - <b>InvoiceWrite</b> – wystawianie faktur - <b>InvoiceRead</b> – przeglądanie faktur - <b>Introspection</b> – przeglądanie historii sesji
+     * Uprawnienia zwracane przez operację obejmują: <b>VatUeManage</b> – zarządzanie uprawnieniami w ramach podmiotu unijnego <b>InvoiceWrite</b> – wystawianie faktur <b>InvoiceRead</b> – przeglądanie faktur <b>Introspection</b> – przeglądanie historii sesji
      * <p>
-     * Odpowiedź może być filtrowana na podstawie następujących parametrów: - <b>vatUeIdentifier</b> – identyfikator podmiotu unijnego - <b>authorizedFingerprintIdentifier</b> – odcisk palca certyfikatu uprawnionej osoby lub podmiotu - <b>permissionTypes</b> – lista rodzajów wyszukiwanych uprawnień
+     * Odpowiedź może być filtrowana na podstawie następujących parametrów: <b>vatUeIdentifier</b> – identyfikator podmiotu unijnego <b>authorizedFingerprintIdentifier</b> – odcisk palca certyfikatu uprawnionej osoby lub podmiotu <b>permissionTypes</b> – lista rodzajów wyszukiwanych uprawnień
      * <p>
-     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. - Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. - Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. - W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
+     * #### Stronicowanie wyników Zapytanie zwraca <b>jedną stronę wyników</b> o numerze i rozmiarze podanym w ścieżce. Przy pierwszym wywołaniu należy ustawić parametr {@code pageOffset = 0}. Jeżeli dostępna jest kolejna strona wyników, w odpowiedzi pojawi się flaga <b>{@code hasMore}</b>. W takim przypadku można wywołać zapytanie ponownie z kolejnym numerem strony.
      * <p>
      * Więcej informacji: <a href="https://github.com/CIRFMF/ksef-api/blob/main/uprawnienia.md#pobranie-listy-uprawnie%C5%84-administrator%C3%B3w-lub-reprezentant%C3%B3w-podmiot%C3%B3w-unijnych-uprawnionych-do-samofakturowania">Pobieranie listy uprawnień</a>
      *
@@ -1575,9 +1646,11 @@ public class DefaultKsefClient implements KSeFClient {
      *
      * <b>Sortowanie:</b>
      * <p>
-     * - startDate (Desc) - id (Asc)
+     * startDate (Desc) id (Asc)
      *
      * <b>Wymagane jedno z uprawnień</b>: {@code CredentialsManage}, {@code CredentialsRead}, {@code VatUeManage}.
+     * <p>
+     * Endpoint: POST /permissions/query/eu-entities/grants
      *
      * @param euEntityPermissionsQueryRequest Treść żądania — patrz opis pól klasy {@link EuEntityPermissionsQueryRequest}.
      * @param pageOffset                      Numer strony wyników.
@@ -1608,9 +1681,9 @@ public class DefaultKsefClient implements KSeFClient {
      * <p>
      * Metoda pozwala na nadanie wskazanemu w żądaniu podmiotowi lub osobie fizycznej uprawnień administratora w kontekście złożonym z identyfikatora NIP podmiotu kontekstu bieżącego oraz numeru VAT UE podmiotu unijnego wskazanego w żądaniu. Wraz z utworzeniem administratora podmiotu unijnego tworzony jest kontekst złożony składający się z numeru NIP podmiotu kontekstu logowania oraz wskazanego numeru identyfikacyjnego VAT UE podmiotu unijnego. W żądaniu podaje się również nazwę i adres podmiotu unijnego.
      * <p>
-     * Jedynym sposobem identyfikacji uprawnianego jest odcisk palca certyfikatu kwalifikowanego: - certyfikat podpisu elektronicznego dla osób fizycznych - certyfikat pieczęci elektronicznej dla podmiotów
+     * Jedynym sposobem identyfikacji uprawnianego jest odcisk palca certyfikatu kwalifikowanego: certyfikat podpisu elektronicznego dla osób fizycznych certyfikat pieczęci elektronicznej dla podmiotów
      * <p>
-     * Uprawnienia administratora podmiotu unijnego obejmują: - <b>VatEuManage</b> – zarządzanie uprawnieniami w ramach podmiotu unijnego - <b>InvoiceWrite</b> – wystawianie faktur - <b>InvoiceRead</b> – przeglądanie faktur - <b>Introspection</b> – przeglądanie historii sesji
+     * Uprawnienia administratora podmiotu unijnego obejmują: <b>VatEuManage</b> – zarządzanie uprawnieniami w ramach podmiotu unijnego <b>InvoiceWrite</b> – wystawianie faktur <b>InvoiceRead</b> – przeglądanie faktur <b>Introspection</b> – przeglądanie historii sesji
      * <p>
      * Metoda automatycznie nadaje wszystkie powyższe uprawnienia, bez konieczności ich wskazywania w żądaniu.
      * <p>
@@ -1621,6 +1694,8 @@ public class DefaultKsefClient implements KSeFClient {
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
      *
      * <b>Wymagane uprawnienie</b>: {@code CredentialsManage}.
+     * <p>
+     * Endpoint: POST /permissions/eu-entities/administration/grants
      *
      * @param euEntityPermissionsGrantRequest Treść żądania — patrz opis pól klasy {@link EuEntityPermissionsGrantRequest}.
      * @param accessToken                     Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
@@ -1643,9 +1718,9 @@ public class DefaultKsefClient implements KSeFClient {
      * <p>
      * Metoda pozwala na nadanie wskazanemu w żądaniu podmiotowi lub osobie fizycznej uprawnień do wystawiania i/lub przeglądania faktur w kontekście złożonym kontekstu bieżącego.
      * <p>
-     * Jedynym sposobem identyfikacji uprawnianego jest odcisk palca certyfikatu kwalifikowanego: - certyfikat podpisu elektronicznego dla osób fizycznych - certyfikat pieczęci elektronicznej dla podmiotów
+     * Jedynym sposobem identyfikacji uprawnianego jest odcisk palca certyfikatu kwalifikowanego: certyfikat podpisu elektronicznego dla osób fizycznych certyfikat pieczęci elektronicznej dla podmiotów
      * <p>
-     * W żądaniu określane są nadawane uprawnienia ze zbioru: - <b>InvoiceWrite</b> – wystawianie faktur - <b>InvoiceRead</b> – przeglądanie faktur
+     * W żądaniu określane są nadawane uprawnienia ze zbioru: <b>InvoiceWrite</b> – wystawianie faktur <b>InvoiceRead</b> – przeglądanie faktur
      * <p>
      * Metoda pozwala na wybór dowolnej kombinacji powyższych uprawnień.
      * <p>
@@ -1656,6 +1731,8 @@ public class DefaultKsefClient implements KSeFClient {
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
      *
      * <b>Wymagane uprawnienie</b>: {@code VatUeManage}.
+     * <p>
+     * Endpoint: POST /permissions/eu-entities/grants
      *
      * @param grantEUEntityRepresentativePermissionsRequest Treść żądania — patrz opis pól klasy {@link GrantEUEntityRepresentativePermissionsRequest}.
      * @param accessToken                                   Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
@@ -1711,7 +1788,7 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * Zwraca listę metadanych faktur spełniające podane kryteria wyszukiwania.
+     * Pobranie listy metadanych faktur
      * <p>
      * Zwraca metadane faktur spełniających filtry.
      * <p>
@@ -1727,9 +1804,11 @@ public class DefaultKsefClient implements KSeFClient {
      *
      * <b>Sortowanie:</b>
      * <p>
-     * - permanentStorageDate | invoicingDate | issueDate (Asc | Desc) - pole wybierane na podstawie filtrów
+     * permanentStorageDate | invoicingDate | issueDate (Asc | Desc) - pole wybierane na podstawie filtrów
      *
      * <b>Wymagane uprawnienie</b>: {@code InvoiceRead}.
+     * <p>
+     * Endpoint: POST /invoices/query/metadata
      *
      * @param pageOffset          - Index strony wyników (domyślnie 0)
      * @param pageSize            - Ilość elementów na stronie (domyślnie 10)
@@ -1848,7 +1927,7 @@ public class DefaultKsefClient implements KSeFClient {
     /**
      * Nadanie podmiotom uprawnień do obsługi faktur
      * <p>
-     * Metoda pozwala na nadanie podmiotowi wskazanemu w żądaniu uprawnień do obsługi faktur podmiotu kontekstu. W żądaniu określane są nadawane uprawnienia ze zbioru: - <b>InvoiceWrite</b> – wystawianie faktur - <b>InvoiceRead</b> – przeglądanie faktur
+     * Metoda pozwala na nadanie podmiotowi wskazanemu w żądaniu uprawnień do obsługi faktur podmiotu kontekstu. W żądaniu określane są nadawane uprawnienia ze zbioru: <b>InvoiceWrite</b> – wystawianie faktur <b>InvoiceRead</b> – przeglądanie faktur
      * <p>
      * Metoda pozwala na wybór dowolnej kombinacji powyższych uprawnień. Dla każdego uprawnienia może być ustawiona flaga <b>canDelegate</b>, mówiąca o możliwości jego dalszego przekazywania poprzez nadawanie w sposób pośredni.
      * <p>
@@ -1859,6 +1938,8 @@ public class DefaultKsefClient implements KSeFClient {
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
      *
      * <b>Wymagane uprawnienie</b>: {@code CredentialsManage}.
+     * <p>
+     * Endpoint: POST /permissions/entities/grants
      *
      * @param grantEntityPermissionsRequest Treść żądania — patrz opis pól klasy {@link GrantEntityPermissionsRequest}.
      * @param accessToken                   Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
@@ -2282,7 +2363,18 @@ public class DefaultKsefClient implements KSeFClient {
 
     /**
      * Unieważnienie aktualnej sesji uwierzytelnienia
-     * Unieważnia sesję powiązaną z tokenem użytym do wywołania tej operacji.  Unieważnienie sesji sprawia, że powiązany z nią refresh token przestaje działać i nie można już za jego pomocą uzyskać kolejnych access tokenów. **Aktywne access tokeny działają do czasu minięcia ich termin ważności.**  Sposób uwierzytelnienia: &#x60;RefreshToken&#x60; lub &#x60;ContextToken&#x60;.
+     * <p>
+     * Unieważnia sesję powiązaną z tokenem użytym do wywołania tej operacji.
+     * <p>
+     * Unieważnienie sesji sprawia, że powiązany z nią refresh token przestaje działać i nie można już za jego pomocą uzyskać kolejnych access tokenów. <b>Aktywne access tokeny działają do czasu minięcia ich termin ważności.</b>
+     * <p>
+     * Sposób uwierzytelnienia: {@code RefreshToken} lub {@code AccessToken}.
+     *
+     * <b>Headers:</b>
+     * <p>
+     * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
+     * <p>
+     * Endpoint: DELETE /auth/sessions/current
      *
      * @param accessToken Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
      */
@@ -2360,13 +2452,15 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * getContextSessionLimit.
+     * Pobranie limitów dla bieżącego kontekstu
      * <p>
      * Zwraca wartości aktualnie obowiązujących limitów dla bieżącego kontekstu.
      *
      * <b>Headers:</b>
      * <p>
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
+     * <p>
+     * Endpoint: GET /limits/context
      *
      * @param accessToken Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
      * @return GetContextLimitResponse
@@ -2385,13 +2479,15 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * Zwraca wartoście aktualnie obowiązujących limitów dla bieżącego podmiotu.
+     * Pobranie limitów dla bieżącego podmiotu
      * <p>
      * Zwraca wartości aktualnie obowiązujących limitów dla bieżącego podmiotu.
      *
      * <b>Headers:</b>
      * <p>
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
+     * <p>
+     * Endpoint: GET /limits/subject
      *
      * @param accessToken Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
      * @return GetSubjectLimitResponse
@@ -2436,13 +2532,15 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * Ustawia w bieżącym kontekście wartości limitów api zgodne z profilem produkcyjnym. Dostępny tylko na środowisku TE.
+     * Zmiana limitów API dla bieżącego kontekstu na wartości produkcyjne
      * <p>
      * Zmienia wartości aktualnie obowiązujących limitów żądań przesyłanych do API dla bieżącego kontekstu na wartości takie jakie będą na środowisku produkcyjnym. <b>Tylko na środowiskach testowych.</b>
      *
      * <b>Headers:</b>
      * <p>
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
+     * <p>
+     * Endpoint: POST /testdata/rate-limits/production
      *
      * @param accessToken Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
      */
@@ -2645,13 +2743,15 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * resetSubjectCertificateLimit.
+     * Przywrócenie domyślnych wartości limitów certyfikatów dla bieżącego podmiotu
      * <p>
      * Przywraca wartości aktualnie obowiązujących limitów certyfikatów dla bieżącego podmiotu do wartości domyślnych. <b>Tylko na środowiskach testowych.</b>
      *
      * <b>Headers:</b>
      * <p>
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
+     * <p>
+     * Endpoint: DELETE /testdata/limits/subject/certificate
      *
      * @param accessToken Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
      */
@@ -2891,7 +2991,7 @@ public class DefaultKsefClient implements KSeFClient {
      * <p>
      * Metoda pozwala na nadanie osobie wskazanej w żądaniu uprawnień do pracy w KSeF w kontekście bieżącym.
      * <p>
-     * W żądaniu określane są nadawane uprawnienia ze zbioru: - <b>InvoiceWrite</b> – wystawianie faktur, - <b>InvoiceRead</b> – przeglądanie faktur, - <b>CredentialsManage</b> – zarządzanie uprawnieniami, - <b>CredentialsRead</b> – przeglądanie uprawnień, - <b>Introspection</b> – przeglądanie historii sesji i generowanie UPO, - <b>SubunitManage</b> – zarządzanie jednostkami podrzędnymi, - <b>EnforcementOperations</b> – wykonywanie operacji egzekucyjnych. - <b>CollectiveIdentifierManage</b> – zarządzanie identyfikatorami zbiorczymi
+     * W żądaniu określane są nadawane uprawnienia ze zbioru: <b>InvoiceWrite</b> – wystawianie faktur, <b>InvoiceRead</b> – przeglądanie faktur, <b>CredentialsManage</b> – zarządzanie uprawnieniami, <b>CredentialsRead</b> – przeglądanie uprawnień, <b>Introspection</b> – przeglądanie historii sesji i generowanie UPO, <b>SubunitManage</b> – zarządzanie jednostkami podrzędnymi, <b>EnforcementOperations</b> – wykonywanie operacji egzekucyjnych. <b>CollectiveIdentifierManage</b> – zarządzanie identyfikatorami zbiorczymi
      * <p>
      * Metoda pozwala na wybór dowolnej kombinacji powyższych uprawnień. Uprawnienie <b>EnforcementOperations</b> może być nadane wyłącznie wtedy, gdy podmiot kontekstu ma rolę <b>EnforcementAuthority</b> (organ egzekucyjny) lub <b>CourtBailiff</b> (komornik sądowy).
      * <p>
@@ -2902,6 +3002,8 @@ public class DefaultKsefClient implements KSeFClient {
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
      *
      * <b>Wymagane uprawnienie</b>: {@code CredentialsManage}.
+     * <p>
+     * Endpoint: POST /permissions/persons/grants
      *
      * @param grantPersonPermissionsRequest Treść żądania — patrz opis pól klasy {@link GrantPersonPermissionsRequest}.
      * @param accessToken                   Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
@@ -2923,17 +3025,17 @@ public class DefaultKsefClient implements KSeFClient {
     /**
      * Nadanie uprawnień administratora podmiotu podrzędnego
      * <p>
-     * Metoda pozwala na nadanie wskazanemu w żądaniu podmiotowi lub osobie fizycznej uprawnień administratora w kontekście: - wskazanego NIP podmiotu podrzędnego – wyłącznie jeżeli podmiot bieżącego kontekstu logowania ma rolę podmiotu nadrzędnego: - <b>LocalGovernmentUnit</b> - <b>VatGroupUnit</b> - wskazanego lub utworzonego identyfikatora wewnętrznego
+     * Metoda pozwala na nadanie wskazanemu w żądaniu podmiotowi lub osobie fizycznej uprawnień administratora w kontekście: wskazanego NIP podmiotu podrzędnego – wyłącznie jeżeli podmiot bieżącego kontekstu logowania ma rolę podmiotu nadrzędnego: <b>LocalGovernmentUnit</b> <b>VatGroupUnit</b> wskazanego lub utworzonego identyfikatora wewnętrznego
      * <p>
      * Wraz z utworzeniem administratora jednostki podrzędnej tworzony jest identyfikator wewnętrzny składający się z numeru NIP podmiotu kontekstu logowania oraz 5 cyfr unikalnie identyfikujących jednostkę wewnętrzną. Ostatnia cyfra musi być poprawną sumą kontrolną, która jest obliczana według poniższego algorytmu.
      * <p>
      * Algorytm używa naprzemiennych wag (1×, 3×, 1×, 3×, ...), sumuje wyniki i zwraca resztę z dzielenia przez 10.
      * <p>
-     * Przykład: - Wejście: "6824515772-1234" (bez cyfry kontrolnej) - Pozycja 0 (1. cyfra): 6 × 1 = 6 - Pozycja 1 (2. cyfra): 8 × 3 = 24 - Pozycja 2 (3. cyfra): 2 × 1 = 2 - Pozycja 3 (4. cyfra): 4 × 3 = 12 - Pozycja 4 (5. cyfra): 5 × 1 = 5 - Pozycja 5 (6. cyfra): 1 × 3 = 3 - Pozycja 6 (7. cyfra): 5 × 1 = 5 - Pozycja 7 (8. cyfra): 7 × 3 = 21 - Pozycja 8 (9. cyfra): 7 × 1 = 7 - Pozycja 9 (10. cyfra): 2 × 3 = 6 - Pozycja 10 (11. cyfra): 1 × 1 = 1 - Pozycja 11 (12. cyfra): 2 × 3 = 6 - Pozycja 12 (13. cyfra): 3 × 1 = 3 - Pozycja 13 (14. cyfra): 4 × 3 = 12 - Suma: 6 + 24 + 2 + 12 + 5 + 3 + 5 + 21 + 7 + 6 + 1 + 6 + 3 + 12 = 113 - Cyfra kontrolna (15. cyfra): 113 % 10 = 3
+     * Przykład: Wejście: "6824515772-1234" (bez cyfry kontrolnej) Pozycja 0 (1. cyfra): 6 × 1 = 6 Pozycja 1 (2. cyfra): 8 × 3 = 24 Pozycja 2 (3. cyfra): 2 × 1 = 2 Pozycja 3 (4. cyfra): 4 × 3 = 12 Pozycja 4 (5. cyfra): 5 × 1 = 5 Pozycja 5 (6. cyfra): 1 × 3 = 3 Pozycja 6 (7. cyfra): 5 × 1 = 5 Pozycja 7 (8. cyfra): 7 × 3 = 21 Pozycja 8 (9. cyfra): 7 × 1 = 7 Pozycja 9 (10. cyfra): 2 × 3 = 6 Pozycja 10 (11. cyfra): 1 × 1 = 1 Pozycja 11 (12. cyfra): 2 × 3 = 6 Pozycja 12 (13. cyfra): 3 × 1 = 3 Pozycja 13 (14. cyfra): 4 × 3 = 12 Suma: 6 + 24 + 2 + 12 + 5 + 3 + 5 + 21 + 7 + 6 + 1 + 6 + 3 + 12 = 113 Cyfra kontrolna (15. cyfra): 113 % 10 = 3
      * <p>
      * W żądaniu podaje się również nazwę tej jednostki.
      * <p>
-     * Uprawnienia administratora jednostki podrzędnej obejmują: - <b>CredentialsManage</b> – zarządzanie uprawnieniami
+     * Uprawnienia administratora jednostki podrzędnej obejmują: <b>CredentialsManage</b> – zarządzanie uprawnieniami
      * <p>
      * Metoda automatycznie nadaje powyższe uprawnienie, bez konieczności podawania go w żądaniu.
      * <p>
@@ -2944,6 +3046,8 @@ public class DefaultKsefClient implements KSeFClient {
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
      *
      * <b>Wymagane uprawnienie</b>: {@code SubunitManage}.
+     * <p>
+     * Endpoint: POST /permissions/subunits/grants
      *
      * @param subunitPermissionsGrantRequest Treść żądania — patrz opis pól klasy {@link SubunitPermissionsGrantRequest}.
      * @param accessToken                    Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
@@ -3065,6 +3169,8 @@ public class DefaultKsefClient implements KSeFClient {
      * <b>Headers:</b>
      * <p>
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
+     * <p>
+     * Endpoint: POST /tokens
      *
      * @param ksefTokenRequest Treść żądania — patrz opis pól klasy {@link KsefTokenRequest}.
      * @param accessToken      Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
@@ -3084,6 +3190,22 @@ public class DefaultKsefClient implements KSeFClient {
 
     /**
      * Pobranie listy wygenerowanych tokenów
+     * <p>
+     * Zwraca listę metadanych tokenów. Zakres wyników zależy od sposobu uwierzytelnienia oraz uprawnień podmiotu wywołującego.
+     * <p>
+     * Jeżeli podmiot posiada uprawnienie <b>CredentialsManage</b> lub <b>CredentialsRead</b>, usługa zwraca wszystkie tokeny wygenerowane w danym kontekście niezależnie od metody uwierzytelnienia.
+     * <p>
+     * Jeżeli podmiot nie posiada żadnego z powyższych uprawnień, zakres wyników jest ograniczony: Dla podmiotu uwierzytelnionego tokenem zwracany jest wyłącznie token użyty do uwierzytelnienia. Dla pozostałych metod uwierzytelnienia zwracane są tokeny, których autorem jest wywołujący podmiot – z uwzględnieniem powiązania NIP–PESEL.
+     *
+     * <b>Headers:</b>
+     * <p>
+     * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
+     *
+     * <b>Sortowanie:</b>
+     * <p>
+     * dateCreated (Desc)
+     * <p>
+     * Endpoint: GET /tokens
      *
      * @param statuses             Status tokenów do zwrócenia. W przypadku braku parametru zwracane są wszystkie tokeny. Parametr można przekazać wielokrotnie.
      * @param description          Umożliwia filtrowanie tokenów po opisie. Wartość parametru jest wyszukiwana w opisie tokena (operacja nie rozróżnia wielkości liter). Należy podać co najmniej 3 znaki.
@@ -3145,6 +3267,8 @@ public class DefaultKsefClient implements KSeFClient {
      * <b>Headers:</b>
      * <p>
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
+     * <p>
+     * Endpoint: GET /tokens/{referenceNumber}
      *
      * @param referenceNumber Numer referencyjny tokena. (required)
      * @param accessToken     Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
@@ -3434,7 +3558,7 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * generateCollectiveIdentifier.
+     * Generowanie identyfikatora zbiorczego
      * <p>
      * Generuje identyfikator zbiorczy dla przekazanej listy numerów KSeF faktur wystawionych przez tego samego sprzedawcę.
      *
@@ -3443,6 +3567,8 @@ public class DefaultKsefClient implements KSeFClient {
      * {@code X-Error-Format: problem-details} - ustawienie tego nagłówka powoduje zwracanie błędów w formacie <b>Problem Details</b> ({@code application/problem+json}).
      *
      * <b>Wymagane jedno z uprawnień</b>: {@code InvoiceRead}, {@code InvoiceWrite}, {@code CollectiveIdentifierManage}.
+     * <p>
+     * Endpoint: POST /collective-identifiers
      *
      * @param request     Treść żądania — patrz opis pól klasy {@link GenerateCollectiveIdentifierRequest}.
      * @param accessToken Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
@@ -3465,7 +3591,7 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * queryCollectiveIdentifiers.
+     * Pobranie listy identyfikatorów zbiorczych powiązanych z kontekstem
      * <p>
      * Zwraca listę identyfikatorów zbiorczych wygenerowanych w kontekście. Dla kontekstu typu NIP zwracane są również identyfikatory zbiorcze, dla których podmiot występuje w roli Podmiotu 1 na fakturze.
      *
@@ -3475,9 +3601,11 @@ public class DefaultKsefClient implements KSeFClient {
      *
      * <b>Sortowanie:</b>
      * <p>
-     * - dateCreated (Desc) - collectiveIdentifierNumber (Desc)
+     * dateCreated (Desc) collectiveIdentifierNumber (Desc)
      *
      * <b>Wymagane jedno z uprawnień</b>: {@code InvoiceRead}, {@code InvoiceWrite}, {@code CollectiveIdentifierManage}.
+     * <p>
+     * Endpoint: POST /collective-identifiers/query
      *
      * @param request           Treść żądania — patrz opis pól klasy {@link CollectiveIdentifiersQueryRequest}.
      * @param accessToken       Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
@@ -3507,7 +3635,7 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * getCollectiveIdentifiersByKsefNumber.
+     * Pobranie listy identyfikatorów zbiorczych po numerze KSeF
      * <p>
      * Zwraca listę identyfikatorów zbiorczych związanych z podanym numerem KSeF.
      *
@@ -3517,9 +3645,11 @@ public class DefaultKsefClient implements KSeFClient {
      *
      * <b>Sortowanie:</b>
      * <p>
-     * - dateCreated (Desc) - collectiveIdentifierNumber (Desc)
+     * dateCreated (Desc) collectiveIdentifierNumber (Desc)
      *
      * <b>Wymagane jedno z uprawnień</b>: {@code InvoiceRead}, {@code InvoiceWrite}, {@code CollectiveIdentifierManage}.
+     * <p>
+     * Endpoint: GET /collective-identifiers/ksef/{ksefNumber}
      *
      * @param ksefNumber        Numer KSeF faktury.
      * @param accessToken       Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
@@ -3549,7 +3679,7 @@ public class DefaultKsefClient implements KSeFClient {
     }
 
     /**
-     * getCollectiveIdentifierInvoices.
+     * Pobranie listy faktur wchodzących w skład identyfikatora zbiorczego
      * <p>
      * Zwraca listę numerów KSeF faktur wchodzących w skład identyfikatora zbiorczego.
      * <p>
@@ -3565,9 +3695,11 @@ public class DefaultKsefClient implements KSeFClient {
      *
      * <b>Sortowanie:</b>
      * <p>
-     * - ksefNumber (Desc)
+     * ksefNumber (Desc)
      *
      * <b>Wymagane jedno z uprawnień</b>: {@code InvoiceRead}, {@code InvoiceWrite}, {@code CollectiveIdentifierManage}.
+     * <p>
+     * Endpoint: POST /collective-identifiers/invoices
      *
      * @param request           Treść żądania — patrz opis pól klasy {@link CollectiveIdentifierInvoicesQueryRequest}.
      * @param accessToken       Token dostępowy (JWT) przekazywany w nagłówku Authorization jako Bearer.
@@ -3597,28 +3729,58 @@ public class DefaultKsefClient implements KSeFClient {
 
     protected HttpResponse<byte[]> sendHttpRequest(HttpRequest request, HttpResponse.BodyHandler<byte[]> bodyHandler) {
         try {
-            if (circuitBreakerHandler != null) {
-                if (responseHeaderCaptureHandler != null) {
-                    return circuitBreakerHandler.send(request, responseInfo -> {
-                        responseHeaderCaptureHandler.capture(request, responseInfo.headers());
-                        return bodyHandler.apply(responseInfo);
-                    });
-                } else {
-                    return circuitBreakerHandler.send(request, bodyHandler);
-                }
-            } else {
-                if (responseHeaderCaptureHandler != null) {
-                    return apiClient.send(request, responseInfo -> {
-                        responseHeaderCaptureHandler.capture(request, responseInfo.headers());
-                        return bodyHandler.apply(responseInfo);
-                    });
-                } else {
-                    return apiClient.send(request, bodyHandler);
-                }
+            // pojedynczy odczyt pola volatile - spójna decyzja i ta sama instancja w całym żądaniu
+            final ResponseHeaderCaptureHandler captureHandler = this.responseHeaderCaptureHandler;
+            if (captureHandler == null) {
+                // obserwacja nagłówków nieaktywna - ścieżka bez żadnego narzutu
+                return doSend(request, bodyHandler);
             }
+
+            // jeden klucz na wywołanie: ten sam trafia do wpisu bufora i do observerów (korelacja)
+            final String requestKey = captureHandler.createRequestKey(request);
+
+            // BODY HANDLER wykonuje się w wątku roboczym HttpClient (nie w wątku wywołującym!) - zapisujemy tu
+            // wyłącznie do bufora, a observerów wołamy dopiero po powrocie z send(), w wątku wywołującym
+            HttpResponse.BodyHandler<byte[]> effectiveBodyHandler = responseInfo -> {
+                captureResponseHeaders(captureHandler, request, responseInfo.headers(), requestKey);
+                return bodyHandler.apply(responseInfo);
+            };
+
+            HttpResponse<byte[]> response = doSend(request, effectiveBodyHandler);
+
+            // wątek wywołujący, po zakończeniu żądania: observer widzi ThreadLocal tego wywołania
+            notifyResponseHeaderObservers(captureHandler, request, response.headers(), requestKey);
+            return response;
         } catch (IOException | InterruptedException e) {
             throw new SystemKSeFSDKException(request.method() + " " + request.uri() + " "
                     + (e.getMessage() != null ? e.getMessage() : ""), e);
+        }
+    }
+
+    // właściwa wysyłka: przez circuit breaker (jeśli włączony) albo bezpośrednio przez HttpClient
+    private HttpResponse<byte[]> doSend(HttpRequest request, HttpResponse.BodyHandler<byte[]> bodyHandler)
+            throws IOException, InterruptedException {
+        if (circuitBreakerHandler != null) {
+            return circuitBreakerHandler.send(request, bodyHandler);
+        }
+        return apiClient.send(request, bodyHandler);
+    }
+
+    // obserwacja nagłówków jest funkcją pomocniczą - jej awaria nie może przerwać właściwego żądania do API
+    private static void captureResponseHeaders(ResponseHeaderCaptureHandler handler, HttpRequest request,
+                                               HttpHeaders headers, String requestKey) {
+        try {
+            handler.capture(request, headers, requestKey);
+        } catch (RuntimeException ignored) {
+        }
+    }
+
+    // wyjątki observerów są już izolowane w handlerze; to zabezpieczenie chroni dodatkowo przed błędem samego handlera
+    private static void notifyResponseHeaderObservers(ResponseHeaderCaptureHandler handler, HttpRequest request,
+                                                      HttpHeaders headers, String requestKey) {
+        try {
+            handler.notifyObservers(request, headers, requestKey);
+        } catch (RuntimeException ignored) {
         }
     }
 

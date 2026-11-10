@@ -2,6 +2,49 @@
 
 
 
+## Wersja 3.0.30 (2026-11-10) - API: 2.9.0
+
+### Nowe
+- Dodano wartość `CollectiveIdentifierManage` do enumów uprawnień dla podmiotów oraz uprawnień pośrednich:
+    - `EntityPermissionType` (żądanie nadania uprawnień dla podmiotu `POST /permissions/entities/grants`),
+    - `EntityPermissionItemScope` (odpowiedź zapytania o uprawnienia podmiotów `POST /permissions/query/entities/grants`),
+    - `IndirectPermissionType` (żądanie nadania uprawnień pośrednich `POST /permissions/indirect/grants`).
+- `QueryPersonalGrantResponse` dodaje pole `List<QueryPersonalPermissionTypes> ownerPermissions`, zwracające listę uprawnień właścicielskich uwierzytelnionego podmiotu. Nowy typ odpowiedzi `POST /permissions/query/personal/grants`.
+
+- **`ResponseHeaderObserver`: przypisanie nagłówków odpowiedzi do konkretnego wywołania** ([github issue](https://github.com/CIRFMF/ksef-client-java/issues/199)). Callback jest wywoływany po każdej odpowiedzi API zawierającej zasubskrybowany nagłówek (np. `X-System-Warning`). Wywołanie jest synchroniczne, **w wątku, który wykonał wywołanie metody klienta**, po powrocie z żądania HTTP, a nie z wątku roboczego `HttpClient`. Dzięki temu observer widzi `ThreadLocal` aplikacji i można powiązać nagłówek z konkretną operacją biznesową. Wcześniej bufor wspólny dla całego klienta tego nie umożliwiał.
+    - Rejestracja: `ResponseHeaderCaptureHandler.addObserver(...) / removeObserver(...)` (bezpieczne wielowątkowo, idempotentne) albo nowy konstruktor `DefaultKsefClient(..., ResponseHeaderObserver observer, ObjectMapper)`. Observer przekazany do konstruktora działa także przy `enabled = false`, a bufor pozostaje wtedy wyłączony.
+    - Observer jest wołany tylko dla odpowiedzi z zasubskrybowanym nagłówkiem (`subscribe(...)`). Jest synchroniczny, więc wolny observer wydłuża wywołanie. Nie jest wołany, gdy żądanie nie zakończyło się odpowiedzią (błąd połączenia, otwarty circuit breaker).
+    - Wyjątek observera jest logowany (WARN) i ignorowany. Nie przerywa wywołania API ani pozostałych observerów.
+    - Wariant `onHeadersCaptured(request, headers, requestKey)` przekazuje klucz wywołania, ten sam, pod którym wpis tego wywołania leży w buforze (`getAndClear()`).
+    - `setBufferingEnabled(false)` jest dla integratorów używających wyłącznie observerów. Bufor nie trzyma wtedy wpisów w pamięci.
+- `ResponseHeaderCaptureHandler.getAndClear()`: atomowy odczyt i wyczyszczenie przechwyconych nagłówków, bezpieczny wielowątkowo (brak utraty i duplikatów wpisów). Korzysta z nowego, osobnego magazynu wpisów o ograniczonym rozmiarze.
+- `ResponseHeaderCaptureHandler.size(), getEvictedCount()`, konstruktor `ResponseHeaderCaptureHandler(int maxEntries)` oraz opcja `ResponseHeaderObservationOptions.maxCapturedEntries` (domyślnie `10000`). Po przekroczeniu limitu w nowym magazynie usuwane są najstarsze wpisy.
+
+
+### Zmodyfikowane
+- Poprawki w opisach metod w `DefaultKsefClient`.
+
+- `ResponseHeaderCaptureHandler.getCaptured() i clear()` zostaną usunięte w jednej z kolejnych wersji. Działają jak dotychczas na własnym (starym) magazynie: sekwencja `getCaptured() + clear()` nadal **nie jest atomowa** (wpis dodany przez inny wątek pomiędzy wywołaniami jest tracony). Magazyn stary i nowy są niezależne (`getAndClear()` nie czyści starego, `clear()` nie czyści nowego), więc nie należy mieszać obu sposobów odczytu. Jedyna zmiana starego magazynu: po osiągnięciu limitu wpisów jest czyszczony w całości (wcześniej rósł bez ograniczeń).
+
+- `DefaultKsefClient`: pole z handlerem jest volatile, a leniwa inicjalizacja w `getResponseHeaderCaptureHandler()` jest bezpieczna wielowątkowo (wcześniej równoległe wywołania mogły utworzyć kilka handlerów). Awaria przechwytywania nagłówków nie przerywa już właściwego żądania do API.
+- Nazwy nagłówków w `ResponseHeaderCaptureHandler` są normalizowane z `Locale.ROOT` (poprawka dla lokalizacji, np. tr-TR).
+- `OnlineSessionIntegrationTest`: odczyt nagłówków przez `getAndClear()`.
+- `ResponseHeaderObservationIntegrationTests`: testy współbieżności i observerów (race `getCaptured`() + `clear(), getAndClear()`, limity wpisów, leniwa inicjalizacja, korelacja per-call w wątku wywołującym).
+```
+// wcześniej (nieatomowe: wpisy innych wątków mogą zginąć)
+var captured = handler.getCaptured();
+handler.clear();
+
+// teraz
+var captured = handler.getAndClear();
+
+// przypisanie nagłówków do bieżącego wywołania biznesowego
+handler.subscribe("X-System-Warning");
+handler.addObserver((request, headers) ->
+    headers.allValues("x-system-warning").forEach(w -> MyContext.current().addWarning(w)));
+```
+
+
 ## Wersja 3.0.29 (2026-09-25) - API: 2.8.0
 
 ### Zmodyfikowane

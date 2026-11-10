@@ -16,6 +16,10 @@ public class ResponseHeaderObservationOptions {
     // kolejne bez zmian w kodzie klienta. np. w application.yaml
     public Set<String> headerNames = new HashSet<>(Collections.singleton("X-System-Warning"));
 
+    // Maksymalna liczba jednocześnie przechowywanych wpisów w ResponseHeaderCaptureHandler. Po przekroczeniu
+    // najstarsze wpisy są usuwane (chroni przed wyciekiem pamięci, gdy wpisy nie są odczytywane i czyszczone).
+    public int maxCapturedEntries = ResponseHeaderCaptureHandler.DEFAULT_MAX_ENTRIES;
+
     public ResponseHeaderObservationOptions() {
     }
 
@@ -38,5 +42,13 @@ public class ResponseHeaderObservationOptions {
 
     public void setHeaderNames(Set<String> headerNames) {
         this.headerNames = headerNames;
+    }
+
+    public int getMaxCapturedEntries() {
+        return maxCapturedEntries;
+    }
+
+    public void setMaxCapturedEntries(int maxCapturedEntries) {
+        this.maxCapturedEntries = maxCapturedEntries;
     }
 }

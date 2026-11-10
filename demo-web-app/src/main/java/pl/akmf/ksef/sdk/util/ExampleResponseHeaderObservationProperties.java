@@ -2,6 +2,7 @@ package pl.akmf.ksef.sdk.util;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import pl.akmf.ksef.sdk.system.headerobservation.ResponseHeaderCaptureHandler;
 import pl.akmf.ksef.sdk.system.headerobservation.ResponseHeaderObservationOptions;
 import pl.akmf.ksef.sdk.system.headerobservation.ResponseHeaderObservationProperties;
 
@@ -15,6 +16,8 @@ public class ExampleResponseHeaderObservationProperties extends ResponseHeaderOb
 
     private boolean enabled = false;
     private Set<String> headerNames = new HashSet<>(Collections.singleton("X-System-Warning"));
+    // maksymalna liczba jednocześnie przechowywanych wpisów (najstarsze są usuwane po przekroczeniu limitu)
+    private int maxCapturedEntries = ResponseHeaderCaptureHandler.DEFAULT_MAX_ENTRIES;
 
     private ResponseHeaderObservationOptions responseHeaderObservationOptions;
 
@@ -22,6 +25,7 @@ public class ExampleResponseHeaderObservationProperties extends ResponseHeaderOb
     public ResponseHeaderObservationOptions getResponseHeaderObservationOptions() {
         if (responseHeaderObservationOptions == null) {
             responseHeaderObservationOptions = new ResponseHeaderObservationOptions(enabled, headerNames);
+            responseHeaderObservationOptions.setMaxCapturedEntries(maxCapturedEntries);
         }
         return responseHeaderObservationOptions;
     }
@@ -40,5 +44,13 @@ public class ExampleResponseHeaderObservationProperties extends ResponseHeaderOb
 
     public void setHeaderNames(Set<String> headerNames) {
         this.headerNames = headerNames;
+    }
+
+    public int getMaxCapturedEntries() {
+        return maxCapturedEntries;
+    }
+
+    public void setMaxCapturedEntries(int maxCapturedEntries) {
+        this.maxCapturedEntries = maxCapturedEntries;
     }
 }
