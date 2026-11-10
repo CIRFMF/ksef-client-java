@@ -13,6 +13,8 @@ sdk:
       enabled: false
       header-names:
         - "X-System-Warning"
+      # limit wpisów w ResponseHeaderCaptureHandler - po przekroczeniu najstarsze wpisy są usuwane (domyślnie 10000)
+      max-captured-entries: 10000
     circuit-breaker-options:
       enabled: true
       failure-threshold: 5

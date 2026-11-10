@@ -16,6 +16,11 @@ public class QueryPersonalGrantResponse {
     private List<QueryPersonalGrantItem> permissions;
 
     /**
+     * Lista uprawnień właścicielskich.
+     */
+    private List<QueryPersonalPermissionTypes> ownerPermissions;
+
+    /**
      * Flaga informująca o dostępności kolejnej strony wyników.
      */
     private Boolean hasMore;
@@ -49,5 +54,19 @@ public class QueryPersonalGrantResponse {
      */
     public void setHasMore(Boolean hasMore) {
         this.hasMore = hasMore;
+    }
+
+    /**
+     * Lista uprawnień właścicielskich.
+     */
+    public List<QueryPersonalPermissionTypes> getOwnerPermissions() {
+        return ownerPermissions;
+    }
+
+    /**
+     * Lista uprawnień właścicielskich.
+     */
+    public void setOwnerPermissions(List<QueryPersonalPermissionTypes> ownerPermissions) {
+        this.ownerPermissions = ownerPermissions;
     }
 }

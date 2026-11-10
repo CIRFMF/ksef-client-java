@@ -90,8 +90,8 @@ class OnlineSessionIntegrationTest extends BaseIntegrationTest {
         getInvoice(sessionInvoice.getKsefNumber(), accessToken);
 
         // sprawdzenie czy hash faktury który zwraca api w ksefClient.getInvoice() zgadza się z hashem faktury którą wysłalismy
-        Map<String, Map<String, List<String>>> capturedHeaders = ksefClient.getResponseHeaderCaptureHandler().getCaptured();
-        ksefClient.getResponseHeaderCaptureHandler().clear(); // po każdym requeście należy wyczyścić subskrybowane nagłówki
+        // getAndClear() odczytuje i czyści zapisane nagłówki w jednej, atomowej operacji (zastępuje getCaptured() + clear())
+        Map<String, Map<String, List<String>>> capturedHeaders = ksefClient.getResponseHeaderCaptureHandler().getAndClear();
         Assertions.assertTrue(capturedHeaders.entrySet().stream()
                 .anyMatch(entry -> {
                     var values = entry.getValue().get(X_MS_META_HASH.toLowerCase());
